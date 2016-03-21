@@ -61,7 +61,10 @@ bool Copter::set_mode(control_mode_t mode, mode_reason_t reason)
             break;
 
         case AUTO:
-            success = auto_init(ignore_checks);
+            success = flightmode_auto.init(ignore_checks);
+            if (success) {
+                flightmode = &flightmode_auto;
+            }
             break;
 
         case CIRCLE:
@@ -190,10 +193,6 @@ void Copter::update_flight_mode()
     }
 
     switch (control_mode) {
-        case AUTO:
-            auto_run();
-            break;
-
         case CIRCLE:
             circle_run();
             break;
@@ -324,7 +323,6 @@ bool Copter::mode_requires_GPS()
         return flightmode->requires_GPS();
     }
     switch (control_mode) {
-        case AUTO:
         case GUIDED:
         case LOITER:
         case RTL:
@@ -378,7 +376,6 @@ void Copter::notify_flight_mode()
         return;
     }
     switch (control_mode) {
-        case AUTO:
         case GUIDED:
         case RTL:
         case CIRCLE:
@@ -397,9 +394,6 @@ void Copter::notify_flight_mode()
 
     // set flight mode string
     switch (control_mode) {
-        case AUTO:
-            notify.set_flight_mode_str("AUTO");
-            break;
         case GUIDED:
             notify.set_flight_mode_str("GUID");
             break;
