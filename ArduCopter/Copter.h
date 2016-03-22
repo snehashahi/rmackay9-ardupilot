@@ -418,9 +418,6 @@ private:
     int32_t nav_delay_time_max;  // used for delaying the navigation commands (eg land,takeoff etc.)
     uint32_t nav_delay_time_start;
 
-    // Flip
-    Vector3f flip_orig_attitude;         // original copter attitude before flip
-
     // throw mode state
     struct {
         ThrowModeStage stage;
@@ -814,8 +811,6 @@ private:
     bool brake_init(bool ignore_checks);
     void brake_run();
     void brake_timeout_to_loiter_ms(uint32_t timeout_ms);
-    bool flip_init(bool ignore_checks);
-    void flip_run();
     bool guided_nogps_init(bool ignore_checks);
     void guided_nogps_run();
     void land_run_vertical_control(bool pause_descent = false);
@@ -1071,6 +1066,8 @@ private:
     Copter::FlightMode_CIRCLE flightmode_circle{*this, circle_nav};
 
     Copter::FlightMode_DRIFT flightmode_drift{*this};
+
+    Copter::FlightMode_FLIP flightmode_flip{*this};
 
     Copter::FlightMode_GUIDED flightmode_guided{*this};
 
