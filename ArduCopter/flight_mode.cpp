@@ -149,7 +149,10 @@ bool Copter::set_mode(control_mode_t mode, mode_reason_t reason)
             break;
 
         case THROW:
-            success = throw_init(ignore_checks);
+            success = flightmode_throw.init(ignore_checks);
+            if (success) {
+                flightmode = &flightmode_throw;
+            }
             break;
 
         case AVOID_ADSB:
@@ -230,10 +233,6 @@ void Copter::update_flight_mode()
 
     switch (control_mode) {
 
-        case THROW:
-            throw_run();
-            break;
-
         case GUIDED_NOGPS:
             guided_nogps_run();
             break;
@@ -309,7 +308,6 @@ bool Copter::mode_requires_GPS()
     }
     switch (control_mode) {
         case SMART_RTL:
-        case THROW:
             return true;
         default:
             return false;
@@ -366,9 +364,6 @@ void Copter::notify_flight_mode()
 
     // set flight mode string
     switch (control_mode) {
-        case THROW:
-            notify.set_flight_mode_str("THRW");
-            break;
         case GUIDED_NOGPS:
             notify.set_flight_mode_str("GNGP");
             break;
