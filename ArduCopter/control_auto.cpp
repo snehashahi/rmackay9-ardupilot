@@ -277,6 +277,9 @@ void Copter::auto_wp_run()
     if (auto_yaw_mode == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), target_yaw_rate, get_smoothing_gain());
+    } else if (auto_yaw_mode == AUTO_YAW_RATE) {
+        // roll & pitch from waypoint controller, yaw rate from MAV_CMD_CONDITION_YAW
+        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), yaw_look_at_heading_slew_cdps, get_smoothing_gain());
     }else{
         // roll, pitch from waypoint controller, yaw heading from auto_heading()
         attitude_control->input_euler_angle_roll_pitch_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), get_auto_heading(),true, get_smoothing_gain());
@@ -673,10 +676,9 @@ void Copter::set_auto_yaw_look_at_heading(float angle_deg, float turn_rate_dps, 
     // get turn speed
     if (is_zero(turn_rate_dps)) {
         // default to regular auto slew rate
-        yaw_look_at_heading_slew = AUTO_YAW_SLEW_RATE;
+        yaw_look_at_heading_slew_cdps = AUTO_YAW_SLEW_RATE;
     }else{
-        int32_t turn_rate = (wrap_180_cd(yaw_look_at_heading - curr_yaw_target) / 100) / turn_rate_dps;
-        yaw_look_at_heading_slew = constrain_int32(turn_rate, 1, 360);    // deg / sec
+        yaw_look_at_heading_slew_cdps = constrain_int16(turn_rate_dps * 100, 100, 32000); // centideg / sec
     }
 
     // set yaw mode

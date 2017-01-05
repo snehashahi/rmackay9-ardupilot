@@ -438,7 +438,7 @@
 #endif
 
 #ifndef AUTO_YAW_SLEW_RATE
- # define AUTO_YAW_SLEW_RATE    60              // degrees/sec
+ # define AUTO_YAW_SLEW_RATE    6000              // centidegrees/sec
 #endif
 
 #ifndef YAW_LOOK_AHEAD_MIN_SPEED
