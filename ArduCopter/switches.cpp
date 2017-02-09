@@ -307,7 +307,8 @@ void Copter::do_aux_switch_function(int8_t ch_function, uint8_t ch_flag)
         case AUXSW_RANGEFINDER:
             // enable or disable the rangefinder
 #if RANGEFINDER_ENABLED == ENABLED
-            if ((ch_flag == AUX_SWITCH_HIGH) && (rangefinder.num_sensors() >= 1)) {
+            uint8_t rfinstance;
+            if ((ch_flag == AUX_SWITCH_HIGH) && rangefinder.find_instance(ROTATION_PITCH_270, rfinstance)) {
                 rangefinder_state.enabled = true;
             } else {
                 rangefinder_state.enabled = false;
