@@ -25,7 +25,8 @@ void Sub::init_rangefinder(void)
 #if RANGEFINDER_ENABLED == ENABLED
     rangefinder.init();
     rangefinder_state.alt_cm_filt.set_cutoff_frequency(RANGEFINDER_WPNAV_FILT_HZ);
-    rangefinder_state.enabled = (rangefinder.num_sensors() >= 1);
+    uint8_t rfinstance;
+    rangefinder_state.enabled = rangefinder.find_instance(ROTATION_PITCH_270, rfinstance);
 #endif
 }
 
@@ -35,9 +36,9 @@ void Sub::read_rangefinder(void)
 #if RANGEFINDER_ENABLED == ENABLED
     rangefinder.update();
 
-    rangefinder_state.alt_healthy = ((rangefinder.status() == RangeFinder::RangeFinder_Good) && (rangefinder.range_valid_count() >= RANGEFINDER_HEALTH_MAX));
+    rangefinder_state.alt_healthy = ((rangefinder.status_orient(ROTATION_PITCH_270) == RangeFinder::RangeFinder_Good) && (rangefinder.range_valid_count_orient(ROTATION_PITCH_270) >= RANGEFINDER_HEALTH_MAX));
 
-    int16_t temp_alt = rangefinder.distance_cm();
+    int16_t temp_alt = rangefinder.distance_cm_orient(ROTATION_PITCH_270);
 
 #if RANGEFINDER_TILT_CORRECTION == ENABLED
     // correct alt for angle of the rangefinder
