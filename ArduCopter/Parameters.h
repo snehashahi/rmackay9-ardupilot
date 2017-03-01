@@ -536,6 +536,9 @@ public:
     // beacon (non-GPS positioning) library
     AP_Beacon beacon;
 
+    // ZED 3D camera
+    AP_ZED zed;
+
 #if PROXIMITY_ENABLED == ENABLED
     // proximity (aka object avoidance) library
     AP_Proximity proximity;

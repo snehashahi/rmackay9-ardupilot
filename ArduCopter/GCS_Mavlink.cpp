@@ -1986,6 +1986,10 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 #endif
         break;
 
+    case MAVLINK_MSG_ID_ZED_VISION_POSITION_DELTA:
+        copter.g2.zed.handle_msg(msg);
+        break;
+
     default:
         handle_common_message(msg);
         break;

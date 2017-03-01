@@ -91,6 +91,7 @@
 #include <AC_InputManager/AC_InputManager_Heli.h>   // Heli specific pilot input handling library
 #include <AP_Button/AP_Button.h>
 #include <AP_Arming/AP_Arming.h>
+#include <AP_ZED/AP_ZED.h>
 
 // Configuration
 #include "defines.h"

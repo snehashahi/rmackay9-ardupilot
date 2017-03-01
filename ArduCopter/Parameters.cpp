@@ -998,6 +998,10 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Path: ../libraries/RC_Channel/RC_Channels.cpp
     AP_SUBGROUPINFO(rc_channels, "RC", 17, ParametersG2, RC_Channels),
 
+    // @Group: ZED
+    // @Path: ../libraries/AP_ZED/AP_ZED.cpp
+    AP_SUBGROUPINFO(zed, "ZED", 18, ParametersG2, AP_ZED),
+
     AP_GROUPEND
 };
 
