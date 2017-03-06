@@ -1177,8 +1177,8 @@ void AP_GPS::calc_blended_state(void)
     state[GPS_MAX_RECEIVERS].time_week = 0;
     state[GPS_MAX_RECEIVERS].ground_speed = 0.0f;
     state[GPS_MAX_RECEIVERS].ground_course = 0.0f;
-    state[GPS_MAX_RECEIVERS].hdop = -1;
-    state[GPS_MAX_RECEIVERS].vdop = -1;
+    state[GPS_MAX_RECEIVERS].hdop = 9999;
+    state[GPS_MAX_RECEIVERS].vdop = 9999;
     state[GPS_MAX_RECEIVERS].num_sats = 0;
     state[GPS_MAX_RECEIVERS].velocity.zero();
     state[GPS_MAX_RECEIVERS].speed_accuracy = 1e6f;
@@ -1188,6 +1188,8 @@ void AP_GPS::calc_blended_state(void)
     state[GPS_MAX_RECEIVERS].have_speed_accuracy = false;
     state[GPS_MAX_RECEIVERS].have_horizontal_accuracy = false;
     state[GPS_MAX_RECEIVERS].have_vertical_accuracy = false;
+    state[GPS_MAX_RECEIVERS].last_gps_time_ms = 0;
+    memset(&state[GPS_MAX_RECEIVERS].location, 0, sizeof(state[GPS_MAX_RECEIVERS].location));
 
     _blended_antenna_offset.zero();
 
