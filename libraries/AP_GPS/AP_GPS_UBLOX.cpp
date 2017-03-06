@@ -646,6 +646,7 @@ AP_GPS_UBLOX::_parse_gps(void)
                     _unconfigured_messages &= ~CONFIG_RATE_MON_HW2;
                     break;
                 }
+                break;
             }
         }
         return false;
