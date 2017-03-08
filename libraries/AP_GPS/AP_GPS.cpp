@@ -1152,7 +1152,7 @@ bool AP_GPS::calc_blend_weights(void)
     // Check if we can do blending using reported accuracy
     bool can_do_blending = (horizontal_accuracy_sum_sq > 0.0f || vertical_accuracy_sum_sq > 0.0f || speed_accuracy_sum_sq > 0.0f);
 
-    // if we cant do blending using reported accuracy, set the weight to the receiver with the highest solution status
+    // if we cant do blending using reported accuracy, return false and hard switch logic will be used instead
     if (!can_do_blending) {
         return false;
     }
