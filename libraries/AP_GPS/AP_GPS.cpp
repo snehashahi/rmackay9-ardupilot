@@ -35,6 +35,13 @@
 #include "AP_GPS_MAV.h"
 #include "GPS_Backend.h"
 
+#define GPS_BAUD_TIME_MS 1200
+
+// defines used to specify the mask position for use of different accuracy metrics in the blending algorithm
+#define BLEND_MASK_USE_HPOS_ACC     1
+#define BLEND_MASK_USE_VPOS_ACC     2
+#define BLEND_MASK_USE_SPD_ACC      4
+
 extern const AP_HAL::HAL &hal;
 
 // baudrates to try to detect GPSes with
@@ -1097,7 +1104,7 @@ bool AP_GPS::calc_blend_weights(void)
 
     // calculate the sum squared speed accuracy across all GPS sensors
     float speed_accuracy_sum_sq = 0.0f;
-    if (_blend_mask & USE_SPD_ACC) {
+    if (_blend_mask & BLEND_MASK_USE_SPD_ACC) {
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
             if (state[i].status >= GPS_OK_FIX_3D) {
                 if (state[i].have_speed_accuracy && state[i].speed_accuracy > 0.0f) {
@@ -1113,7 +1120,7 @@ bool AP_GPS::calc_blend_weights(void)
 
     // calculate the sum squared horizontal position accuracy across all GPS sensors
     float horizontal_accuracy_sum_sq = 0.0f;
-    if (_blend_mask & USE_HPOS_ACC) {
+    if (_blend_mask & BLEND_MASK_USE_HPOS_ACC) {
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
             if (state[i].status >= GPS_OK_FIX_2D) {
                 if (state[i].have_horizontal_accuracy && state[i].horizontal_accuracy > 0.0f) {
@@ -1129,7 +1136,7 @@ bool AP_GPS::calc_blend_weights(void)
 
     // calculate the sum squared vertical position accuracy across all GPS sensors
     float vertical_accuracy_sum_sq = 0.0f;
-    if (_blend_mask & USE_VPOS_ACC) {
+    if (_blend_mask & BLEND_MASK_USE_VPOS_ACC) {
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
             if (state[i].status >= GPS_OK_FIX_3D) {
                 if (state[i].have_vertical_accuracy && state[i].vertical_accuracy > 0.0f) {
@@ -1153,8 +1160,8 @@ bool AP_GPS::calc_blend_weights(void)
     float sum_of_all_weights = 0.0f;
 
     // calculate a weighting using the reported horizontal position
-    if (horizontal_accuracy_sum_sq > 0.0f && (_blend_mask & USE_HPOS_ACC)) {
     float hpos_blend_weights[GPS_MAX_RECEIVERS] = {};
+    if (horizontal_accuracy_sum_sq > 0.0f && (_blend_mask & BLEND_MASK_USE_HPOS_ACC)) {
         // calculate the weights using the inverse of the variances
         float sum_of_hpos_weights = 0.0f;
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
@@ -1174,7 +1181,7 @@ bool AP_GPS::calc_blend_weights(void)
 
     // calculate a weighting using the reported vertical position accuracy
     float vpos_blend_weights[GPS_MAX_RECEIVERS];
-    if (vertical_accuracy_sum_sq > 0.0f && (_blend_mask & USE_VPOS_ACC)) {
+    if (vertical_accuracy_sum_sq > 0.0f && (_blend_mask & BLEND_MASK_USE_VPOS_ACC)) {
         // calculate the weights using the inverse of the variances
         float sum_of_vpos_weights = 0.0f;
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
@@ -1200,7 +1207,7 @@ bool AP_GPS::calc_blend_weights(void)
 
     // calculate a weighting using the reported speed accuracy
     float spd_blend_weights[GPS_MAX_RECEIVERS];
-    if (speed_accuracy_sum_sq > 0.0f && (_blend_mask & USE_SPD_ACC)) {
+    if (speed_accuracy_sum_sq > 0.0f && (_blend_mask & BLEND_MASK_USE_SPD_ACC)) {
         // calculate the weights using the inverse of the variances
         float sum_of_spd_weights = 0.0f;
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
