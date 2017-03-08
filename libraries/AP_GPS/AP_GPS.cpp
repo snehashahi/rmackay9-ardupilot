@@ -65,7 +65,7 @@ const AP_Param::GroupInfo AP_GPS::var_info[] = {
     // @Param: AUTO_SWITCH
     // @DisplayName: Automatic Switchover Setting
     // @Description: Automatic switchover to GPS reporting best lock
-    // @Values: 0:Disabled,1:Hard,2:Soft
+    // @Values: 0:Disabled,1:UseBest,2:Blend
     // @RebootRequired: True
     // @User: Advanced
     AP_GROUPINFO("AUTO_SWITCH", 3, AP_GPS, _auto_switch, 1),
@@ -219,7 +219,7 @@ const AP_Param::GroupInfo AP_GPS::var_info[] = {
 
     // @Param: BLEND_MASK
     // @DisplayName: Multi GPS Blending Mask
-    // @Description: Determines which of the accuracy measures Horizontal position, Vertical Position and Speed are used to calculate the weighting on each GPS receiver when soft switching has been selected by setting GPS_AUTO_SWITCH to 3.
+    // @Description: Determines which of the accuracy measures Horizontal position, Vertical Position and Speed are used to calculate the weighting on each GPS receiver when soft switching has been selected by setting GPS_AUTO_SWITCH to 2
     // @Bitmask: 0:Horiz Pos,1:Vert Pos,2:Speed
     // @User: Advanced
     AP_GROUPINFO("BLEND_MASK", 20, AP_GPS, _blend_mask, 5),
@@ -247,15 +247,7 @@ void AP_GPS::init(DataFlash_Class *dataflash, const AP_SerialManager& serial_man
     _last_instance_swap_ms = 0;
 
     // Initialise class variables used to do GPS blending
-    memset(&_NE_pos_offset_m, 0, sizeof(_NE_pos_offset_m));
-    memset(&_hgt_offset_cm, 0, sizeof(_hgt_offset_cm));
-    memset(&state[GPS_MAX_RECEIVERS], 0, sizeof(state[GPS_MAX_RECEIVERS]));
-    memset(&_last_time_updated, 0, sizeof(_last_time_updated));
-    memset(&_blend_weights, 0, sizeof(_blend_weights));
-    memset(&timing[GPS_MAX_RECEIVERS], 0, sizeof(timing[GPS_MAX_RECEIVERS]));
-    _blended_antenna_offset.zero();
     _omega_lpf = 1.0f / constrain_float(_blend_tc, 5.0f, 30.0f);
-    _output_is_blended = false;
 
     // sanity check update rate
     for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
@@ -564,7 +556,14 @@ AP_GPS::update(void)
         update_instance(i);
     }
 
-    // Implement soft switch logic
+    // calculate number of instances
+    for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
+        if (state[i].status != NO_GPS) {
+            num_instances = i+1;
+        }
+    }
+
+    // implement blending logic
     if (_auto_switch == 2) {
         // calculate weighting for each GPS
         calc_blend_weights();
@@ -580,11 +579,8 @@ AP_GPS::update(void)
         // use hard switch logic
         // work out which GPS is the primary, and how many sensors we have
         uint32_t now = AP_HAL::millis();
-        for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
-            if (state[i].status != NO_GPS) {
-                num_instances = i+1;
-            }
-            if (_auto_switch) {
+        if (_auto_switch == 1) {
+            for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
                 if (i == primary_instance) {
                     continue;
                 }
@@ -612,17 +608,18 @@ AP_GPS::update(void)
                     _last_instance_swap_ms = now;
                     }
                 }
-            } else {
-                primary_instance = 0;
             }
-
-            // copy the primary instance to the blended instance
-            state[GPS_MAX_RECEIVERS] = state[primary_instance];
-            _blended_antenna_offset = _antenna_offset[primary_instance];
-
-            // we are using hard switching logic, so no blending
-            _output_is_blended = false;
+        } else {
+            primary_instance = 0;
         }
+
+        // copy the primary instance to the blended instance
+        state[GPS_MAX_RECEIVERS] = state[primary_instance];
+        _blended_antenna_offset = _antenna_offset[primary_instance];
+
+        // we are using hard switching logic, so no blending
+        _output_is_blended = false;
+
         // update notify with gps status. We always base this on the primary_instance
         AP_Notify::flags.gps_status = state[primary_instance].status;
         AP_Notify::flags.gps_num_sats = state[primary_instance].num_sats;
@@ -980,20 +977,9 @@ void AP_GPS::calc_blend_weights(void)
     // zero the blend weights
     memset(&_blend_weights, 0, sizeof(_blend_weights));
 
-    // determine how many GPS receivers are returning a fix and the instance of the first receiver that is
-    uint8_t first_instance = 0;
-    for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
-        if (state[i].status > NO_FIX) {
-            num_instances = i+1;
-            if (first_instance == 0) {
-                first_instance = i;
-            }
-        }
-    }
-
-    // If not enough receivers to do blending or blending has  been disabled, set the primary instance and weighting to the first receiver detected
-    if (num_instances < 2 || _auto_switch != 2) {
-        primary_instance = first_instance;
+    // if not enough receivers to do blending, set the primary instance and weighting to the first receiver
+    if (num_instances < 2) {
+        primary_instance = 0;
         _output_is_blended = false;
         _blend_weights[primary_instance] = 1.0f;
         return;
@@ -1035,7 +1021,7 @@ void AP_GPS::calc_blend_weights(void)
     if (_blend_mask & USE_SPD_ACC) {
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
             if (state[i].status >= GPS_OK_FIX_3D) {
-                if (state[i].have_speed_accuracy) {
+                if (state[i].have_speed_accuracy && state[i].speed_accuracy > 0.0f) {
                     speed_accuracy_sum_sq += state[i].speed_accuracy * state[i].speed_accuracy;
                 } else {
                     // not all receivers support this metric so set it to zero and don't use it
@@ -1083,10 +1069,10 @@ void AP_GPS::calc_blend_weights(void)
     // if we cant do blending using reported accuracy, set the weight to the receiver with the highest solution status
     if (!can_do_blending) {
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
-                if (state[i].status > state[primary_instance].status) {
-                    // we have a higher status lock, change GPS
-                    primary_instance = i;
-                }
+            if (state[i].status > state[primary_instance].status) {
+                // we have a higher status lock, change GPS
+                primary_instance = i;
+            }
         }
         _output_is_blended = false;
         _blend_weights[primary_instance] = 1.0f;
