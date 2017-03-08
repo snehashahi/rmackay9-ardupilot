@@ -339,9 +339,6 @@ public:
             return _antenna_offset[instance];
         }
     }
-    const Vector3f &get_antenna_offset(void) const {
-        return _antenna_offset[primary_instance];
-    }
 
     // set position for HIL
     void setHIL(uint8_t instance, GPS_Status status, uint64_t time_epoch_ms, 
