@@ -1395,9 +1395,9 @@ void AP_GPS::calc_blended_state(void)
     // Calculate a corrected location for each GPS
     Location corrected_location[GPS_MAX_RECEIVERS];
     for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
-            corrected_location[i] = state[i].location;
-            location_offset(corrected_location[i], _NE_pos_offset_m[i].x, _NE_pos_offset_m[i].y);
-            corrected_location[i].alt += (int)(_hgt_offset_cm[i]);
+        corrected_location[i] = state[i].location;
+        location_offset(corrected_location[i], _NE_pos_offset_m[i].x, _NE_pos_offset_m[i].y);
+        corrected_location[i].alt += (int)(_hgt_offset_cm[i]);
     }
 
     // Calculate the weighted sum of horizontal and vertical position offsets relative to the blended location
