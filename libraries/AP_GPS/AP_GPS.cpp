@@ -1153,16 +1153,14 @@ bool AP_GPS::calc_blend_weights(void)
     float sum_of_all_weights = 0.0f;
 
     // calculate a weighting using the reported horizontal position
-    float hpos_blend_weights[GPS_MAX_RECEIVERS];
     if (horizontal_accuracy_sum_sq > 0.0f && (_blend_mask & USE_HPOS_ACC)) {
+    float hpos_blend_weights[GPS_MAX_RECEIVERS] = {};
         // calculate the weights using the inverse of the variances
         float sum_of_hpos_weights = 0.0f;
         for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
             if (state[i].status >= GPS_OK_FIX_2D && state[i].horizontal_accuracy > 0.001f) {
                 hpos_blend_weights[i] = horizontal_accuracy_sum_sq / (state[i].horizontal_accuracy * state[i].horizontal_accuracy);
                 sum_of_hpos_weights += hpos_blend_weights[i];
-            } else {
-                hpos_blend_weights[i] = 0.0f;
             }
         }
         // normalise the weights
@@ -1171,10 +1169,6 @@ bool AP_GPS::calc_blend_weights(void)
                 hpos_blend_weights[i] = hpos_blend_weights[i] / sum_of_hpos_weights;
             }
             sum_of_all_weights += 1.0f;
-        }
-    } else {
-        for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
-            hpos_blend_weights[i] = 0.0f;
         }
     }
 
@@ -1373,9 +1367,8 @@ void AP_GPS::calc_blended_state(void)
 
     // Calculate filter coefficients to be applied to the offsets for each GPS position and height offset
     // A weighting of 1 will make the offset adjust the slowest, a weighting of 0 will make it adjust with zero filtering
-    float alpha[GPS_MAX_RECEIVERS];
+    float alpha[GPS_MAX_RECEIVERS] = {};
     for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
-        alpha[i] = 0.0f;
         if (state[i].last_gps_time_ms > _last_time_updated[i]) {
             float min_alpha = constrain_float(_omega_lpf * 0.001f * (float)(state[i].last_gps_time_ms - _last_time_updated[i]), 0.0f, 1.0f);
             if (_blend_weights[i] > min_alpha) {
