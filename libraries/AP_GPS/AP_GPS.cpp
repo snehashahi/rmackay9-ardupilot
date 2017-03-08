@@ -941,10 +941,15 @@ void AP_GPS::inject_data_all(const uint8_t *data, uint16_t len)
 }
 
 /*
-  return expected lag from a GPS
+  return the expected lag (in seconds) in the position and velocity readings from the gps
  */
 float AP_GPS::get_lag(uint8_t instance) const
 {
+    // return lag of blended GPS
+    if (instance == GPS_MAX_RECEIVERS) {
+        return _blended_lag_sec;
+    }
+
     if (_delay_ms[instance] > 0) {
         // if the user has specified a non zero time delay, always return that value
         return 0.001f * (float)_delay_ms[instance];
@@ -1178,6 +1183,7 @@ void AP_GPS::calc_blended_state(void)
     memset(&state[GPS_MAX_RECEIVERS].location, 0, sizeof(state[GPS_MAX_RECEIVERS].location));
 
     _blended_antenna_offset.zero();
+    _blended_lag_sec = 0;
 
     timing[GPS_MAX_RECEIVERS].last_fix_time_ms = 0;
     timing[GPS_MAX_RECEIVERS].last_message_time_ms = 0;
@@ -1354,13 +1360,14 @@ void AP_GPS::calc_blended_state(void)
         state[GPS_MAX_RECEIVERS].time_week_ms = (uint32_t)temp_time_0;
     }
 
-    // calculate a blended value for the timing data
+    // calculate a blended value for the timing data and lag
     double temp_time_1 = 0.0;
     double temp_time_2 = 0.0;
     for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
         if (_blend_weights[i] > 0.0f) {
             temp_time_1 += (double)timing[i].last_fix_time_ms * _blend_weights[i];
             temp_time_2 += (double)timing[i].last_message_time_ms * _blend_weights[i];
+            _blended_lag_sec += get_lag(i) * _blended_lag_sec;
         }
     }
     timing[GPS_MAX_RECEIVERS].last_fix_time_ms = (uint32_t)temp_time_1;
