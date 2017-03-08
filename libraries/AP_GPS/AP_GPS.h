@@ -488,8 +488,8 @@ private:
     float _omega_lpf; // cutoff frequency in rad/sec of LPF applied to position offsets
     bool _output_is_blended; // true when a blended GPS solution being output
 
-    // calculate the blend weight
-    void calc_blend_weights(void);
+    // calculate the blend weight.  Returns true if blend could be calculated, false if not
+    bool calc_blend_weights(void);
 
     // calculate the blended state
     void calc_blended_state(void);
