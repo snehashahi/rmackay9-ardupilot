@@ -914,6 +914,23 @@ AP_GPS::broadcast_first_configuration_failure_reason(void) const {
     }
 }
 
+// pre-arm check that all GPSs are close to each other.  farthest distance between GPSs (in meters) is returned
+bool AP_GPS::all_consistent(float &distance) const
+{
+    // return true immediately if only one valid receiver
+    if (num_instances <= 1 ||
+        drivers[0] == nullptr || _type[0] == GPS_TYPE_NONE ||
+        drivers[1] == nullptr || _type[1] == GPS_TYPE_NONE) {
+        distance = 0;
+        return true;
+    }
+
+    // calculate distance
+    distance = location_3d_diff_NED(state[0].location, state[1].location).length();
+    // success if distance is within 50m
+    return (distance < 50);
+}
+
 void
 AP_GPS::_broadcast_gps_type(const char *type, uint8_t instance, int8_t baud_index)
 {

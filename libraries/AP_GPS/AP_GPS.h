@@ -341,6 +341,9 @@ public:
         return first_unconfigured_gps() == GPS_ALL_CONFIGURED;
     }
 
+    // pre-arm check that all GPSs are close to each other.  farthest distance between GPSs (in meters) is returned
+    bool all_consistent(float &distance) const;
+
     // handle sending of initialisation strings to the GPS - only used by backends
     void send_blob_start(uint8_t instance, const char *_blob, uint16_t size);
     void send_blob_update(uint8_t instance);
