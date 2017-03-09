@@ -1393,13 +1393,14 @@ void AP_GPS::calc_blended_state(void)
     // A weighting of 1 will make the offset adjust the slowest, a weighting of 0 will make it adjust with zero filtering
     float alpha[GPS_MAX_RECEIVERS] = {};
     for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
-        if (state[i].last_gps_time_ms > _last_time_updated[i]) {
+        if (state[i].last_gps_time_ms - _last_time_updated[i] > 0) {
             float min_alpha = constrain_float(_omega_lpf * 0.001f * (float)(state[i].last_gps_time_ms - _last_time_updated[i]), 0.0f, 1.0f);
             if (_blend_weights[i] > min_alpha) {
                 alpha[i] = min_alpha / _blend_weights[i];
             } else {
                 alpha[i] = 1.0f;
             }
+            _last_time_updated[i] = state[i].last_gps_time_ms;
         }
     }
 
