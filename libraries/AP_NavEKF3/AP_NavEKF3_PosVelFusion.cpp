@@ -889,7 +889,7 @@ void NavEKF3_core::selectHeightForFusion()
 /*
  * Fuse body frame velocity measurements using explicit algebraic equations generated with Matlab symbolic toolbox.
  * The script file used to generate these and other equations in this filter can be found here:
- * https://github.com/priseborough/InertialNav/blob/master/derivations/RotationVectorAttitudeParameterisation/GenerateNavFilterEquations.m
+ * https://github.com/PX4/ecl/blob/master/matlab/scripts/Inertial%20Nav%20EKF/GenerateNavFilterEquations.m
 */
 void NavEKF3_core::FuseBodyVel()
 {
