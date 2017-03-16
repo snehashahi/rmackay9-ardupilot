@@ -196,6 +196,18 @@ public:
     // posOffset is the XYZ flow sensor position in the body frame in m
     void writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRates, Vector2f &rawGyroRates, uint32_t &msecFlowMeas, const Vector3f &posOffset);
 
+    /*
+     * Write body frame linear and angular displacement measurements from a visual odometry sensor
+     *
+     * quality is a normalised confidence value from 0 to 100
+     * delPos is the XYZ change in linear position meaasured in body frame and relative to the inertial reference at time_ms (m)
+     * delAng is the XYZ angular rotation measured in body frame and relative to the inertial reference at time_ms (rad)
+     * delTime is the time interval for the measurement of delPos and delAng (sec)
+     * timeStamp_ms is the timestamp of the last image used to calculate delPos and delAng (msec)
+     * posOffset is the XYZ body frame position of the camera focal point (m)
+    */
+    void writeBodyFrameDispl(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset);
+
     // return data for debugging optical flow fusion for the specified instance
     // An out of range instance (eg -1) returns data for the the primary instance
     void getFlowDebug(int8_t instance, float &varFlow, float &gndOffset, float &flowInnovX, float &flowInnovY, float &auxInnov, float &HAGL, float &rngInnov, float &range, float &gndOffsetErr);

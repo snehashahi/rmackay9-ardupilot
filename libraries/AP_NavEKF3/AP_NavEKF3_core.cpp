@@ -356,6 +356,17 @@ void NavEKF3_core::InitialiseVariables()
     bcnPosOffsetNED.zero();
     bcnOriginEstInit = false;
 
+    // body frame displacement fusion
+    memset(&bodyOdmDataNew, 0, sizeof(bodyOdmDataNew));
+    memset(&bodyOdmDataDelayed, 0, sizeof(bodyOdmDataDelayed));
+    bodyOdmStoreIndex = 0;
+    lastbodyVelPassTime_ms = 0;
+    memset(&bodyVelTestRatio, 0, sizeof(bodyVelTestRatio));
+    memset(&varInnovBodyVel, 0, sizeof(varInnovBodyVel));
+    memset(&innovBodyVel, 0, sizeof(innovBodyVel));
+    prevBodyVelFuseTime_ms = 0;
+    bodyOdmMeasTime_ms = 0;
+
     // zero data buffers
     storedIMU.reset();
     storedGPS.reset();
@@ -365,6 +376,7 @@ void NavEKF3_core::InitialiseVariables()
     storedRange.reset();
     storedOutput.reset();
     storedRangeBeacon.reset();
+    storedBodyOdm.reset();
 }
 
 // Initialise the states from accelerometer and magnetometer data (if present)

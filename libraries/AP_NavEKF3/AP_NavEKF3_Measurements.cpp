@@ -106,6 +106,33 @@ void NavEKF3_core::readRangeFinder(void)
     }
 }
 
+void NavEKF3_core::writeBodyFrameDispl(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset)
+{
+    // limit update rate to maximum allowed by sensor buffers
+    if ((imuSampleTime_ms - bodyOdmMeasTime_ms) < frontend->sensorIntervalMin_ms) {
+        return;
+    }
+
+    // write delta position data to buffer
+    if (delTime > dtEkfAvg) {
+        bodyOdmDataNew.vel = delPos * (1.0f/delTime);
+        bodyOdmDataNew.time_ms = timeStamp_ms;
+        bodyOdmDataNew.body_offset = &posOffset;
+        bodyOdmDataNew.angRate = delAng * (1.0f/delTime);
+
+        // simple model of accuracy
+        // TODO move this calculation outside of EKF into the sensor driver
+        const float minVelErr = 0.5f;
+        const float maxVelErr = 10.0f;
+        bodyOdmDataNew.velErr.x = minVelErr + (maxVelErr - minVelErr) * (1.0f - 0.01f * quality);
+
+        storedBodyOdm.push(bodyOdmDataNew);
+        bodyOdmMeasTime_ms = imuSampleTime_ms;
+
+    }
+
+}
+
 // write the raw optical flow measurements
 // this needs to be called externally.
 void NavEKF3_core::writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRates, Vector2f &rawGyroRates, uint32_t &msecFlowMeas, const Vector3f &posOffset)

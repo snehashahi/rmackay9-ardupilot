@@ -1107,6 +1107,25 @@ void NavEKF3::getFlowDebug(int8_t instance, float &varFlow, float &gndOffset, fl
     }
 }
 
+/*
+ * Write body frame linear and angular displacement measurements from a visual odometry sensor
+ *
+ * quality is a normalised confidence value from 0 to 100
+ * delPos is the XYZ change in linear position meaasured in body frame and relative to the inertial reference at time_ms (m)
+ * delAng is the XYZ angular rotation measured in body frame and relative to the inertial reference at time_ms (rad)
+ * delTime is the time interval for the measurement of delPos and delAng (sec)
+ * timeStamp_ms is the timestamp of the last image used to calculate delPos and delAng (msec)
+ * posOffset is the XYZ body frame position of the camera focal point (m)
+*/
+void NavEKF3::writeBodyFrameDispl(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset)
+{
+    if (core) {
+        for (uint8_t i=0; i<num_cores; i++) {
+            core[i].writeBodyFrameDispl(quality, delPos, delAng, delTime, timeStamp_ms, posOffset);
+        }
+    }
+}
+
 // return data for debugging range beacon fusion
 bool NavEKF3::getRangeBeaconDebug(int8_t instance, uint8_t &ID, float &rng, float &innov, float &innovVar, float &testRatio, Vector3f &beaconPosNED,
                                   float &offsetHigh, float &offsetLow, Vector3f &posNED)
