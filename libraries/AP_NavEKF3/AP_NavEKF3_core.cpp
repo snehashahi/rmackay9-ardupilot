@@ -23,7 +23,8 @@ NavEKF3_core::NavEKF3_core(void) :
     _perf_FuseAirspeed(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK3_FuseAirspeed")),
     _perf_FuseSideslip(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK3_FuseSideslip")),
     _perf_TerrainOffset(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK3_TerrainOffset")),
-    _perf_FuseOptFlow(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK3_FuseOptFlow"))
+    _perf_FuseOptFlow(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK3_FuseOptFlow")),
+    _perf_FuseBodyOdom(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK3_FuseBodyOdom"))
 {
     _perf_test[0] = hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK3_Test0");
     _perf_test[1] = hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK3_Test1");
@@ -366,6 +367,7 @@ void NavEKF3_core::InitialiseVariables()
     memset(&innovBodyVel, 0, sizeof(innovBodyVel));
     prevBodyVelFuseTime_ms = 0;
     bodyOdmMeasTime_ms = 0;
+    bodyVelFusionDelayed = false;
 
     // zero data buffers
     storedIMU.reset();
@@ -559,6 +561,9 @@ void NavEKF3_core::UpdateFilter(bool predict)
 
         // Update states using optical flow data
         SelectFlowFusion();
+
+        // Update states using body frame odometry data
+        SelectBodyOdomFusion();
 
         // Update states using airspeed data
         SelectTasFusion();

@@ -647,11 +647,17 @@ private:
     // return true if the filter is ready to start using optical flow measurements
     bool readyToUseOptFlow(void) const;
 
+    // return true if the filter is ready to start using body frame odometry measurements
+    bool readyToUseBodyOdm(void) const;
+
     // return true if we should use the range finder sensor
     bool useRngFinder(void) const;
 
     // determine when to perform fusion of optical flow measurements
     void SelectFlowFusion();
+
+    // determine when to perform fusion of body frame odometry measurements
+    void SelectBodyOdomFusion();
 
     // Estimate terrain offset using a single state EKF
     void EstimateTerrainOffset();
@@ -1033,6 +1039,8 @@ private:
     Vector3 innovBodyVel;               // Body velocity XYZ innovations (rad/sec)
     uint32_t prevBodyVelFuseTime_ms;    // previous time all body velocity measurement components passed their innovation consistency checks (msec)
     uint32_t bodyOdmMeasTime_ms;        // time body velocity measurements were accepted for input to the data buffer (msec)
+    bool bodyVelFusionDelayed;          // true when body fame velocity fusion has been delayed
+
 
     // Range Beacon Sensor Fusion
     obs_ring_buffer_t<rng_bcn_elements> storedRangeBeacon; // Beacon range buffer
@@ -1182,6 +1190,7 @@ private:
     AP_HAL::Util::perf_counter_t  _perf_FuseSideslip;
     AP_HAL::Util::perf_counter_t  _perf_TerrainOffset;
     AP_HAL::Util::perf_counter_t  _perf_FuseOptFlow;
+    AP_HAL::Util::perf_counter_t  _perf_FuseBodyOdom;
     AP_HAL::Util::perf_counter_t  _perf_test[10];
 
     // should we assume zero sideslip?
