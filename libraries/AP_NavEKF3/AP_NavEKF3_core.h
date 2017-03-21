@@ -212,7 +212,7 @@ public:
      * timeStamp_ms is the timestamp of the last image used to calculate delPos and delAng (msec)
      * posOffset is the XYZ body frame position of the camera focal point (m)
     */
-    void writeBodyFrameDispl(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset);
+    void writeBodyFrameOdom(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset);
 
     /*
         Returns the following data for debugging range beacon fusion

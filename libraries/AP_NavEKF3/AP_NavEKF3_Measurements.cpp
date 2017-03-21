@@ -106,7 +106,7 @@ void NavEKF3_core::readRangeFinder(void)
     }
 }
 
-void NavEKF3_core::writeBodyFrameDispl(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset)
+void NavEKF3_core::writeBodyFrameOdom(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset)
 {
     // limit update rate to maximum allowed by sensor buffers
     if ((imuSampleTime_ms - bodyOdmMeasTime_ms) < frontend->sensorIntervalMin_ms) {
