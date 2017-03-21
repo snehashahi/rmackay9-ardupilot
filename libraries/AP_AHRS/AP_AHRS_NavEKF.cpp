@@ -286,6 +286,21 @@ void AP_AHRS_NavEKF::update_SITL(void)
                                         fdm.zAccel);
         }
         _accel_ef_ekf_blended = _accel_ef_ekf[0];
+
+        // use SITL states to write body frame odometry data at 20Hz
+        if (AP_HAL::millis() - _last_body_odm_update_ms > 50) {
+            float quality = 100;
+            Vector3f posOffset = Vector3f(0.0f,0.0f,0.0f);
+            uint32_t timeStamp_ms = AP_HAL::millis();
+            float delTime = 0.001f*(timeStamp_ms - _last_body_odm_update_ms);
+            _last_body_odm_update_ms = timeStamp_ms;
+            Vector3f delAng = _gyro_estimate * delTime;
+            // rotate earth velocity into body frame
+            Vector3f earth_vel = Vector3f(fdm.speedN,fdm.speedE,fdm.speedD);
+            Vector3f delPos = _dcm_matrix.transposed() * (earth_vel * delTime);
+            // write to EKF
+            EKF3.writeBodyFrameOdom(quality, delPos, delAng, delTime, timeStamp_ms, posOffset);
+        }
     }
 }
 #endif // CONFIG_HAL_BOARD
