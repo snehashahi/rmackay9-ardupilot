@@ -200,9 +200,9 @@ void NavEKF3_core::setAidingMode()
          // Check if the fusion has timed out (flow measurements have been rejected for too long)
          bool flowFusionTimeout = ((imuSampleTime_ms - prevFlowFuseTime_ms) > 5000);
          // Check if the body odometry flow sensor has timed out
-         bool bodyOdmSensorTimeout = ((imuSampleTime_ms - flowValidMeaTime_ms) > 5000);
+         bool bodyOdmSensorTimeout = ((imuSampleTime_ms - bodyOdmMeasTime_ms) > 5000);
          // Check if the fusion has timed out (body odometry measurements have been rejected for too long)
-         bool bodyOdmFusionTimeout = ((imuSampleTime_ms - prevFlowFuseTime_ms) > 5000);
+         bool bodyOdmFusionTimeout = ((imuSampleTime_ms - prevBodyVelFuseTime_ms) > 5000);
          // Enable switch to absolute position mode if GPS or range beacon data is available
          // If GPS or range beacons data is not available and flow fusion has timed out, then fall-back to no-aiding
          if(readyToUseGPS() || readyToUseRangeBeacon()) {
