@@ -926,7 +926,7 @@ void NavEKF3_core::FuseBodyVel()
             }
 
             // calculate intermediate expressions for X axis Kalman gains
-            float R_VEL = bodyOdmDataDelayed.velErr.x;
+            float R_VEL = bodyOdmDataDelayed.velErr;
             float t2 = q0*q3*2.0f;
             float t3 = q1*q2*2.0f;
             float t4 = t2+t3;
@@ -1085,7 +1085,7 @@ void NavEKF3_core::FuseBodyVel()
             }
 
             // calculate intermediate expressions for Y axis Kalman gains
-            float R_VEL = bodyOdmDataDelayed.velErr.y;
+            float R_VEL = bodyOdmDataDelayed.velErr;
             float t2 = q0*q3*2.0f;
             float t9 = q1*q2*2.0f;
             float t3 = t2-t9;
@@ -1244,7 +1244,7 @@ void NavEKF3_core::FuseBodyVel()
             }
 
             // calculate intermediate expressions for Z axis Kalman gains
-            float R_VEL = bodyOdmDataDelayed.velErr.z;
+            float R_VEL = bodyOdmDataDelayed.velErr;
             float t2 = q0*q2*2.0f;
             float t3 = q1*q3*2.0f;
             float t4 = t2+t3;

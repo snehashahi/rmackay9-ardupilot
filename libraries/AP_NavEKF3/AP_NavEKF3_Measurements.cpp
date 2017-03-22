@@ -108,28 +108,25 @@ void NavEKF3_core::readRangeFinder(void)
 
 void NavEKF3_core::writeBodyFrameOdom(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset)
 {
-    // limit update rate to maximum allowed by sensor buffers
-    if ((imuSampleTime_ms - bodyOdmMeasTime_ms) < frontend->sensorIntervalMin_ms) {
+    // limit update rate to maximum allowed by sensor buffers and fusion process
+    // don't try to write to buffer until the filter has been initialised
+    if (((timeStamp_ms - bodyOdmMeasTime_ms) < frontend->sensorIntervalMin_ms) || (delTime < dtEkfAvg || !statesInitialised)) {
         return;
     }
 
-    // write delta position data to buffer
-    if (delTime > dtEkfAvg) {
-        bodyOdmDataNew.vel = delPos * (1.0f/delTime);
-        bodyOdmDataNew.time_ms = timeStamp_ms;
-        bodyOdmDataNew.body_offset = &posOffset;
-        bodyOdmDataNew.angRate = delAng * (1.0f/delTime);
+    bodyOdmDataNew.body_offset = &posOffset;
+    bodyOdmDataNew.vel = delPos * (1.0f/delTime);
+    bodyOdmDataNew.time_ms = timeStamp_ms;
+    bodyOdmDataNew.angRate = delAng * (1.0f/delTime);
+    bodyOdmMeasTime_ms = timeStamp_ms;
 
-        // simple model of accuracy
-        // TODO move this calculation outside of EKF into the sensor driver
-        const float minVelErr = 0.5f;
-        const float maxVelErr = 10.0f;
-        bodyOdmDataNew.velErr.x = minVelErr + (maxVelErr - minVelErr) * (1.0f - 0.01f * quality);
+    // simple model of accuracy
+    // TODO move this calculation outside of EKF into the sensor driver
+    const float minVelErr = 0.5f;
+    const float maxVelErr = 10.0f;
+    bodyOdmDataNew.velErr = minVelErr + (maxVelErr - minVelErr) * (1.0f - 0.01f * quality);
 
-        storedBodyOdm.push(bodyOdmDataNew);
-        bodyOdmMeasTime_ms = imuSampleTime_ms;
-
-    }
+    storedBodyOdm.push(bodyOdmDataNew);
 
 }
 

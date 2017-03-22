@@ -391,9 +391,7 @@ bool NavEKF3_core::readyToUseBodyOdm(void) const
 {
     // We need stable roll/pitch angles and gyro bias estimates but do not need the yaw angle aligned to use these measurements
     return (imuSampleTime_ms - bodyOdmMeasTime_ms < 200)
-            && bodyOdmDataNew.velErr.x < 0.5f
-            && bodyOdmDataNew.velErr.y < 0.5f
-            && bodyOdmDataNew.velErr.z < 0.5f
+            && bodyOdmDataNew.velErr < 1.0f
             && tiltAlignComplete
             && delAngBiasLearned;
 }

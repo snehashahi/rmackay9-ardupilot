@@ -469,10 +469,10 @@ private:
 
     struct bfodm_elements {
         Vector3f        vel;            // 0..2 XYZ velocity measured in body frame (m/s)
-        Vector3f        velErr;         // 3..5 velocity measurement error 1-std (m/s)
-        Vector3f        angRate;        // 6..8 XYZ angular rate estimated from odmetry rad/sec)
-        uint32_t        time_ms;        // 9 measurement timestamp (msec)
+        float           velErr;         // 3 velocity measurement error 1-std (m/s)
         const Vector3f *body_offset;    // 10..12 XYZ position of the velocity sensor in body frame (m)
+        Vector3f        angRate;        // 4..6 XYZ angular rate estimated from odmetry rad/sec)
+        uint32_t        time_ms;        // 7 measurement timestamp (msec)
     };
 
     // update the navigation filter status
