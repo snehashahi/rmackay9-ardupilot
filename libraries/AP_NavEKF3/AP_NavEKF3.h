@@ -208,6 +208,16 @@ public:
     */
     void writeBodyFrameOdom(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset);
 
+    /*
+     * Return data for debugging body frame odometry fusion:
+     *
+     * velInnov are the XYZ body frame velocity innovations (m/s)
+     * velInnovVar are the XYZ body frame velocity innovation variances (m/s)**2
+     *
+     * Return the system time stamp of the last update (msec)
+     */
+    uint32_t getBodyFrameOdomDebug(int8_t instance, Vector3f &velInnov, Vector3f &velInnovVar);
+
     // return data for debugging optical flow fusion for the specified instance
     // An out of range instance (eg -1) returns data for the the primary instance
     void getFlowDebug(int8_t instance, float &varFlow, float &gndOffset, float &flowInnovX, float &flowInnovY, float &auxInnov, float &HAGL, float &rngInnov, float &range, float &gndOffsetErr);

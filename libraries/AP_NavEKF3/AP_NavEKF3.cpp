@@ -1126,6 +1126,17 @@ void NavEKF3::writeBodyFrameOdom(float &quality, Vector3f &delPos, Vector3f &del
     }
 }
 
+// return data for debugging body frame odometry fusion
+uint32_t NavEKF3::getBodyFrameOdomDebug(int8_t instance, Vector3f &velInnov, Vector3f &velInnovVar)
+{
+    uint32_t ret = 0;
+    if (instance < 0 || instance >= num_cores) instance = primary;
+    if (core) {
+        ret = core[instance].getBodyFrameOdomDebug(velInnov, velInnovVar);
+    }
+    return ret;
+}
+
 // return data for debugging range beacon fusion
 bool NavEKF3::getRangeBeaconDebug(int8_t instance, uint8_t &ID, float &rng, float &innov, float &innovVar, float &testRatio, Vector3f &beaconPosNED,
                                   float &offsetHigh, float &offsetLow, Vector3f &posNED)

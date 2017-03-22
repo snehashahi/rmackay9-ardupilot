@@ -215,6 +215,16 @@ public:
     void writeBodyFrameOdom(float &quality, Vector3f &delPos, Vector3f &delAng, float &delTime, uint32_t &timeStamp_ms, const Vector3f &posOffset);
 
     /*
+     * Return data for debugging body frame odometry fusion:
+     *
+     * velInnov are the XYZ body frame velocity innovations (m/s)
+     * velInnovVar are the XYZ body frame velocity innovation variances (m/s)**2
+     *
+     * Return the time stamp of the last odometry fusion update (msec)
+     */
+    uint32_t getBodyFrameOdomDebug(Vector3f &velInnov, Vector3f &velInnovVar);
+
+    /*
         Returns the following data for debugging range beacon fusion
         ID : beacon identifier
         rng : measured range to beacon (m)
