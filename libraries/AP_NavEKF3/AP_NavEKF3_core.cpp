@@ -123,6 +123,9 @@ bool NavEKF3_core::setup_core(NavEKF3 *_frontend, uint8_t _imu_index, uint8_t _c
     if(!storedOF.init(obs_buffer_length)) {
         return false;
     }
+    if(!storedBodyOdm.init(obs_buffer_length)) {
+        return false;
+    }
     // Note: the use of dual range finders potentially doubles the amount of data to be stored
     if(!storedRange.init(MIN(2*obs_buffer_length , imu_buffer_length))) {
         return false;
