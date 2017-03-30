@@ -53,14 +53,15 @@ public:
     // return true if sensor is basically healthy (we are receiving data)
     bool healthy() const;
 
-    // return latest attitude delta
-    void get_deltas(Vector3f &angle_delta, Vector3f &position_delta, uint64_t &time_delta_usec, float &confidence) const;
+    // state accessors
+    const Vector3f &get_angle_delta() const { return zed_state.angle_delta; }
+    const Vector3f &get_position_delta() const { return zed_state.position_delta; }
+    uint64_t get_time_delta_usec() const { return zed_state.time_delta_usec; }
+    float get_confidence() const { return zed_state.confidence; }
+    uint32_t get_last_update_ms() const { return zed_state.last_update_ms; }
 
     // return a 3D vector defining the position offset of the camera in meters relative to the body frame origin
     const Vector3f &get_pos_offset(void) const { return _pos_offset; }
-
-    // return system time of last update
-    uint32_t last_update_ms() const { return zed_state.last_update_ms; }
 
     // consume ZED data from MAVLink messages
     void handle_msg(mavlink_message_t *msg);

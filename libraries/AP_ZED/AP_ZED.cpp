@@ -78,15 +78,6 @@ bool AP_ZED::healthy() const
     return ((AP_HAL::millis() - zed_state.last_update_ms) < AP_ZED_TIMEOUT_MS);
 }
 
-// return latest attitude delta
-void AP_ZED::get_deltas(Vector3f &angle_delta, Vector3f &position_delta, uint64_t &time_delta_usec, float &confidence) const
-{
-    angle_delta = zed_state.angle_delta;
-    position_delta = zed_state.position_delta;
-    time_delta_usec = zed_state.time_delta_usec;
-    confidence = zed_state.confidence;
-}
-
 // consume ZED data from MAVLink messages
 void AP_ZED::handle_msg(mavlink_message_t *msg)
 {
