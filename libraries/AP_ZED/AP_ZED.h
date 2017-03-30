@@ -56,6 +56,9 @@ public:
     // return latest attitude delta
     void get_deltas(Vector3f &angle_delta, Vector3f &position_delta, uint64_t &time_delta_usec, float &confidence) const;
 
+    // return a 3D vector defining the position offset of the camera in meters relative to the body frame origin
+    const Vector3f &get_pos_offset(void) const { return _pos_offset; }
+
     // return system time of last update
     uint32_t last_update_ms() const { return zed_state.last_update_ms; }
 
@@ -68,6 +71,7 @@ private:
 
     // parameters
     AP_Int8 _type;
+    AP_Vector3f _pos_offset;    // position offset of the camera in the body frame
 
     // reference to backends
     AP_ZED_Backend *_driver;

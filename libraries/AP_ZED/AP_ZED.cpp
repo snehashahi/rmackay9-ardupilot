@@ -29,6 +29,25 @@ const AP_Param::GroupInfo AP_ZED::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("_TYPE",    0, AP_ZED, _type, 0),
 
+    // @Param: _POS_X
+    // @DisplayName: ZED camera X position offset
+    // @Description: X position of the camera in body frame. Positive X is forward of the origin.
+    // @Units: m
+    // @User: Advanced
+
+    // @Param: _POS_Y
+    // @DisplayName: ZED camera Y position offset
+    // @Description: Y position of the camera in body frame. Positive Y is to the right of the origin.
+    // @Units: m
+    // @User: Advanced
+
+    // @Param: _POS_Z
+    // @DisplayName: ZED camera Z position offset
+    // @Description: Z position of the camera in body frame. Positive Z is down from the origin.
+    // @Units: m
+    // @User: Advanced
+    AP_GROUPINFO("_POS", 1, AP_ZED, _pos_offset, 0.0f),
+
     AP_GROUPEND
 };
 
