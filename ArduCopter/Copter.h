@@ -588,7 +588,10 @@ private:
 
     // last valid RC input time
     uint32_t last_radio_update_ms;
-    
+
+    // last visual odometry update time
+    uint32_t zed_last_update_ms;
+
     // Top-level logic
     // setup the var_info table
     AP_Param param_loader;
@@ -693,6 +696,7 @@ private:
     void stats_update();
     void init_beacon();
     void update_beacon();
+    void update_visual_odom();
     void send_pid_tuning(mavlink_channel_t chan);
     void gcs_send_message(enum ap_message id);
     void gcs_send_mission_item_reached_message(uint16_t mission_index);

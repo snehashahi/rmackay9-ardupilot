@@ -461,3 +461,20 @@ void Copter::update_beacon()
 {
     g2.beacon.update();
 }
+
+// update visual odometry sensor
+void Copter::update_visual_odom()
+{
+#if AP_AHRS_NAVEKF_AVAILABLE
+    // check for updates
+    if (g2.zed.enabled() && (g2.zed.get_last_update_ms() != zed_last_update_ms)) {
+        zed_last_update_ms = g2.zed.get_last_update_ms();
+        EKF3.writeBodyFrameOdom(g2.zed.get_confidence(),
+                                g2.zed.get_position_delta(),
+                                g2.zed.get_angle_delta(),
+                                g2.zed.get_time_delta_usec() / 1000000.0f,
+                                g2.zed.get_last_update_ms(),
+                                g2.zed.get_pos_offset());
+    }
+#endif
+}
