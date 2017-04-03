@@ -205,6 +205,48 @@ void Rover::Log_Write_Steering()
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
 }
 
+// beacon sensor logging
+struct PACKED log_Beacon {
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    uint8_t health;
+    uint8_t count;
+    float dist0;
+    float dist1;
+    float dist2;
+    float dist3;
+    float posx;
+    float posy;
+    float posz;
+};
+// Write beacon position and distances
+void Rover::Log_Write_Beacon()
+{
+    // exit immediately if feature is disabled
+    if (!g2.beacon.enabled()) {
+        return;
+    }
+
+    // position
+    Vector3f pos;
+    float accuracy = 0.0f;
+    g2.beacon.get_vehicle_position_ned(pos, accuracy);
+
+    struct log_Beacon pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_BEACON_MSG),
+        time_us         : AP_HAL::micros64(),
+        health          : (uint8_t)g2.beacon.healthy(),
+        count           : (uint8_t)g2.beacon.count(),
+        dist0           : g2.beacon.beacon_distance(0),
+        dist1           : g2.beacon.beacon_distance(1),
+        dist2           : g2.beacon.beacon_distance(2),
+        dist3           : g2.beacon.beacon_distance(3),
+        posx            : pos.x,
+        posy            : pos.y,
+        posz            : pos.z
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));
+}
 struct PACKED log_Startup {
     LOG_PACKET_HEADER;
     uint64_t time_us;
@@ -459,6 +501,8 @@ const LogStructure Rover::log_structure[] = {
       "GUID",  "QBffffff",    "TimeUS,Type,pX,pY,pZ,vX,vY,vZ" },
     { LOG_ERROR_MSG, sizeof(log_Error),
       "ERR",   "QBB",         "TimeUS,Subsys,ECode" },
+    { LOG_BEACON_MSG, sizeof(log_Beacon),
+      "BCN", "QBBfffffff", "TimeUS,Health,Cnt,D0,D1,D2,D3,PosX,PosY,PosZ" }
 };
 
 void Rover::log_init(void)
@@ -535,5 +579,6 @@ void Rover::Log_Write_Baro(void) {}
 void Rover::Log_Arm_Disarm() {}
 void Rover::Log_Write_Error(uint8_t sub_system, uint8_t error_code) {}
 void Rover::Log_Write_Steering() {}
+void Rover::Log_Write_Beacon() {}
 
 #endif  // LOGGING_ENABLED
