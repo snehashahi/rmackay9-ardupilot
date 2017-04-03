@@ -314,6 +314,7 @@ public:
     // control over servo output ranges
     SRV_Channels servo_channels;
 
+    AP_Beacon beacon;
 #if ADVANCED_FAILSAFE == ENABLED
     // advanced failsafe library
     AP_AdvancedFailsafe_Rover afs;
