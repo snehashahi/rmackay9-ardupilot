@@ -696,6 +696,7 @@ private:
     void stats_update();
     void init_beacon();
     void update_beacon();
+    void init_visual_odom();
     void update_visual_odom();
     void send_pid_tuning(mavlink_channel_t chan);
     void gcs_send_message(enum ap_message id);

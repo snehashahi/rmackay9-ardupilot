@@ -279,6 +279,9 @@ void Copter::init_ardupilot()
     // init beacons used for non-gps position estimation
     init_beacon();
 
+    // init visual odometry
+    init_visual_odom();
+
     // initialise AP_RPM library
     rpm_sensor.init();
 

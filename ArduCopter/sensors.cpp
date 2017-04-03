@@ -462,6 +462,12 @@ void Copter::update_beacon()
     g2.beacon.update();
 }
 
+// init visual odometry sensor
+void Copter::init_visual_odom()
+{
+    g2.zed.init();
+}
+
 // update visual odometry sensor
 void Copter::update_visual_odom()
 {
