@@ -47,6 +47,9 @@ public:
         uint32_t last_update_ms;    // system time (in milliseconds) of last update from sensor
     };
 
+    // detect and initialise any ZED sensors
+    void init();
+
     // return true if ZED is enabled
     bool enabled() const;
 

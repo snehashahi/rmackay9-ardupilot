@@ -54,7 +54,11 @@ const AP_Param::GroupInfo AP_ZED::var_info[] = {
 AP_ZED::AP_ZED()
 {
     AP_Param::setup_object_defaults(this, var_info);
+}
 
+// detect and initialise any ZED sensors
+void AP_ZED::init()
+{
     // create backend
     if (_type == AP_ZEDType_MAV) {
         _driver = new AP_ZED_MAV(*this);
@@ -81,7 +85,7 @@ bool AP_ZED::healthy() const
 // consume ZED data from MAVLink messages
 void AP_ZED::handle_msg(mavlink_message_t *msg)
 {
-    // exit immediatley if not enabled
+    // exit immediately if not enabled
     if (!enabled()) {
         return;
     }

@@ -10,5 +10,5 @@ public:
     AP_ZED_MAV(AP_ZED &frontend);
 
     // consume ZED data from MAVLink messages
-    void handle_msg(mavlink_message_t *msg);
+    void handle_msg(mavlink_message_t *msg) override;
 };
