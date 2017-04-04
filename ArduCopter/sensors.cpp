@@ -475,12 +475,18 @@ void Copter::update_visual_odom()
     // check for updates
     if (g2.zed.enabled() && (g2.zed.get_last_update_ms() != zed_last_update_ms)) {
         zed_last_update_ms = g2.zed.get_last_update_ms();
+        float time_delta_sec = g2.zed.get_time_delta_usec() / 1000000.0f;
         EKF3.writeBodyFrameOdom(g2.zed.get_confidence(),
                                 g2.zed.get_position_delta(),
                                 g2.zed.get_angle_delta(),
-                                g2.zed.get_time_delta_usec() / 1000000.0f,
+                                time_delta_sec,
                                 g2.zed.get_last_update_ms(),
                                 g2.zed.get_pos_offset());
+        // log sensor data
+        DataFlash.Log_Write_VisualOdom(time_delta_sec,
+                                       g2.zed.get_angle_delta(),
+                                       g2.zed.get_position_delta(),
+                                       g2.zed.get_confidence());
     }
 #endif
 }
