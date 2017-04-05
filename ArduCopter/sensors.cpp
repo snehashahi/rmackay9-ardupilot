@@ -298,6 +298,9 @@ void Copter::update_sensor_status_flags(void)
         control_sensors_present |= MAV_SYS_STATUS_SENSOR_VISION_POSITION;
     }
 #endif
+    if (g2.zed.enabled()) {
+        control_sensors_present |= MAV_SYS_STATUS_SENSOR_VISION_POSITION;
+    }
     if (ap.rc_receiver_present) {
         control_sensors_present |= MAV_SYS_STATUS_SENSOR_RC_RECEIVER;
     }
@@ -382,10 +385,13 @@ void Copter::update_sensor_status_flags(void)
     }
 #endif
 #if PRECISION_LANDING == ENABLED
-    if (!precland.healthy()) {
+    if (precland.enabled() && !precland.healthy()) {
         control_sensors_health &= ~MAV_SYS_STATUS_SENSOR_VISION_POSITION;
     }
 #endif
+    if (g2.zed.enabled() && !g2.zed.healthy()) {
+        control_sensors_health &= ~MAV_SYS_STATUS_SENSOR_VISION_POSITION;
+    }
     if (!ins.get_gyro_health_all() || !ins.gyro_calibrated_ok_all()) {
         control_sensors_health &= ~MAV_SYS_STATUS_SENSOR_3D_GYRO;
     }
