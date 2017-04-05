@@ -492,8 +492,8 @@ void  NavEKF3_core::updateFilterStatus(void)
 {
     // init return value
     filterStatus.value = 0;
-    bool doingBodyVelNav = (PV_AidingMode == AID_RELATIVE) && (imuSampleTime_ms - prevBodyVelFuseTime_ms < 5000);
-    bool doingFlowNav = (PV_AidingMode == AID_RELATIVE) && flowDataValid;
+    bool doingBodyVelNav = (PV_AidingMode != AID_NONE) && (imuSampleTime_ms - prevBodyVelFuseTime_ms < 5000);
+    bool doingFlowNav = (PV_AidingMode != AID_NONE) && flowDataValid;
     bool doingWindRelNav = !tasTimeout && assume_zero_sideslip();
     bool doingNormalGpsNav = !posTimeout && (PV_AidingMode == AID_ABSOLUTE);
     bool someVertRefData = (!velTimeout && useGpsVertVel) || !hgtTimeout;
