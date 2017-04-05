@@ -386,8 +386,13 @@ bool Copter::optflow_position_ok()
 #if OPTFLOW != ENABLED
     return false;
 #else
-    // return immediately if optflow is not enabled or EKF not used
-    if (!optflow.enabled() || !ahrs.have_inertial_nav()) {
+    // return immediately if EKF not used
+    if (!ahrs.have_inertial_nav()) {
+        return false;
+    }
+
+    // return immediately if neither optflow nor zed is enabled
+    if (!optflow.enabled() && !g2.zed.enabled()) {
         return false;
     }
 
