@@ -114,7 +114,7 @@ private:
 
     struct MarvelmindHedge* m_MarvelmindHedge;
     uint16_t CalcCrcModbus_(uint8_t * buf, int len);
-    void getOrAllocBeacon(struct StationaryBeaconPosition &b, uint8_t address);
+    bool getOrAllocBeacon(struct StationaryBeaconPosition &b, uint8_t address);
     uint8_t markPositionReady();
     void process_beacons_positions_datagram(struct StationaryBeaconPosition &b);
     void process_beacons_positions_highres_datagram(struct StationaryBeaconPosition &b);

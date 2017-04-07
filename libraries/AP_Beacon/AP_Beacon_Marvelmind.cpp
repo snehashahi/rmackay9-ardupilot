@@ -4,15 +4,6 @@
  *  Created on: 21.03.2017
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <ctype.h>
-
 #include <AP_HAL/AP_HAL.h>
 
 #include "AP_Beacon_Marvelmind.h"
@@ -41,22 +32,23 @@ AP_Beacon_Marvelmind::AP_Beacon_Marvelmind(AP_Beacon &frontend,
     }
 }
 
-void AP_Beacon_Marvelmind::getOrAllocBeacon(struct StationaryBeaconPosition &b,
+bool AP_Beacon_Marvelmind::getOrAllocBeacon(struct StationaryBeaconPosition &b,
         uint8_t address) {
     const uint8_t n_used = hedge->positionsBeacons.numBeacons;
     if (n_used != 0) {
         for (uint8_t i = 0; i < n_used; i++) {
             if (hedge->positionsBeacons.beacons[i].address == address) {
                 b = hedge->positionsBeacons.beacons[i];
-                return;
+                return true;
             }
         }
-
-    if (n_used >= (MAX_STATIONARY_BEACONS - 1))
-        return;
-
+    }
+    if (n_used >= (MAX_STATIONARY_BEACONS - 1)) {
+        return false;
+    }
     hedge->positionsBeacons.numBeacons = (n_used + 1);
     b = hedge->positionsBeacons.beacons[n_used];
+    return true;
 }
 
 void AP_Beacon_Marvelmind::process_beacons_positions_datagram(
@@ -74,6 +66,7 @@ void AP_Beacon_Marvelmind::process_beacons_positions_datagram(
                 | (((uint16_t) input_buffer[ofs + 4]) << 8);
         const int16_t z = input_buffer[ofs + 5]
                 | (((uint16_t) input_buffer[ofs + 6]) << 8);
+        if (getOrAllocBeacon(b, address)) {
             b.address = address;
             b.x = x * 10; // millimeters
             b.y = y * 10; // millimeters
@@ -105,6 +98,7 @@ void AP_Beacon_Marvelmind::process_beacons_positions_highres_datagram(
                 | (((uint32_t) input_buffer[ofs + 10]) << 8)
                 | (((uint32_t) input_buffer[ofs + 11]) << 16)
                 | (((uint32_t) input_buffer[ofs + 12]) << 24);
+        if (getOrAllocBeacon(b, address)) {
             b.address = address;
             b.x = x;
             b.y = y;
