@@ -100,6 +100,11 @@ void Copter::tuning() {
         wp_nav->set_speed_xy(control_in);
         break;
 
+    case TUNING_LOITER_SPEED:
+        // set loiter speed from 0 ~ 1000 cm/s
+        wp_nav->set_loiter_speed(control_in);
+        break;
+
     // Acro roll pitch gain
     case TUNING_ACRO_RP_KP:
         g.acro_rp_p = tuning_value;
