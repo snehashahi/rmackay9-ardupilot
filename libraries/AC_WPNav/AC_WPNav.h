@@ -102,6 +102,9 @@ public:
     /// get_loiter_target - returns loiter target position
     const Vector3f& get_loiter_target() const { return _pos_control.get_pos_target(); }
 
+    /// set loiter maximum speed in cm/s
+    void set_loiter_speed(float speed_cms);
+
     /// update_loiter - run the loiter controller - should be called at 10hz
     void update_loiter(float ekfGndSpdLimit, float ekfNavVelGainScaler);
 

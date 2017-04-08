@@ -313,6 +313,13 @@ int32_t AC_WPNav::get_loiter_bearing_to_target() const
     return get_bearing_cd(_inav.get_position(), _pos_control.get_pos_target());
 }
 
+/// set loiter maximum speed in cm/s
+void AC_WPNav::set_loiter_speed(float speed_cms)
+{
+    // sanity check and set loiter speed to between 0.2 and 20 m/s
+    _loiter_speed_cms = constrain_float(speed_cms, WPNAV_LOITER_SPEED_MIN, 2000);
+}
+
 // update_loiter - run the loiter controller - gets called at 100hz (APM) or 400hz (PX4)
 void AC_WPNav::update_loiter(float ekfGndSpdLimit, float ekfNavVelGainScaler)
 {
