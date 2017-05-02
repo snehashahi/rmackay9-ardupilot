@@ -16,10 +16,10 @@ const AP_Param::GroupInfo AC_Fence::var_info[] = {
     // @Param: TYPE
     // @DisplayName: Fence Type
     // @Description: Enabled fence types held as bitmask
-    // @Values: 0:None,1:Altitude,2:Circle,3:Altitude and Circle,4:Polygon,5:Altitude and Polygon,6:Circle and Polygon,7:All
-    // @Bitmask: 0:Altitude,1:Circle,2:Polygon
+    // @Values: 0:None,1:Altitude,2:Circle,3:Altitude and Circle,4:Polygon,5:Altitude and Polygon,6:Circle and Polygon,7:Altitude and Circle and Polygon,8:Beacon,9:Altitude and Beacon,10:Circle and Beacon,11:Altitude and Circle and Beacon,12:Polygon and Beacon,13:Altitude and Polygon and Beacon,14:Circle and Polygon and Beacon,15:All
+    // @Bitmask: 0:Altitude,1:Circle,2:Polygon,3:Beacon
     // @User: Standard
-    AP_GROUPINFO("TYPE",        1,  AC_Fence,   _enabled_fences,  AC_FENCE_TYPE_ALT_MAX | AC_FENCE_TYPE_CIRCLE | AC_FENCE_TYPE_POLYGON),
+    AP_GROUPINFO("TYPE",        1,  AC_Fence,   _enabled_fences,  AC_FENCE_TYPE_ALT_MAX | AC_FENCE_TYPE_CIRCLE | AC_FENCE_TYPE_POLYGON | AC_FENCE_TYPE_BEACON),
 
     // @Param: ACTION
     // @DisplayName: Fence Action
@@ -73,9 +73,10 @@ const AP_Param::GroupInfo AC_Fence::var_info[] = {
 };
 
 /// Default constructor.
-AC_Fence::AC_Fence(const AP_AHRS& ahrs, const AP_InertialNav& inav) :
+AC_Fence::AC_Fence(const AP_AHRS& ahrs, const AP_InertialNav& inav, const AP_Beacon* beacon) :
     _ahrs(ahrs),
     _inav(inav),
+    _beacon(beacon),
     _alt_max_backup(0),
     _circle_radius_backup(0),
     _alt_max_breach_distance(0),
@@ -124,7 +125,7 @@ bool AC_Fence::pre_arm_check(const char* &fail_msg) const
     }
 
     // if we have horizontal limits enabled, check inertial nav position is ok
-    if ((_enabled_fences & (AC_FENCE_TYPE_CIRCLE | AC_FENCE_TYPE_POLYGON))>0 && !_inav.get_filter_status().flags.horiz_pos_abs && !_inav.get_filter_status().flags.pred_horiz_pos_abs) {
+    if ((_enabled_fences & (AC_FENCE_TYPE_CIRCLE | AC_FENCE_TYPE_POLYGON | AC_FENCE_TYPE_BEACON))>0 && !_inav.get_filter_status().flags.horiz_pos_abs && !_inav.get_filter_status().flags.pred_horiz_pos_abs) {
         fail_msg = "fence requires position";
         return false;
     }
@@ -241,6 +242,30 @@ uint8_t AC_Fence::check_fence(float curr_alt)
         }
     }
 
+    // beacon fence check
+    if ((_enabled_fences & AC_FENCE_TYPE_BEACON) != 0 && _beacon != nullptr) {
+        uint16_t num_points;
+        const Vector2f* boundary = _beacon->get_boundary_points(num_points);
+        // boundary is null or num_points is not enough (at least 3 points)
+        if (boundary != nullptr && num_points >= AP_BEACON_MINIMUM_FENCE_BEACONS+1) {
+            // check if vehicle is outside the beacon fence
+            const Vector3f& position = _inav.get_position();
+            if (_poly_loader.boundary_breached(Vector2f(position.x, position.y), num_points, boundary, true)) {
+                // check if this is a new breach
+                if ((_breached_fences & AC_FENCE_TYPE_BEACON) == 0) {
+                    // record that we have breached the beacon fence
+                    record_breach(AC_FENCE_TYPE_BEACON);
+                    ret |= AC_FENCE_TYPE_BEACON;
+                }
+            } else {
+                // clear breach if present
+                if ((_breached_fences & AC_FENCE_TYPE_BEACON) != 0) {
+                    clear_breach(AC_FENCE_TYPE_BEACON);
+                }
+            }
+        }
+    }
+
     // return any new breaches that have occurred
     return ret;
 }
@@ -274,6 +299,23 @@ bool AC_Fence::check_destination_within_fence(const Location_Class& loc)
             Vector2f position = location_diff(ekf_origin, loc) * 100.0f;
             if (_poly_loader.boundary_breached(position, _boundary_num_points, _boundary, true)) {
                 return false;
+            }
+        }
+    }
+
+    // beacon fence check
+    if ((get_enabled_fences() & AC_FENCE_TYPE_BEACON) && (_beacon != nullptr)) {
+        // check ekf has a good location
+        Location temp_loc;
+        if (_inav.get_location(temp_loc)) {
+            const struct Location &ekf_origin = _inav.get_origin();
+            Vector2f position = location_diff(ekf_origin, loc) * 100.0f;
+            uint16_t boundary_num_points = 0;
+            const Vector2f* beacon_boundary = _beacon->get_boundary_points(boundary_num_points);
+            if (beacon_boundary != nullptr && boundary_num_points > 0) {
+                if (_poly_loader.boundary_breached(position, boundary_num_points, beacon_boundary, true)) {
+                    return false;
+                }
             }
         }
     }
@@ -352,6 +394,16 @@ Vector2f* AC_Fence::get_polygon_points(uint16_t& num_points) const
 bool AC_Fence::boundary_breached(const Vector2f& location, uint16_t num_points, const Vector2f* points) const
 {
     return _poly_loader.boundary_breached(location, num_points, points, true);
+}
+
+/// returns pointer to a polygon fence that surrounds the beacons
+const Vector2f* AC_Fence::get_beacon_boundary_points(uint16_t& num_points) const
+{
+    if (_beacon == nullptr) {
+        num_points = 0;
+        return nullptr;
+    }
+    return _beacon->get_boundary_points(num_points);
 }
 
 /// handler for polygon fence messages with GCS
