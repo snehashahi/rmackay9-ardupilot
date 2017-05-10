@@ -113,12 +113,11 @@ public:
     /// returns true if we've breached the polygon boundary.  simple passthrough to underlying _poly_loader object
     bool boundary_breached(const Vector2f& location, uint16_t num_points, const Vector2f* points) const;
 
+    /// handler for polygon fence messages with GCS
+    void handle_msg(mavlink_channel_t chan, mavlink_message_t* msg);
 
     /// returns pointer to a polygon fence that surrounds the beacons
     const Vector2f* get_beacon_boundary_points(uint16_t& num_points) const;
-
-    /// handler for polygon fence messages with GCS
-    void handle_msg(mavlink_channel_t chan, mavlink_message_t* msg);
 
     static const struct AP_Param::GroupInfo var_info[];
 
