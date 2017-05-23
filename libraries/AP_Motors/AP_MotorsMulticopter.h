@@ -123,9 +123,6 @@ protected:
     // update_lift_max_from_batt_voltage - used for voltage compensation
     void                update_lift_max_from_batt_voltage();
 
-    // update_battery_resistance - calculate battery resistance when throttle is above hover_out
-    void                update_battery_resistance();
-
     // return gain scheduling gain based on voltage and air density
     float               get_compensation_gain() const;
 

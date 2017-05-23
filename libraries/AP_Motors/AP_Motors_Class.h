@@ -106,6 +106,9 @@ public:
     // set_current - set current to be used for output scaling
     void                set_current(float current){ _batt_current = current; }
 
+    // set battery resistance in ohms
+    void                set_resistance(float resistance){ _batt_resistance = resistance; }
+
     // set_density_ratio - sets air density as a proportion of sea level density
     void                set_air_density_ratio(float ratio) { _air_density_ratio = ratio; }
 
@@ -203,6 +206,7 @@ protected:
     // battery voltage, current and air pressure compensation variables
     float               _batt_voltage;          // latest battery voltage reading
     float               _batt_current;          // latest battery current reading
+    float               _batt_resistance;       // latest battery resistance estimate in ohms
     float               _air_density_ratio;     // air density / sea level density - decreases in altitude
 
     // mapping to output channels
