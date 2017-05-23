@@ -59,11 +59,11 @@ void AP_BattMonitor_Backend::update_resistance_estimate(bool resting, bool throt
         return;
     }
 
-    if (_state.voltage_resting > _state.voltage && _state.current_resting < _state.current_amps) {
-        uint32_t time_diff_ms = now - _state.resistance_timer_ms;
-        // update battery resistance when throttle is over hover throttle
-        float batt_resistance = (_state.voltage_resting-_state.voltage)/(_state.current_amps - _state.current_resting);
-        if ((time_diff_ms < 1000) && ((_state.current_resting*2.0f) < _state.current_amps)) {
+    uint32_t time_diff_ms = now - _state.resistance_timer_ms;
+    if (time_diff_ms < 1000) {
+        if (_state.voltage < _state.voltage_resting && _state.current_amps > _state.current_resting) {
+            // update battery resistance when throttle is over hover throttle
+            float batt_resistance = (_state.voltage_resting-_state.voltage)/(_state.current_amps - _state.current_resting);
             if (throttle_above_threshold) {
                 // filter reaches 90% in 1/4 the test time
                 _state.resistance += 0.05f*(batt_resistance - _state.resistance);
@@ -72,10 +72,12 @@ void AP_BattMonitor_Backend::update_resistance_estimate(bool resting, bool throt
                 _state.resistance_timer_ms = now;
                 _state.resistance = batt_resistance;
             }
-        }
-        // make sure battery resistance value doesn't result in the predicted battery voltage exceeding the resting voltage
-        if (batt_resistance < _state.resistance && throttle_above_threshold){
-            _state.resistance = batt_resistance;
+            // make sure battery resistance value doesn't result in the predicted battery voltage exceeding the resting voltage
+            if (batt_resistance < _state.resistance && throttle_above_threshold){
+                _state.resistance = batt_resistance;
+            }
+        } else {
+            _state.resistance_timer_ms = now;
         }
     }
 }
