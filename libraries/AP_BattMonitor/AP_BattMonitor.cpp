@@ -265,6 +265,16 @@ float AP_BattMonitor::voltage(uint8_t instance) const
     }
 }
 
+/// get voltage with sag removed (based on battery current draw and resistance)
+float AP_BattMonitor::voltage_resting_estimate(uint8_t instance) const
+{
+    if (instance < _num_instances) {
+        return _BattMonitor_STATE(instance).voltage_resting_estimate;
+    } else {
+        return 0.0f;
+    }
+}
+
 /// current_amps - returns the instantaneous current draw in amperes
 float AP_BattMonitor::current_amps(uint8_t instance) const {
     if (instance < _num_instances) {

@@ -66,6 +66,7 @@ public:
         float       temperature;        // battery temperature in celsius
         uint32_t    temperature_time;   // timestamp of the last recieved temperature message
         float       voltage_resting;    // voltage when throttle at minimum
+        float       voltage_resting_estimate; // voltage with sag removed based on current and resistance estimate
         float       current_resting;    // current when throttle at minimum
         float       resistance;         // resistance calculated by comparing resting voltage vs in flight voltage
         uint32_t    resistance_timer_ms; // timer used in battery resistance calcs
@@ -96,6 +97,10 @@ public:
     /// voltage - returns battery voltage in millivolts
     float voltage(uint8_t instance) const;
     float voltage() const { return voltage(AP_BATT_PRIMARY_INSTANCE); }
+
+    /// get voltage with sag removed (based on battery current draw and resistance)
+    float voltage_resting_estimate(uint8_t instance) const;
+    float voltage_resting_estimate() const { return voltage_resting_estimate(AP_BATT_PRIMARY_INSTANCE); }
 
     /// current_amps - returns the instantaneous current draw in amperes
     float current_amps(uint8_t instance) const;

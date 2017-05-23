@@ -80,4 +80,7 @@ void AP_BattMonitor_Backend::update_resistance_estimate(bool resting, bool throt
             _state.resistance_timer_ms = now;
         }
     }
+
+    // update estimated voltage without sag
+    _state.voltage_resting_estimate = _state.voltage + (_state.current_amps-_state.current_resting) * _state.resistance;;
 }
