@@ -44,3 +44,38 @@ int32_t AP_BattMonitor_Backend::get_capacity() const
 {
     return _mon.pack_capacity_mah(_state.instance);
 }
+
+// update battery resistance estimate.  throttle_above_threshold should be true if throttle is high enough to calculate the estimate
+void AP_BattMonitor_Backend::update_resistance_estimate(bool resting, bool throttle_above_threshold)
+{
+    // get current system time
+    uint32_t now = AP_HAL::millis();
+
+    // if disarmed reset resting voltage and current
+    if (resting) {
+        _state.voltage_resting = _state.voltage;
+        _state.current_resting = _state.current_amps;
+        _state.resistance_timer_ms = now;
+        return;
+    }
+
+    if (_state.voltage_resting > _state.voltage && _state.current_resting < _state.current_amps) {
+        uint32_t time_diff_ms = now - _state.resistance_timer_ms;
+        // update battery resistance when throttle is over hover throttle
+        float batt_resistance = (_state.voltage_resting-_state.voltage)/(_state.current_amps - _state.current_resting);
+        if ((time_diff_ms < 1000) && ((_state.current_resting*2.0f) < _state.current_amps)) {
+            if (throttle_above_threshold) {
+                // filter reaches 90% in 1/4 the test time
+                _state.resistance += 0.05f*(batt_resistance - _state.resistance);
+            } else {
+                // initialize battery resistance to prevent change in resting voltage estimate
+                _state.resistance_timer_ms = now;
+                _state.resistance = batt_resistance;
+            }
+        }
+        // make sure battery resistance value doesn't result in the predicted battery voltage exceeding the resting voltage
+        if (batt_resistance < _state.resistance && throttle_above_threshold){
+            _state.resistance = batt_resistance;
+        }
+    }
+}

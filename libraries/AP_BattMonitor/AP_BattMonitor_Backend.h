@@ -40,6 +40,11 @@ public:
     /// get capacity for this instance
     int32_t get_capacity() const;
 
+    // update battery resistance estimate
+    //   resting should be true early on in the flight while the current is low
+    //   throttle_above_threshold should be true if throttle is high enough to calculate the estimate
+    void update_resistance_estimate(bool resting, bool throttle_above_threshold);
+
 protected:
     AP_BattMonitor                      &_mon;      // reference to front-end
     AP_BattMonitor::BattMonitor_State   &_state;    // reference to this instances state (held in the front-end)

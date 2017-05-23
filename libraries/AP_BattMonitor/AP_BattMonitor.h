@@ -65,6 +65,10 @@ public:
         cells       cell_voltages;      // battery cell voltages in millivolts, 10 cells matches the MAVLink spec
         float       temperature;        // battery temperature in celsius
         uint32_t    temperature_time;   // timestamp of the last recieved temperature message
+        float       voltage_resting;    // voltage when throttle at minimum
+        float       current_resting;    // current when throttle at minimum
+        float       resistance;         // resistance calculated by comparing resting voltage vs in flight voltage
+        uint32_t    resistance_timer_ms; // timer used in battery resistance calcs
     };
 
     // Return the number of battery monitor instances
@@ -134,6 +138,15 @@ public:
     // temperature
     bool get_temperature(float &temperature) const { return get_temperature(temperature, AP_BATT_PRIMARY_INSTANCE); };
     bool get_temperature(float &temperature, const uint8_t instance) const;
+
+    // get battery resistance estimate in ohms
+    float get_resistance() const { return get_resistance(AP_BATT_PRIMARY_INSTANCE); }
+    float get_resistance(uint8_t instance) const { return state[instance].resistance; }
+
+    // update battery resistance estimate
+    //   resting should be true early on in the flight while the current is low
+    //   throttle_above_threshold should be true if throttle is high enough to calculate the estimate
+    void update_resistance_estimate(bool resting, bool throttle_above_threshold);
 
     static const struct AP_Param::GroupInfo var_info[];
 
