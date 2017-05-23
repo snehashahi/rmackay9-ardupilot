@@ -102,11 +102,13 @@ public:
     //
     // set_voltage - set voltage to be used for output scaling
     void                set_voltage(float volts){ _batt_voltage = volts; }
+    void                set_voltage_resting_estimate(float volts) { _batt_voltage_resting_estimate = volts; }
 
     // set_current - set current to be used for output scaling
     void                set_current(float current){ _batt_current = current; }
 
-    // set battery resistance in ohms
+    // get and set battery resistance estimate
+    float               get_batt_resistance() const { return _batt_resistance; }
     void                set_resistance(float resistance){ _batt_resistance = resistance; }
 
     // set_density_ratio - sets air density as a proportion of sea level density
@@ -205,6 +207,7 @@ protected:
 
     // battery voltage, current and air pressure compensation variables
     float               _batt_voltage;          // latest battery voltage reading
+    float               _batt_voltage_resting_estimate; // estimated battery voltage with sag removed
     float               _batt_current;          // latest battery current reading
     float               _batt_resistance;       // latest battery resistance estimate in ohms
     float               _air_density_ratio;     // air density / sea level density - decreases in altitude

@@ -73,9 +73,6 @@ public:
     // get_batt_voltage_filt - get battery voltage ratio - for logging purposes only
     float               get_batt_voltage_filt() const { return _batt_voltage_filt.get(); }
 
-    // get_batt_resistance - get battery resistance approximation - for logging purposes only
-    float               get_batt_resistance() const { return _batt_resistance; }
-
     // get throttle limit imposed by battery current limiting.  This is a number from 0 ~ 1 where 0 means hover throttle, 1 means full throttle (i.e. not limited)
     float               get_throttle_limit() const { return _throttle_limit; }
 
@@ -183,11 +180,8 @@ protected:
     float               _spin_up_ratio;      // throttle percentage (0 ~ 1) between zero and throttle_min
 
     // battery voltage, current and air pressure compensation variables
-    float               _batt_voltage_resting;  // battery voltage reading at minimum throttle
     LowPassFilterFloat  _batt_voltage_filt;     // filtered battery voltage expressed as a percentage (0 ~ 1.0) of batt_voltage_max
-    float               _batt_current_resting;  // battery's current when motors at minimum
-    float               _batt_resistance;       // battery's resistance calculated by comparing resting voltage vs in flight voltage
-    int16_t             _batt_timer;            // timer used in battery resistance calcs
+    float               _batt_voltage_resting_estimate; // estimate voltage with sag removed based on current and resistance
     float               _lift_max;              // maximum lift ratio from battery voltage
     float               _throttle_limit;        // ratio of throttle limit between hover and maximum
     float               _throttle_thrust_max;   // the maximum allowed throttle thrust 0.0 to 1.0 in the range throttle_min to throttle_max
