@@ -153,9 +153,7 @@ public:
     float get_resistance(uint8_t instance) const { return state[instance].resistance; }
 
     // update battery resistance estimate
-    //   resting should be true early on in the flight while the current is low
-    //   throttle_above_threshold should be true if throttle is high enough to calculate the estimate
-    void update_resistance_estimate(bool resting, bool throttle_above_threshold);
+    void update_resistance_estimate();
 
     static const struct AP_Param::GroupInfo var_info[];
 

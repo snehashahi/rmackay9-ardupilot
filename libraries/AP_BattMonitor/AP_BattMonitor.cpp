@@ -227,6 +227,7 @@ AP_BattMonitor::read()
     for (uint8_t i=0; i<_num_instances; i++) {
         if (drivers[i] != nullptr && _monitoring[i] != BattMonitor_TYPE_NONE) {
             drivers[i]->read();
+            drivers[i]->update_resistance_estimate();
         }
     }
 }
@@ -384,13 +385,11 @@ bool AP_BattMonitor::get_temperature(float &temperature, const uint8_t instance)
 }
 
 // update battery resistance estimate
-//   resting should be true early on in the flight while the current is low
-//   throttle_above_threshold should be true if throttle is high enough to calculate the estimate
-void AP_BattMonitor::update_resistance_estimate(bool resting, bool throttle_above_threshold)
+void AP_BattMonitor::update_resistance_estimate()
 {
     for (uint8_t i = 0; i < _num_instances; i++) {
         if (drivers[i] != nullptr) {
-            drivers[i]->update_resistance_estimate(resting, throttle_above_threshold);
+            drivers[i]->update_resistance_estimate();
         }
     }
 }
