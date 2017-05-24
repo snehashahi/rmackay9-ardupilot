@@ -158,9 +158,6 @@ void Copter::read_battery(void)
 {
     battery.read();
 
-    // update battery resistance estimate.  resting if disarmed.  throttle_above_thresh if throttle output is at least 75% of hover throttle
-    battery.update_resistance_estimate(!motors->armed(), motors->get_throttle() > 0.75f * motors->get_throttle_hover());
-
     // update compass with current value
     if (battery.has_current()) {
         compass.set_current(battery.current_amps());
