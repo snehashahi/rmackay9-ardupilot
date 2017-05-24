@@ -87,6 +87,9 @@ public:
     /// Read the battery voltage and current.  Should be called at 10hz
     void read();
 
+    /// all smart batteries provide current info
+    bool has_current() const override;
+
 protected:
 
     AP_HAL::AnalogSource *_volt_pin_analog_source;
