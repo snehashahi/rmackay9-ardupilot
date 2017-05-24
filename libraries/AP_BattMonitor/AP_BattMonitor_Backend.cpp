@@ -51,36 +51,19 @@ void AP_BattMonitor_Backend::update_resistance_estimate(bool resting, bool throt
     // get current system time
     uint32_t now = AP_HAL::millis();
 
-    // if disarmed reset resting voltage and current
-    if (resting) {
-        _state.voltage_resting = _state.voltage;
-        _state.current_resting = _state.current_amps;
-        _state.resistance_timer_ms = now;
-        return;
-    }
+    float loop_interval = (now - _state.resistance_timer_ms) / 1000.0f;
+    _state.resistance_timer_ms = now;
+    float filt_alpha = constrain_float(loop_interval/(loop_interval + AP_BATT_MONITOR_RES_EST_TC_1), 0.0f, 0.5f);
 
-    uint32_t time_diff_ms = now - _state.resistance_timer_ms;
-    if (time_diff_ms < 1000) {
-        if (_state.voltage < _state.voltage_resting && _state.current_amps > _state.current_resting) {
-            // update battery resistance when throttle is over hover throttle
-            float batt_resistance = (_state.voltage_resting-_state.voltage)/(_state.current_amps - _state.current_resting);
-            if (throttle_above_threshold) {
-                // filter reaches 90% in 1/4 the test time
-                _state.resistance += 0.05f*(batt_resistance - _state.resistance);
-            } else {
-                // initialize battery resistance to prevent change in resting voltage estimate
-                _state.resistance_timer_ms = now;
-                _state.resistance = batt_resistance;
-            }
-            // make sure battery resistance value doesn't result in the predicted battery voltage exceeding the resting voltage
-            if (batt_resistance < _state.resistance && throttle_above_threshold){
-                _state.resistance = batt_resistance;
-            }
-        } else {
-            _state.resistance_timer_ms = now;
-        }
+    _state.current_max_amps = MAX(_state.current_max_amps, _state.current_amps);
+    float time_constant = MIN(1, AP_BATT_MONITOR_RES_EST_TC_2*abs((_state.current_amps-_state.current_filt_amps)/_state.current_max_amps));
+    float resistance_estimate = -(_state.voltage-_state.voltage_filt)/(_state.current_amps-_state.current_filt_amps);
+    if (resistance_estimate > 0){
+        _state.resistance = _state.resistance*(1-time_constant) + resistance_estimate*time_constant;
     }
+    _state.voltage_filt = _state.voltage_filt*(1-filt_alpha) + _state.voltage*filt_alpha;
+    _state.current_filt_amps = _state.current_filt_amps*(1-filt_alpha) + _state.current_amps*filt_alpha;
 
     // update estimated voltage without sag
-    _state.voltage_resting_estimate = _state.voltage + (_state.current_amps-_state.current_resting) * _state.resistance;;
+    _state.voltage_resting_estimate = _state.voltage + _state.current_amps * _state.resistance;
 }

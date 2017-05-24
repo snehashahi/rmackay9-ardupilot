@@ -18,6 +18,9 @@
 
 #define AP_BATT_MONITOR_TIMEOUT             5000
 
+#define AP_BATT_MONITOR_RES_EST_TC_1        0.5f
+#define AP_BATT_MONITOR_RES_EST_TC_2        0.1f
+
 // declare backend class
 class AP_BattMonitor_Backend;
 class AP_BattMonitor_Analog;
@@ -58,16 +61,17 @@ public:
         bool        healthy;            // battery monitor is communicating correctly
         bool        is_powering_off;    // true if the battery is about to power off
         float       voltage;            // voltage in volts
+        float       voltage_filt;            // voltage in volts
         float       current_amps;       // current in amperes
+        float       current_max_amps;       // current in amperes
+        float       current_filt_amps;       // current in amperes
         float       current_total_mah;  // total current draw since start-up
         uint32_t    last_time_micros;   // time when voltage and current was last read
         uint32_t    low_voltage_start_ms;  // time when voltage dropped below the minimum
         cells       cell_voltages;      // battery cell voltages in millivolts, 10 cells matches the MAVLink spec
         float       temperature;        // battery temperature in celsius
         uint32_t    temperature_time;   // timestamp of the last recieved temperature message
-        float       voltage_resting;    // voltage when throttle at minimum
         float       voltage_resting_estimate; // voltage with sag removed based on current and resistance estimate
-        float       current_resting;    // current when throttle at minimum
         float       resistance;         // resistance calculated by comparing resting voltage vs in flight voltage
         uint32_t    resistance_timer_ms; // timer used in battery resistance calcs
     };
