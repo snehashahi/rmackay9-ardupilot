@@ -35,21 +35,21 @@
 #define OREOLED_BACKRIGHT               1       // back right led instance number
 #define OREOLED_FRONTRIGHT              2       // front right led instance number
 #define OREOLED_FRONTLEFT               3       // front left led instance number
-#define PERIOD_SLOW                     800     // Slow flash rate
-#define PERIOD_FAST                     500     // Fast flash rate
-#define PERIOD_SUPER                    150     // Super fast rate
-#define PO_ALTERNATE                    180     // 180 degree Phase Offset
+#define PERIOD_SLOW                     800     // slow flash rate
+#define PERIOD_FAST                     500     // fast flash rate
+#define PERIOD_SUPER                    150     // super fast rate
+#define PO_ALTERNATE                    180     // 180 degree phase offset
 
 extern const AP_HAL::HAL& hal;
 
 // constructor
-OreoLED_PX4::OreoLED_PX4(uint8_t _theme_Param): NotifyDevice(),
+OreoLED_PX4::OreoLED_PX4(uint8_t theme): NotifyDevice(),
     _overall_health(false),
     _oreoled_fd(-1),
     _send_required(false),
     _state_desired_semaphore(false),
     _pattern_override(0),
-    _oreo_theme(_theme_Param)
+    _oreo_theme(theme)
 {
     // initialise desired and sent state
     memset(_state_desired,0,sizeof(_state_desired));
@@ -64,15 +64,15 @@ extern "C" int oreoled_main(int, char **);
 //
 bool OreoLED_PX4::init()
 {
-    
-    #if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
+
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2)
     if (!AP_BoardConfig::px4_start_driver(oreoled_main, "oreoled", "start autoupdate")) {
         hal.console->printf("Unable to start oreoled driver\n");
     } else {
         // give it time to initialise
         hal.scheduler->delay(500);
     }
-    #endif
+#endif
 
     // open the device
     _oreoled_fd = open(OREOLED0_DEVICE_PATH, O_RDWR);
@@ -95,44 +95,41 @@ bool OreoLED_PX4::init()
 void OreoLED_PX4::update()
 {
 
-    if (!_overall_health) { return;}        // Don't go any further if LED driver reports unhealthy
+    if (!_overall_health) { return; }       // don't go any further if LED driver reports unhealthy
 
-    if (Slow_Counter()) {return; }          // Slowing rate from 50hz to 10hz.
-    
-    Sync_Counter();                         // Syncronizes LEDs every 10 seconds. No need to do this at 10hz
-    
-    if (Mode_FW()) { return; }              // Don't go any further if the Pixhawk is in firmware update.
+    if (slow_counter()) { return; }         // slow rate from 50hz to 10hz
 
-    if (Mode_Init()) { return; }            // Don't go any further if the Pixhawk is initializing
-    
-    if (Mode_FS_Radio()) { return; }        // Don't go any further if the Pixhawk is is in radio failsafe
-        
-    Set_Std_Colors();                       // Set the rear LED standard colors as described above 
-    
-    if (Mode_FS_Batt()) { return; }         // Stop here if the battery is low.
-    
-    if (_pattern_override) { return; }      // Stop here if in mavlink LED control override.
-    
-    if (Mode_Auto_Flight()) {return; }      // Stop here if in an autopilot mode.
-    
-    if (Mode_Pilot_Flight()) {return; }     // Stop here if in an pilot controlled mode.
-    
-    return;                                 // The end
-    
+    sync_counter();                         // syncronizes LEDs every 10 seconds
+
+    if (mode_firmware_update()) { return; } // don't go any further if the Pixhawk is in firmware update
+
+    if (mode_init()) { return; }            // don't go any further if the Pixhawk is initializing
+
+    if (mode_failsafe_radio()) { return; }  // don't go any further if the Pixhawk is is in radio failsafe
+
+    set_standard_colors();                  // set the rear LED standard colors as described above
+
+    if (mode_failsafe_batt()) { return; }   // stop here if the battery is low.
+
+    if (_pattern_override) { return; }      // stop here if in mavlink LED control override.
+
+    if (mode_auto_flight()) { return; }     // stop here if in an autopilot mode.
+
+    mode_pilot_flight();                    // stop here if in an pilot controlled mode.
 }
 
 // Slow the update rate from 50hz to 10hz
 // Returns true if counting up
 // Returns false and resets one counter hits 5
-bool OreoLED_PX4::Slow_Counter()
+bool OreoLED_PX4::slow_counter()
 {
-    static uint8_t updateCounter{0};
-    
-    updateCounter++;
-    if (updateCounter < 5) { 
+    static uint8_t update_counter;
+
+    update_counter++;
+    if (update_counter < 5) {
         return 1;
     } else {
-        updateCounter = 0;
+        update_counter = 0;
         return 0;
     }
 }
@@ -140,23 +137,22 @@ bool OreoLED_PX4::Slow_Counter()
 
 // Calls resyncing the LEDs every 10 seconds
 // Always returns false, no action needed.
-bool OreoLED_PX4::Sync_Counter()
+void OreoLED_PX4::sync_counter()
 {
-    static uint8_t syncCounter{80};
-    
-    syncCounter++;
-    if (syncCounter > 100) { 
-        syncCounter = 0;
+    static uint8_t counter = 80;
+
+    counter++;
+    if (counter > 100) {
+        counter = 0;
         send_sync();
     }
-    return 0;
 }
 
 
 // Procedure for when Pixhawk is in FW update / bootloader
 // Makes all LEDs go into color cycle mode
 // Returns true if firmware update in progress. False if not
-bool OreoLED_PX4::Mode_FW()
+bool OreoLED_PX4::mode_firmware_update()
 {
     if (AP_Notify::flags.firmware_update) {
         set_macro(OREOLED_INSTANCE_ALL, OREOLED_PARAM_MACRO_COLOUR_CYCLE);
@@ -172,10 +168,10 @@ bool OreoLED_PX4::Mode_FW()
 // 1 = Default, initialization has not yet begun
 // 2 = Initialization flag found, initialization in progress
 // 3 = Initialization flag no longer found, initialization complete
-bool OreoLED_PX4::Mode_Init()
+bool OreoLED_PX4::mode_init()
 {
-    static uint16_t stage{1};
-    
+    static uint16_t stage = 1;
+
     // Pixhawk has not begun initializing yet. Strobe all blue
     if ((!AP_Notify::flags.initialising) && ((stage == 1))) {
         set_rgb(OREOLED_INSTANCE_ALL, OREOLED_PATTERN_STROBE, 0, 0, 255,0,0,0,PERIOD_SUPER,0);
@@ -184,25 +180,25 @@ bool OreoLED_PX4::Mode_Init()
     } else if ((AP_Notify::flags.initialising) && ((stage == 1))) { 
         stage = 2;
         set_rgb(OREOLED_INSTANCE_ALL, OREOLED_PATTERN_STROBE, 0, 0, 255,0,0,0,PERIOD_SUPER,0);
-        
+
     // Pixhawk still initializing
     } else if ((AP_Notify::flags.initialising) && ((stage == 2))) { 
         set_rgb(OREOLED_INSTANCE_ALL, OREOLED_PATTERN_STROBE, 0, 0, 255,0,0,0,PERIOD_SUPER,0);
-    
+
     // Pixhawk has completed initialization
     } else if((!AP_Notify::flags.initialising) && ((stage == 2))) {
         stage = 0;
         set_rgb(OREOLED_INSTANCE_ALL, OREOLED_PATTERN_SOLID, 0, 0, 255);
 
     } else { stage = 0; }
-    
+
     return stage;
 }
 
 
 // Procedure for when Pixhawk is in radio failsafe
 // LEDs perform alternating Red X pattern
-bool OreoLED_PX4::Mode_FS_Radio()
+bool OreoLED_PX4::mode_failsafe_radio()
 {
     if (AP_Notify::flags.failsafe_radio) {
         set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_STROBE, 255, 0, 0,0,0,0,PERIOD_SLOW,0);
@@ -217,25 +213,25 @@ bool OreoLED_PX4::Mode_FS_Radio()
 // Procedure to set standard rear LED colors in aviation theme
 // Back LEDS White for normal, yellow for GPS not usable, purple for EKF bad]
 // Returns true GPS or EKF problem, returns false if all ok
-bool OreoLED_PX4::Set_Std_Colors()
+bool OreoLED_PX4::set_standard_colors()
 {
     if (!(AP_Notify::flags.gps_fusion)) {
         _rear_color_r = 255;
         _rear_color_g = 50;
         _rear_color_b = 0;
-        return 1;
-        
+        return true;
+
     } else if (AP_Notify::flags.ekf_bad){
         _rear_color_r = 255;
         _rear_color_g = 0;
         _rear_color_b = 255;
-        return 1;
-        
+        return true;
+
     } else {
         _rear_color_r = 255;
         _rear_color_g = 255;
         _rear_color_b = 255;
-        return 0;
+        return false;
     }
 }
 
@@ -243,10 +239,10 @@ bool OreoLED_PX4::Set_Std_Colors()
 // Procedure to set low battery LED output
 // Colors standard
 // Fast strobe alternating front/back
-bool OreoLED_PX4::Mode_FS_Batt()
+bool OreoLED_PX4::mode_failsafe_batt()
 {
     if (AP_Notify::flags.failsafe_battery){
-        
+
         switch (_oreo_theme) {
             case OreoLED_Aircraft:
                 set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_STROBE, 255, 0, 0,0,0,0,PERIOD_FAST,0);
@@ -254,14 +250,14 @@ bool OreoLED_PX4::Mode_FS_Batt()
                 set_rgb(OREOLED_BACKLEFT, OREOLED_PATTERN_STROBE, _rear_color_r, _rear_color_g, _rear_color_b,0,0,0,PERIOD_FAST,PO_ALTERNATE);
                 set_rgb(OREOLED_BACKRIGHT, OREOLED_PATTERN_STROBE, _rear_color_r, _rear_color_g, _rear_color_b,0,0,0,PERIOD_FAST,PO_ALTERNATE);
                 break;
-                    
+
             case OreoLED_Automobile:
                 set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_STROBE, 255, 255, 255,0,0,0,PERIOD_FAST,0);
                 set_rgb(OREOLED_FRONTRIGHT, OREOLED_PATTERN_STROBE, 255, 255, 255,0,0,0,PERIOD_FAST,0);
                 set_rgb(OREOLED_BACKLEFT, OREOLED_PATTERN_STROBE, 255, 0, 0,0,0,0,PERIOD_FAST,PO_ALTERNATE);
                 set_rgb(OREOLED_BACKRIGHT, OREOLED_PATTERN_STROBE, 255, 0, 0,0,0,0,PERIOD_FAST,PO_ALTERNATE);
                 break;
-                    
+
             default:
                 set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_STROBE, 255, 255, 255,0,0,0,PERIOD_FAST,0);
                 set_rgb(OREOLED_FRONTRIGHT, OREOLED_PATTERN_STROBE, 255, 255, 255,0,0,0,PERIOD_FAST,0);
@@ -276,10 +272,10 @@ bool OreoLED_PX4::Mode_FS_Batt()
 
 // Procedure for when Pixhawk is in an autopilot mode
 // Makes all LEDs strobe super fast using standard colors
-bool OreoLED_PX4::Mode_Auto_Flight()
+bool OreoLED_PX4::mode_auto_flight()
 {
     switch (_oreo_theme) {
-        
+
         case OreoLED_Aircraft:
             set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_STROBE, 255, 0, 0,0,0,0,PERIOD_SUPER,0);
             set_rgb(OREOLED_FRONTRIGHT, OREOLED_PATTERN_STROBE, 0, 255, 0,0,0,0,PERIOD_SUPER,0);
@@ -291,14 +287,14 @@ bool OreoLED_PX4::Mode_Auto_Flight()
                 set_rgb(OREOLED_BACKRIGHT, OREOLED_PATTERN_SOLID, _rear_color_r, _rear_color_g, _rear_color_b);
             }
             break;
-                
+
         case OreoLED_Automobile:
             set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_STROBE, 255, 255, 255,0,0,0,PERIOD_SUPER,0);
             set_rgb(OREOLED_FRONTRIGHT, OREOLED_PATTERN_STROBE, 255, 255, 255,0,0,0,PERIOD_SUPER,0);
             set_rgb(OREOLED_BACKLEFT, OREOLED_PATTERN_STROBE, 255, 0, 0,0,0,0,PERIOD_SUPER,PO_ALTERNATE);
             set_rgb(OREOLED_BACKRIGHT, OREOLED_PATTERN_STROBE, 255, 0, 0,0,0,0,PERIOD_SUPER,PO_ALTERNATE);
             break;
-                
+
         default:
             set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_STROBE, 255, 255, 255,0,0,0,PERIOD_SUPER,0);
             set_rgb(OREOLED_FRONTRIGHT, OREOLED_PATTERN_STROBE, 255, 255, 255,0,0,0,PERIOD_SUPER,0);
@@ -313,7 +309,7 @@ bool OreoLED_PX4::Mode_Auto_Flight()
 
 // Procedure for when Pixhawk is in a pilot controlled mode
 // All LEDs use standard pattern and colors
-bool OreoLED_PX4::Mode_Pilot_Flight()
+bool OreoLED_PX4::mode_pilot_flight()
 {
     switch (_oreo_theme) {
 
@@ -328,14 +324,14 @@ bool OreoLED_PX4::Mode_Pilot_Flight()
                 set_rgb(OREOLED_BACKRIGHT, OREOLED_PATTERN_SOLID, _rear_color_r, _rear_color_g, _rear_color_b);
             }
             break;
-                
+
         case OreoLED_Automobile:
             set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_SOLID, 255, 255, 255);
             set_rgb(OREOLED_FRONTRIGHT, OREOLED_PATTERN_SOLID, 255, 255, 255);
             set_rgb(OREOLED_BACKLEFT, OREOLED_PATTERN_SOLID, 255, 0, 0);
             set_rgb(OREOLED_BACKRIGHT, OREOLED_PATTERN_SOLID, 255, 0, 0);
             break;
-                
+
         default:
             set_rgb(OREOLED_FRONTLEFT, OREOLED_PATTERN_SOLID, 255, 255, 255);
             set_rgb(OREOLED_FRONTRIGHT, OREOLED_PATTERN_SOLID, 255, 255, 255);
@@ -343,8 +339,8 @@ bool OreoLED_PX4::Mode_Pilot_Flight()
             set_rgb(OREOLED_BACKRIGHT, OREOLED_PATTERN_SOLID, 255, 0, 0);
             break;
     }
-            
-    return 1;
+
+    return true;
 }
 
 
@@ -456,7 +452,6 @@ void OreoLED_PX4::send_sync()
     // set semaphore
     _state_desired_semaphore = true;
 
-
     // store desired macro for all LEDs
     for (uint8_t i=0; i<OREOLED_NUM_LEDS; i++) {
         _state_desired[i].send_sync();
@@ -464,7 +459,6 @@ void OreoLED_PX4::send_sync()
             _send_required = true;
         }
     }
-
 
     // release semaphore
     _state_desired_semaphore = false;

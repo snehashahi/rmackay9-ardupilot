@@ -34,7 +34,7 @@ class OreoLED_PX4 : public NotifyDevice
 {
 public:
     // constuctor
-    OreoLED_PX4(uint8_t _theme_Param);
+    OreoLED_PX4(uint8_t theme);
 
     // init - initialised the device
     bool init(void);
@@ -69,18 +69,17 @@ private:
 
     // send_sync - force a syncronisation of the all LED's
     void send_sync();
-    
-    
-    bool Slow_Counter(void);
-    bool Sync_Counter(void);
-    bool Mode_FW(void);
-    bool Mode_Init(void);
-    bool Mode_FS_Radio(void);
-    bool Set_Std_Colors(void);
-    bool Mode_FS_Batt(void);
-    bool Mode_Auto_Flight(void);
-    bool Mode_Pilot_Flight(void);
-    
+
+    // functions to set LEDs to specific patterns.  These functions return true if no further updates should be made to LEDs this iteration
+    bool slow_counter(void);
+    void sync_counter(void);
+    bool mode_firmware_update(void);
+    bool mode_init(void);
+    bool mode_failsafe_radio(void);
+    bool set_standard_colors(void);
+    bool mode_failsafe_batt(void);
+    bool mode_auto_flight(void);
+    bool mode_pilot_flight(void);
 
     // Clear the desired state
     void clear_state(void);
@@ -93,8 +92,8 @@ private:
         OREOLED_MODE_RGB_EXTENDED,
         OREOLED_MODE_SYNC
     };
-    
-            // Oreo LED modes
+
+    // Oreo LED modes
     enum Oreo_LED_Theme {
         OreoLED_Disabled        = 0,
         OreoLED_Aircraft        = 1,
@@ -141,10 +140,10 @@ private:
     oreo_state _state_desired[OREOLED_NUM_LEDS];    // desired state
     oreo_state _state_sent[OREOLED_NUM_LEDS];       // last state sent to led
     uint8_t _pattern_override;                      // holds last processed pattern override, 0 if we are not overriding a pattern
-    uint8_t _oreo_theme;
-    uint8_t _rear_color_r = 255;                           // the rear LED red value
-    uint8_t _rear_color_g = 255;                           // the rear LED green value
-    uint8_t _rear_color_b = 255;                           // the rear LED blue value
+    uint8_t _oreo_theme;                            // theme (1=AirCraft, 2=Ground Vehicle)
+    uint8_t _rear_color_r = 255;                    // the rear LED red value
+    uint8_t _rear_color_g = 255;                    // the rear LED green value
+    uint8_t _rear_color_b = 255;                    // the rear LED blue value
 };
 
 #endif // CONFIG_HAL_BOARD == HAL_BOARD_PX4
