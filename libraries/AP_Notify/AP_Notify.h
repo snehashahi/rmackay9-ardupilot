@@ -42,7 +42,7 @@ class AP_Notify
 public:
     // Constructor
     AP_Notify();   
-    
+
     // Oreo LED Themes
     enum Oreo_LED_Theme {
         OreoLED_Disabled        = 0,    // Disabled the OLED driver entirely
