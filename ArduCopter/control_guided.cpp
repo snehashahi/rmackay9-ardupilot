@@ -35,6 +35,13 @@ struct Guided_Limit {
     Vector3f start_pos; // start position as a distance from home in cm.  used for checking horiz_max limit
 } guided_limit;
 
+struct {
+    bool use_yaw;
+    float yaw;
+    bool use_yaw_rate;
+    float yaw_rate;
+} static guided_yaw_state = {false, 0.0f, false, 0.0f};
+
 // guided_init - initialise guided controller
 bool Copter::guided_init(bool ignore_checks)
 {
@@ -177,7 +184,7 @@ void Copter::guided_angle_control_start()
 // guided_set_destination - sets guided mode's target destination
 // Returns true if the fence is enabled and guided waypoint is within the fence
 // else return false if the waypoint is outside the fence
-bool Copter::guided_set_destination(const Vector3f& destination)
+bool Copter::guided_set_destination(const Vector3f& destination, bool use_yaw, float yaw, bool use_yaw_rate, float yaw_rate)
 {
     // ensure we are in position control mode
     if (guided_mode != Guided_WP) {
@@ -194,6 +201,9 @@ bool Copter::guided_set_destination(const Vector3f& destination)
     }
 #endif
 
+    // set yaw state
+    guided_set_yaw_state(use_yaw, yaw, use_yaw_rate, yaw_rate);
+
     // no need to check return status because terrain data is not used
     wp_nav->set_wp_destination(destination, false);
 
@@ -205,7 +215,7 @@ bool Copter::guided_set_destination(const Vector3f& destination)
 // sets guided mode's target from a Location object
 // returns false if destination could not be set (probably caused by missing terrain data)
 // or if the fence is enabled and guided waypoint is outside the fence
-bool Copter::guided_set_destination(const Location_Class& dest_loc)
+bool Copter::guided_set_destination(const Location_Class& dest_loc, bool use_yaw, float yaw, bool use_yaw_rate, float yaw_rate)
 {
     // ensure we are in position control mode
     if (guided_mode != Guided_WP) {
@@ -229,18 +239,24 @@ bool Copter::guided_set_destination(const Location_Class& dest_loc)
         return false;
     }
 
+    // set yaw state
+    guided_set_yaw_state(use_yaw, yaw, use_yaw_rate, yaw_rate);
+
     // log target
     Log_Write_GuidedTarget(guided_mode, Vector3f(dest_loc.lat, dest_loc.lng, dest_loc.alt),Vector3f());
     return true;
 }
 
 // guided_set_velocity - sets guided mode's target velocity
-void Copter::guided_set_velocity(const Vector3f& velocity)
+void Copter::guided_set_velocity(const Vector3f& velocity, bool use_yaw, float yaw, bool use_yaw_rate, float yaw_rate)
 {
     // check we are in velocity control mode
     if (guided_mode != Guided_Velocity) {
         guided_vel_control_start();
     }
+
+    // set yaw state
+    guided_set_yaw_state(use_yaw, yaw, use_yaw_rate, yaw_rate);
 
     // record velocity target
     guided_vel_target_cms = velocity;
@@ -251,11 +267,14 @@ void Copter::guided_set_velocity(const Vector3f& velocity)
 }
 
 // set guided mode posvel target
-void Copter::guided_set_destination_posvel(const Vector3f& destination, const Vector3f& velocity) {
+void Copter::guided_set_destination_posvel(const Vector3f& destination, const Vector3f& velocity, bool use_yaw, float yaw, bool use_yaw_rate, float yaw_rate) {
     // check we are in velocity control mode
     if (guided_mode != Guided_PosVel) {
         guided_posvel_control_start();
     }
+
+    // set yaw state
+    guided_set_yaw_state(use_yaw, yaw, use_yaw_rate, yaw_rate);
 
     posvel_update_time_ms = millis();
     guided_pos_target_cm = destination;
@@ -427,8 +446,13 @@ void Copter::guided_pos_control_run()
         // roll & pitch from waypoint controller, yaw rate from pilot
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), target_yaw_rate, get_smoothing_gain());
     }else{
-        // roll, pitch from waypoint controller, yaw heading from auto_heading()
-        attitude_control->input_euler_angle_roll_pitch_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), get_auto_heading(), true, get_smoothing_gain());
+        if (guided_yaw_state.use_yaw_rate) {
+            // roll & pitch from waypoint controller, yaw rate from GCS
+            attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), guided_yaw_state.yaw_rate, get_smoothing_gain());
+        } else {
+            // roll, pitch from waypoint controller, yaw heading from auto_heading()
+            attitude_control->input_euler_angle_roll_pitch_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), guided_yaw_state.use_yaw ? guided_yaw_state.yaw: get_auto_heading(), true, get_smoothing_gain());
+        }
     }
 }
 
@@ -481,8 +505,13 @@ void Copter::guided_vel_control_run()
         // roll & pitch from waypoint controller, yaw rate from pilot
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(pos_control->get_roll(), pos_control->get_pitch(), target_yaw_rate, get_smoothing_gain());
     }else{
-        // roll, pitch from waypoint controller, yaw heading from auto_heading()
-        attitude_control->input_euler_angle_roll_pitch_yaw(pos_control->get_roll(), pos_control->get_pitch(), get_auto_heading(), true, get_smoothing_gain());
+        if (guided_yaw_state.use_yaw_rate) {
+            // roll & pitch from waypoint controller, yaw rate from GCS
+            attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(pos_control->get_roll(), pos_control->get_pitch(), guided_yaw_state.yaw_rate, get_smoothing_gain());
+        } else {
+            // roll, pitch from waypoint controller, yaw heading from auto_heading()
+            attitude_control->input_euler_angle_roll_pitch_yaw(pos_control->get_roll(), pos_control->get_pitch(), guided_yaw_state.use_yaw ? guided_yaw_state.yaw: get_auto_heading(), true, get_smoothing_gain());
+        }
     }
 }
 
@@ -555,8 +584,13 @@ void Copter::guided_posvel_control_run()
         // roll & pitch from waypoint controller, yaw rate from pilot
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(pos_control->get_roll(), pos_control->get_pitch(), target_yaw_rate, get_smoothing_gain());
     }else{
-        // roll, pitch from waypoint controller, yaw heading from auto_heading()
-        attitude_control->input_euler_angle_roll_pitch_yaw(pos_control->get_roll(), pos_control->get_pitch(), get_auto_heading(), true, get_smoothing_gain());
+        if (guided_yaw_state.use_yaw_rate) {
+            // roll & pitch from waypoint controller, yaw rate from GCS
+            attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(pos_control->get_roll(), pos_control->get_pitch(), guided_yaw_state.yaw_rate, get_smoothing_gain());
+        } else {
+            // roll, pitch from waypoint controller, yaw heading from auto_heading()
+            attitude_control->input_euler_angle_roll_pitch_yaw(pos_control->get_roll(), pos_control->get_pitch(), guided_yaw_state.use_yaw ? guided_yaw_state.yaw: get_auto_heading(), true, get_smoothing_gain());
+        }
     }
 }
 
@@ -660,6 +694,15 @@ void Copter::guided_set_desired_velocity_with_accel_and_fence_limits(const Vecto
 
     // update position controller with new target
     pos_control->set_desired_velocity(curr_vel_des);
+}
+
+// helper function to set guided yaw state
+void Copter::guided_set_yaw_state(bool use_yaw, float yaw, bool use_yaw_rate, float yaw_rate)
+{
+    guided_yaw_state.use_yaw = use_yaw;
+    guided_yaw_state.yaw = yaw;
+    guided_yaw_state.use_yaw_rate = use_yaw_rate;
+    guided_yaw_state.yaw_rate = yaw_rate;
 }
 
 // Guided Limit code
