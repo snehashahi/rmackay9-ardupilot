@@ -271,26 +271,38 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     // adjust the desired acceleration
     _loiter_desired_accel += des_accel_diff;
 
+    _loiter_predicted_jerk.x = AC_AttitudeControl::input_shaping_angle(_loiter_desired_accel.x-_loiter_predicted_accel.x, _attitude_control.get_smoothing_gain(), 0.5f*(_attitude_control.get_accel_roll_max_radss()+_attitude_control.get_accel_pitch_max_radss())*980, _loiter_predicted_jerk.x, nav_dt);
+    _loiter_predicted_jerk.y = AC_AttitudeControl::input_shaping_angle(_loiter_desired_accel.y-_loiter_predicted_accel.y, _attitude_control.get_smoothing_gain(), 0.5f*(_attitude_control.get_accel_roll_max_radss()+_attitude_control.get_accel_pitch_max_radss())*980, _loiter_predicted_jerk.y, nav_dt);
+    _loiter_predicted_accel.x += _loiter_predicted_jerk.x * nav_dt;
+    _loiter_predicted_accel.y += _loiter_predicted_jerk.y * nav_dt;
+
     // get pos_control's feed forward velocity
     const Vector3f &desired_vel_3d = _pos_control.get_desired_velocity();
     Vector2f desired_vel(desired_vel_3d.x,desired_vel_3d.y);
 
     // add pilot commanded acceleration
-    desired_vel.x += _loiter_desired_accel.x * nav_dt;
-    desired_vel.y += _loiter_desired_accel.y * nav_dt;
+    desired_vel.x += _loiter_predicted_accel.x * nav_dt;
+    desired_vel.y += _loiter_predicted_accel.y * nav_dt;
 
     float desired_speed = desired_vel.length();
 
+    Vector2f loiter_break_accel;
     if (!is_zero(desired_speed)) {
         Vector2f desired_vel_norm = desired_vel/desired_speed;
-        float drag_speed_delta = -_loiter_accel_cmss*nav_dt*desired_speed/gnd_speed_limit_cms;
+        float drag_decel = _loiter_accel_cmss*desired_speed/gnd_speed_limit_cms;
 
+        float break_decel = 0.0f;
         if (_pilot_accel_fwd_cms == 0 && _pilot_accel_rgt_cms == 0) {
-            drag_speed_delta = MIN(drag_speed_delta,MAX(-_loiter_accel_min_cmss*nav_dt, -2.0f*desired_speed*nav_dt));
+            float break_scale = constrain_float((AP_HAL::millis()-_break_timer)*0.001f-1.0f, 0.0f, 1.0f);
+            break_decel = break_scale*_loiter_accel_min_cmss*desired_speed/(desired_speed+_loiter_accel_min_cmss*0.5f);
+            //break_decel = break_scale * MIN(_loiter_accel_min_cmss, 2.0f*desired_speed);
+        } else {
+            _break_timer = AP_HAL::millis();
         }
 
-        desired_speed = MAX(desired_speed+drag_speed_delta,0.0f);
+        desired_speed = MAX(desired_speed-(drag_decel+break_decel)*nav_dt,0.0f);
         desired_vel = desired_vel_norm*desired_speed;
+        loiter_break_accel = desired_vel_norm*break_decel;
     }
 
     // Apply EKF limit to desired velocity -  this limit is calculated by the EKF and adjusted as required to ensure certain sensor limits are respected (eg optical flow sensing)
@@ -301,6 +313,7 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     }
 
     // Limit the velocity to prevent fence violations
+    // We need to also limit the acceleration
     if (_avoid != nullptr) {
         _avoid->adjust_velocity(_pos_control.get_pos_xy_kP(), _loiter_accel_cmss, desired_vel);
     }
