@@ -343,6 +343,9 @@ protected:
     int16_t     _pilot_accel_fwd_cms; 	// pilot's desired acceleration forward (body-frame)
     int16_t     _pilot_accel_rgt_cms;   // pilot's desired acceleration right (body-frame)
     Vector2f    _loiter_desired_accel;  // slewed pilot's desired acceleration in lat/lon frame
+    Vector2f    _loiter_predicted_accel;//
+    Vector2f    _loiter_predicted_jerk; //
+    float       _break_timer;           //
 
     // waypoint controller internal variables
     uint32_t    _wp_last_update;        // time of last update_wpnav call
