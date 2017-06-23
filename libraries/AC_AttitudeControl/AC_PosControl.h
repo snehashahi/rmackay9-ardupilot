@@ -224,6 +224,8 @@ public:
     // clear desired velocity feed-forward in z axis
     void clear_desired_velocity_ff_z() { _flags.use_desvel_ff_z = false; }
 
+    void set_desired_accel_xy(float accel_lat_cms, float accel_lon_cms) {_accel_feedforward.x = accel_lat_cms; _accel_feedforward.y = accel_lat_cms; }
+
     /// set_desired_velocity_xy - sets desired velocity in cm/s in lat and lon directions
     ///     when update_xy_controller is next called the position target is moved based on the desired velocity and
     ///     the desired velocities are fed forward into the rate_to_accel step
@@ -342,6 +344,9 @@ protected:
     /// xy controller private methods
     ///
 
+    /// move velocity target using desired acceleration
+    void desired_accel_to_vel(float nav_dt);
+
     /// desired_vel_to_pos - move position target using desired velocities
     void desired_vel_to_pos(float nav_dt);
 
@@ -362,6 +367,12 @@ protected:
 
     /// calc_leash_length - calculates the horizontal leash length given a maximum speed, acceleration and position kP gain
     float calc_leash_length(float speed_cms, float accel_cms, float kP) const;
+
+    /// limit vector to a given length, returns true if vector was limited
+    static bool limit_vector_length(float& vector_x, float& vector_y, float max_length);
+
+    /// Proportional controller with piecewise sqrt sections to constrain second derivative
+    static Vector3f sqrt_controller(const Vector3f& error, float p, float second_ord_lim);
 
     /// initialise and check for ekf position resets
     void init_ekf_xy_reset();
@@ -419,7 +430,6 @@ protected:
     float       _distance_to_target;    // distance to position target - for reporting only
     LowPassFilterFloat _vel_error_filter;   // low-pass-filter on z-axis velocity error
 
-    Vector2f    _accel_target_jerk_limited; // acceleration target jerk limited to 100deg/s/s
     LowPassFilterVector2f _accel_target_filter; // acceleration target filter
 
     // ekf reset handling
