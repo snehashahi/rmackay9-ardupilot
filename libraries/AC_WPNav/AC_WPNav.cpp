@@ -190,7 +190,7 @@ void AC_WPNav::init_loiter_target()
     _loiter_speed_cms = MAX(_loiter_speed_cms, WPNAV_LOITER_SPEED_MIN);
 
     // initialise pos controller speed and acceleration
-    _pos_control.set_speed_xy(_loiter_speed_cms);
+    _pos_control.set_speed_xy(_loiter_speed_cms); // should be maximum correction speed.
     _pos_control.set_accel_xy(_loiter_accel_cmss);
     _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
@@ -306,6 +306,7 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     }
 
     // send adjusted feed forward velocity back to position controller
+    _pos_control.set_desired_accel_xy(_loiter_desired_accel.x,_loiter_desired_accel.y);
     _pos_control.set_desired_velocity_xy(desired_vel.x,desired_vel.y);
 }
 
