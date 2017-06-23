@@ -283,13 +283,13 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
 
     if (!is_zero(desired_speed)) {
         Vector2f desired_vel_norm = desired_vel/desired_speed;
-        float drag_speed_delta = -_loiter_accel_cmss*nav_dt*desired_speed/gnd_speed_limit_cms;
+        float drag_decel = _loiter_accel_cmss*desired_speed/gnd_speed_limit_cms;
 
         if (_pilot_accel_fwd_cms == 0 && _pilot_accel_rgt_cms == 0) {
-            drag_speed_delta = MIN(drag_speed_delta,MAX(-_loiter_accel_min_cmss*nav_dt, -2.0f*desired_speed*nav_dt));
+            drag_decel = MAX(drag_decel,MIN(_loiter_accel_min_cmss, 2.0f*desired_speed));
         }
 
-        desired_speed = MAX(desired_speed+drag_speed_delta,0.0f);
+        desired_speed = MAX(desired_speed+drag_speed_delta*nav_dt,0.0f);
         desired_vel = desired_vel_norm*desired_speed;
     }
 
@@ -301,6 +301,7 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     }
 
     // Limit the velocity to prevent fence violations
+    // We need to also limit the acceleration
     if (_avoid != nullptr) {
         _avoid->adjust_velocity(_pos_control.get_pos_xy_kP(), _loiter_accel_cmss, desired_vel);
     }
