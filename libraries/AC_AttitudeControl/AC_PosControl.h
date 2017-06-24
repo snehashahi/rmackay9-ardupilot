@@ -39,6 +39,7 @@
 #define POSCONTROL_VEL_ERROR_CUTOFF_FREQ        4.0f    // low-pass filter on velocity error (unit: hz)
 #define POSCONTROL_THROTTLE_CUTOFF_FREQ         2.0f    // low-pass filter on accel error (unit: hz)
 #define POSCONTROL_ACCEL_FILTER_HZ              2.0f    // low-pass filter on acceleration (unit: hz)
+#define POSCONTROL_ACCEL_JERK                   100.0f  // XY Jerk limit (unit: m/s^3)
 #define POSCONTROL_JERK_RATIO                   1.0f    // Defines the time it takes to reach the requested acceleration
 
 #define POSCONTROL_OVERSPEED_GAIN_Z             2.0f    // gain controlling rate at which z-axis speed is brought back within SPEED_UP and SPEED_DOWN range
@@ -224,7 +225,7 @@ public:
     // clear desired velocity feed-forward in z axis
     void clear_desired_velocity_ff_z() { _flags.use_desvel_ff_z = false; }
 
-    void set_desired_accel_xy(float accel_lat_cms, float accel_lon_cms) {_accel_feedforward.x = accel_lat_cms; _accel_feedforward.y = accel_lat_cms; }
+    void set_desired_accel_xy(float accel_lat_cms, float accel_lon_cms) {_accel_feedforward.x = accel_lat_cms; _accel_feedforward.y = accel_lon_cms; }
 
     /// set_desired_velocity_xy - sets desired velocity in cm/s in lat and lon directions
     ///     when update_xy_controller is next called the position target is moved based on the desired velocity and
@@ -401,6 +402,7 @@ protected:
 
     // parameters
     AP_Float    _accel_xy_filt_hz;      // XY acceleration filter cutoff frequency
+    AP_Float    _accel_xy_jerk;         // XY Jerk limit
 
     // internal variables
     float       _dt;                    // time difference (in seconds) between calls from the main program
