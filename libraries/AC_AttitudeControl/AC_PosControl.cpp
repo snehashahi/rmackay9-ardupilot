@@ -1022,15 +1022,13 @@ bool AC_PosControl::limit_vector_length(float& vector_x, float& vector_y, float 
 {
     bool length_reduced;
 
-    float vector_length = norm(_vel_target.x, _vel_target.y);
+    float vector_length = norm(vector_x, vector_y);
     if(vector_length > max_length && max_length > 0.0f) {
         vector_x *= max_length/vector_length;
         vector_y *= max_length/vector_length;
-        length_reduced = true;
-    } else {
-        length_reduced = false;
+        return true;
     }
-    return length_reduced;
+    return false;
 }
 
 
@@ -1042,9 +1040,9 @@ Vector3f AC_PosControl::sqrt_controller(Vector3f& error, float p, float second_o
     }
 
     float linear_dist = second_ord_lim/sq(p);
-    float error_length = norm(_vel_target.x, _vel_target.y);
+    float error_length = norm(error.x, error.y);
     if (error_length > linear_dist) {
-        float first_order_scale = 2.0f*second_ord_lim*(error_length-(linear_dist/2.0f))/error_length;
+        float first_order_scale = safe_sqrt(2.0f*second_ord_lim*(error_length-(linear_dist/2.0f)))/error_length;
         return Vector3f(error.x*first_order_scale, error.y*first_order_scale, error.z);
     } else {
         return Vector3f(error.x*p, error.y*p, error.z);
