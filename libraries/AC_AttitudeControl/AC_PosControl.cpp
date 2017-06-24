@@ -16,6 +16,15 @@ const AP_Param::GroupInfo AC_PosControl::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("_ACC_XY_FILT", 1, AC_PosControl, _accel_xy_filt_hz, POSCONTROL_ACCEL_FILTER_HZ),
 
+    // @Param: _ACC_XY_JERK
+    // @DisplayName: XY Jerk limit
+    // @Description: Lower values will slow the response of the navigation controller and reduce twitchiness
+    // @Units: m/s^3
+    // @Range: 0 100
+    // @Increment: 0.1
+    // @User: Advanced
+    AP_GROUPINFO("_ACC_XY_JERK", 2, AC_PosControl, _accel_xy_jerk, POSCONTROL_ACCEL_JERK),
+
     AP_GROUPEND
 };
 
@@ -377,7 +386,7 @@ void AC_PosControl::pos_to_rate_z()
     }
 
     // calculate _vel_target.z using from _pos_error.z using sqrt controller
-    _vel_target.z = AC_AttitudeControl::sqrt_controller(_pos_error.z, _p_pos_z.kP(), _accel_z_cms);
+    _vel_target.z = AC_AttitudeControl::sqrt_controller(_pos_error.z, _p_pos_z.kP(), _accel_z_cms, _dt);
 
     // check speed limits
     // To-Do: check these speed limits here or in the pos->rate controller
@@ -909,7 +918,7 @@ void AC_PosControl::rate_to_accel_xy(float dt, float ekfNavVelGainScaler)
     accel_target.y -= _accel_feedforward.y;
 
     // limit jerk and jounce to limit the angular acceleration and angular jerk.
-    float max_delta_accel = dt * _jerk_cmsss;
+    float max_delta_accel = dt * _accel_xy_jerk*100.0f;
     Vector2f accel_change = accel_target-_accel_target_filter.get();
     limit_vector_length(accel_change.x, accel_change.y, max_delta_accel);
     _accel_target_filter.set_cutoff_frequency(MIN(_accel_xy_filt_hz, 5.0f*ekfNavVelGainScaler));
@@ -1021,17 +1030,13 @@ void AC_PosControl::check_for_ekf_z_reset()
 /// limit vector to a given length, returns true if vector was limited
 bool AC_PosControl::limit_vector_length(float& vector_x, float& vector_y, float max_length)
 {
-    bool length_reduced;
-
-    float vector_length = norm(_vel_target.x, _vel_target.y);
+    float vector_length = norm(vector_x, vector_y);
     if(vector_length > max_length && max_length > 0.0f) {
         vector_x *= max_length/vector_length;
         vector_y *= max_length/vector_length;
-        length_reduced = true;
-    } else {
-        length_reduced = false;
+        return true;
     }
-    return length_reduced;
+    return false;
 }
 
 
@@ -1043,9 +1048,9 @@ Vector3f AC_PosControl::sqrt_controller(const Vector3f& error, float p, float se
     }
 
     float linear_dist = second_ord_lim/sq(p);
-    float error_length = norm(_vel_target.x, _vel_target.y);
+    float error_length = norm(error.x, error.y);
     if (error_length > linear_dist) {
-        float first_order_scale = 2.0f*second_ord_lim*(error_length-(linear_dist/2.0f))/error_length;
+        float first_order_scale = safe_sqrt(2.0f*second_ord_lim*(error_length-(linear_dist/2.0f)))/error_length;
         return Vector3f(error.x*first_order_scale, error.y*first_order_scale, error.z);
     } else {
         return Vector3f(error.x*p, error.y*p, error.z);
