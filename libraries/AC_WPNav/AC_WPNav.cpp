@@ -281,6 +281,7 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
 
     float desired_speed = desired_vel.length();
 
+    Vector2f loiter_drag_accel;
     if (!is_zero(desired_speed)) {
         Vector2f desired_vel_norm = desired_vel/desired_speed;
         float drag_decel = _loiter_accel_cmss*desired_speed/gnd_speed_limit_cms;
@@ -289,8 +290,9 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
             drag_decel = MAX(drag_decel,MIN(_loiter_accel_min_cmss, 2.0f*desired_speed));
         }
 
-        desired_speed = MAX(desired_speed+drag_speed_delta*nav_dt,0.0f);
+        desired_speed = MAX(desired_speed-drag_decel*nav_dt,0.0f);
         desired_vel = desired_vel_norm*desired_speed;
+        loiter_drag_accel = desired_vel_norm*drag_decel;
     }
 
     // Apply EKF limit to desired velocity -  this limit is calculated by the EKF and adjusted as required to ensure certain sensor limits are respected (eg optical flow sensing)
@@ -307,7 +309,7 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     }
 
     // send adjusted feed forward velocity back to position controller
-    _pos_control.set_desired_accel_xy(_loiter_desired_accel.x,_loiter_desired_accel.y);
+    _pos_control.set_desired_accel_xy(_loiter_desired_accel.x-loiter_drag_accel.x,_loiter_desired_accel.y-loiter_drag_accel.y);
     _pos_control.set_desired_velocity_xy(desired_vel.x,desired_vel.y);
 }
 
