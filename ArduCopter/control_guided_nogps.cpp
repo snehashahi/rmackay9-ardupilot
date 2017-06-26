@@ -16,6 +16,9 @@ bool Copter::FlightMode_GUIDED_NOGPS::init(bool ignore_checks)
 // should be called at 100hz or more
 void Copter::FlightMode_GUIDED_NOGPS::run()
 {
+    // initialize smoothing gain
+    attitude_control->set_smoothing_gain(get_smoothing_gain());
+
     // run angle controller
     Copter::FlightMode_GUIDED::angle_control_run();
 }
