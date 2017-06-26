@@ -411,7 +411,8 @@ void AC_Avoid::limit_velocity(float kP, float accel_cmss, Vector2f &desired_vel,
  */
 float AC_Avoid::get_max_speed(float kP, float accel_cmss, float distance) const
 {
-    return AC_AttitudeControl::sqrt_controller(distance, kP, accel_cmss);
+    // should use time instead of 0.0f
+    return AC_AttitudeControl::sqrt_controller(distance, kP, accel_cmss, 0.0f);
 }
 
 /*
