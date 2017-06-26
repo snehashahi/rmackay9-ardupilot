@@ -8,6 +8,9 @@
 // stabilize_init - initialise stabilize controller
 bool Copter::heli_stabilize_init(bool ignore_checks)
 {
+
+    // initialize smoothing gain
+    attitude_control->set_smoothing_gain(get_smoothing_gain());
     // set target altitude to zero for reporting
     // To-Do: make pos controller aware when it's active/inactive so it can always report the altitude error?
     pos_control->set_alt_target(0);
@@ -63,7 +66,7 @@ void Copter::heli_stabilize_run()
     pilot_throttle_scaled = input_manager.get_pilot_desired_collective(channel_throttle->get_control_in());
 
     // call attitude controller
-    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
+    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
 
     // output pilot's throttle - note that TradHeli does not used angle-boost
     attitude_control->set_throttle_out(pilot_throttle_scaled, false, g.throttle_filt);

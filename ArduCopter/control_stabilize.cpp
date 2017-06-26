@@ -12,6 +12,10 @@ bool Copter::stabilize_init(bool ignore_checks)
             (get_pilot_desired_throttle(channel_throttle->get_control_in()) > get_non_takeoff_throttle())) {
         return false;
     }
+
+    // initialize smoothing gain
+    attitude_control->set_smoothing_gain(get_smoothing_gain());
+
     // set target altitude to zero for reporting
     pos_control->set_alt_target(0);
 
@@ -52,7 +56,7 @@ void Copter::stabilize_run()
     pilot_throttle_scaled = get_pilot_desired_throttle(channel_throttle->get_control_in());
 
     // call attitude controller
-    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
+    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
 
     // body-frame rate controller is run directly from 100hz loop
 
