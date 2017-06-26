@@ -9,6 +9,9 @@ bool Copter::brake_init(bool ignore_checks)
 {
     if (position_ok() || ignore_checks) {
 
+        // initialize smoothing gain
+        attitude_control->set_smoothing_gain(get_smoothing_gain());
+
         // set desired acceleration to zero
         wp_nav->clear_pilot_desired_acceleration();
 
@@ -42,7 +45,7 @@ void Copter::brake_run()
         wp_nav->init_brake_target(BRAKE_MODE_DECEL_RATE);
 #if FRAME_CONFIG == HELI_FRAME  // Helicopters always stabilize roll/pitch/yaw
         // call attitude controller
-        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0, 0, 0, get_smoothing_gain());
+        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0, 0, 0);
         attitude_control->set_throttle_out(0,false,g.throttle_filt);
 #else
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
@@ -70,7 +73,7 @@ void Copter::brake_run()
     wp_nav->update_brake(ekfGndSpdLimit, ekfNavVelGainScaler);
 
     // call attitude controller
-    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), 0.0f, get_smoothing_gain());
+    attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), 0.0f);
 
     // body-frame rate controller is run directly from 100hz loop
 
