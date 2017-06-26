@@ -914,19 +914,6 @@ void AC_PosControl::rate_to_accel_xy(float dt, float ekfNavVelGainScaler)
     accel_target.x = (vel_xy_p.x + vel_xy_i.x) * ekfNavVelGainScaler;
     accel_target.y = (vel_xy_p.y + vel_xy_i.y) * ekfNavVelGainScaler;
 
-
-    // limit acceleration if necessary (should we limit the maximum lean angle to 45 degrees)
-    float accel_max = POSCONTROL_ACCEL_XY_MAX;
-    accel_max = MIN(accel_max, GRAVITY_MSS * 100.0f * tanf(ToRad(constrain_float(_attitude_control.get_althold_lean_angle_max(),1000,8000)/100.0f)));
-
-    // limit the acceleration or lean angle with feedforward included
-    accel_target.x += _accel_feedforward.x;
-    accel_target.y += _accel_feedforward.y;
-    _limit.accel_xy = limit_vector_length(accel_target.x, accel_target.y, accel_max);
-    // we don't want to jerk and jounce limit the feed forward to ensure the pilots request is not limited
-    accel_target.x -= _accel_feedforward.x;
-    accel_target.y -= _accel_feedforward.y;
-
     // limit jerk and jounce to limit the angular acceleration and angular jerk.
     float max_delta_accel = dt * _accel_xy_jerk*100.0f;
     Vector2f accel_change = accel_target-_accel_target_filter.get();
@@ -948,14 +935,19 @@ void AC_PosControl::accel_to_lean_angles(float dt, float ekfNavVelGainScaler, bo
 {
     float accel_right, accel_forward;
 
+    // limit acceleration using maximum lean angles
+    float angle_max = MIN(_attitude_control.get_althold_lean_angle_max(), _attitude_control.lean_angle_max());
+    float accel_max = GRAVITY_MSS * 100.0f * tanf(ToRad(angle_max * 0.01f));
+    _limit.accel_xy = limit_vector_length(_accel_target.x, _accel_target.y, accel_max);
+
     // rotate accelerations into body forward-right frame
     accel_forward = _accel_target.x*_ahrs.cos_yaw() + _accel_target.y*_ahrs.sin_yaw();
     accel_right = -_accel_target.x*_ahrs.sin_yaw() + _accel_target.y*_ahrs.cos_yaw();
 
     // update angle targets that will be passed to stabilize controller
-    _pitch_target = constrain_float(atanf(-accel_forward/(GRAVITY_MSS * 100))*(18000/M_PI),-_attitude_control.get_althold_lean_angle_max(), _attitude_control.get_althold_lean_angle_max());
+    _pitch_target = atanf(-accel_forward/(GRAVITY_MSS * 100))*(18000/M_PI);
     float cos_pitch_target = cosf(_pitch_target*M_PI/18000);
-    _roll_target = constrain_float(atanf(accel_right*cos_pitch_target/(GRAVITY_MSS * 100))*(18000/M_PI), -_attitude_control.get_althold_lean_angle_max(), _attitude_control.get_althold_lean_angle_max());
+    _roll_target = atanf(accel_right*cos_pitch_target/(GRAVITY_MSS * 100))*(18000/M_PI);
 }
 
 // get_lean_angles_to_accel - convert roll, pitch lean angles to lat/lon frame accelerations in cm/s/s
