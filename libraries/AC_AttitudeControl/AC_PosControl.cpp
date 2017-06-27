@@ -765,7 +765,7 @@ void AC_PosControl::update_vel_controller_xy(float ekfNavVelGainScaler)
         rate_to_accel_xy(dt, ekfNavVelGainScaler);
 
         // run acceleration to lean angle step
-        accel_to_lean_angles(dt, ekfNavVelGainScaler, false);
+        accel_to_lean_angles(dt, ekfNavVelGainScaler, true);
 
         // update xy update time
         _last_update_xy_ms = now;
