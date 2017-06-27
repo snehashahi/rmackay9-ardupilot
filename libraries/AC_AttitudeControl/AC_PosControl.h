@@ -225,7 +225,7 @@ public:
     // clear desired velocity feed-forward in z axis
     void clear_desired_velocity_ff_z() { _flags.use_desvel_ff_z = false; }
 
-    void set_desired_accel_xy(float accel_lat_cms, float accel_lon_cms) {_accel_feedforward.x = accel_lat_cms; _accel_feedforward.y = accel_lon_cms; }
+    void set_desired_accel_xy(float accel_lat_cms, float accel_lon_cms) {_accel_desired.x = accel_lat_cms; _accel_desired.y = accel_lon_cms; }
 
     /// set_desired_velocity_xy - sets desired velocity in cm/s in lat and lon directions
     ///     when update_xy_controller is next called the position target is moved based on the desired velocity and
@@ -431,9 +431,9 @@ protected:
     Vector3f    _vel_target;            // velocity target in cm/s calculated by pos_to_rate step
     Vector3f    _vel_error;             // error between desired and actual acceleration in cm/s
     Vector3f    _vel_last;              // previous iterations velocity in cm/s
-    Vector3f    _accel_feedforward;     // feedforward acceleration in cm/s/s
     Vector3f    _accel_target;          // acceleration target in cm/s/s
     Vector3f    _accel_error;           // acceleration error in cm/s/s
+    Vector3f    _accel_desired;         // desired acceleration in cm/s/s (feed forward)
     Vector2f    _vehicle_horiz_vel;     // velocity to use if _flags.vehicle_horiz_vel_override is set
     float       _distance_to_target;    // distance to position target - for reporting only
     LowPassFilterFloat _vel_error_filter;   // low-pass-filter on z-axis velocity error
