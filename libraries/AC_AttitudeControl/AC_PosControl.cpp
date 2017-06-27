@@ -242,7 +242,7 @@ void AC_PosControl::relax_alt_hold_controllers(float throttle_setting)
     _flags.use_desvel_ff_z = false;
     _vel_target.z = _inav.get_velocity_z();
     _vel_last.z = _inav.get_velocity_z();
-    _accel_feedforward.z = 0.0f;
+    _accel_desired.z = 0.0f;
     _accel_last_z_cms = 0.0f;
     _accel_target.z = -(_ahrs.get_accel_ef_blended().z + GRAVITY_MSS) * 100.0f;
     _flags.reset_accel_to_throttle = true;
@@ -425,13 +425,13 @@ void AC_PosControl::rate_to_accel_z()
     // feed forward desired acceleration calculation
     if (_dt > 0.0f) {
     	if (!_flags.freeze_ff_z) {
-    		_accel_feedforward.z = (_vel_target.z - _vel_last.z)/_dt;
+    	    _accel_desired.z = (_vel_target.z - _vel_last.z)/_dt;
         } else {
     		// stop the feed forward being calculated during a known discontinuity
     		_flags.freeze_ff_z = false;
     	}
     } else {
-    	_accel_feedforward.z = 0.0f;
+        _accel_desired.z = 0.0f;
     }
 
     // store this iteration's velocities for the next iteration
@@ -452,7 +452,7 @@ void AC_PosControl::rate_to_accel_z()
     p = _p_vel_z.kP() * _vel_error.z;
 
     // consolidate and constrain target acceleration
-    _accel_target.z = _accel_feedforward.z + p;
+    _accel_target.z = _accel_desired.z + p;
 
     // set target for accel based throttle controller
     accel_to_throttle(_accel_target.z);
@@ -809,8 +809,8 @@ void AC_PosControl::desired_accel_to_vel(float nav_dt)
     if (_flags.reset_desired_vel_to_pos) {
         _flags.reset_desired_vel_to_pos = false;
     } else {
-        _vel_desired.x += _accel_feedforward.x * nav_dt;
-        _vel_desired.y += _accel_feedforward.y * nav_dt;
+        _vel_desired.x += _accel_desired.x * nav_dt;
+        _vel_desired.y += _accel_desired.y * nav_dt;
     }
 }
 
@@ -915,8 +915,8 @@ void AC_PosControl::rate_to_accel_xy(float dt, float ekfNavVelGainScaler)
     _accel_target.x = _accel_target_filter.get().x;
     _accel_target.y = _accel_target_filter.get().y;
 
-    _accel_target.x += _accel_feedforward.x;
-    _accel_target.y += _accel_feedforward.y;
+    _accel_target.x += _accel_desired.x;
+    _accel_target.y += _accel_desired.y;
 }
 
 /// accel_to_lean_angles - horizontal desired acceleration to lean angles
