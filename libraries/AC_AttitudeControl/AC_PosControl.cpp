@@ -74,7 +74,6 @@ AC_PosControl::AC_PosControl(const AP_AHRS_View& ahrs, const AP_InertialNav& ina
     _flags.reset_accel_to_lean_xy = true;
     _flags.reset_rate_to_accel_z = true;
     _flags.reset_accel_to_throttle = true;
-    _flags.freeze_ff_xy = true;
     _flags.freeze_ff_z = true;
     _flags.use_desvel_ff_z = true;
     _limit.pos_up = true;
@@ -560,11 +559,6 @@ void AC_PosControl::shift_pos_xy_target(float x_cm, float y_cm)
     // move pos controller target
     _pos_target.x += x_cm;
     _pos_target.y += y_cm;
-
-    // disable feed forward
-    if (!is_zero(x_cm) || !is_zero(y_cm)) {
-        freeze_ff_xy();
-    }
 }
 
 /// set_target_to_stopping_point_xy - sets horizontal target to reasonable stopping position in cm from home
