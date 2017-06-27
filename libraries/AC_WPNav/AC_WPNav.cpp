@@ -85,7 +85,7 @@ const AP_Param::GroupInfo AC_WPNav::var_info[] = {
     // @Range: 100 981
     // @Increment: 1
     // @User: Advanced
-    AP_GROUPINFO("LOIT_MAXA",   8, AC_WPNav, _loiter_accel_cmss, WPNAV_LOITER_ACCEL),
+    AP_GROUPINFO("LOIT_MAXA",   8, AC_WPNav, _loiter_accel_cmss, WPNAV_LOITER_ACCEL_MAX),
 
     // @Param: LOIT_MINA
     // @DisplayName: Loiter minimum acceleration
