@@ -234,16 +234,13 @@ public:
 
     /// set_desired_velocity - sets desired velocity in cm/s in all 3 axis
     ///     when update_vel_controller_xyz is next called the position target is moved based on the desired velocity
-    void set_desired_velocity(const Vector3f &des_vel) { _vel_desired = des_vel; freeze_ff_xy(); }
+    void set_desired_velocity(const Vector3f &des_vel) { _vel_desired = des_vel; }
 
     // overrides the velocity process variable for one timestep
     void override_vehicle_velocity_xy(const Vector2f& vel_xy) { _vehicle_horiz_vel = vel_xy; _flags.vehicle_horiz_vel_override = true; }
 
     /// freeze_ff_z - used to stop the feed forward being calculated during a known discontinuity
     void freeze_ff_z() { _flags.freeze_ff_z = true; }
-
-    /// freeze_ff_xy - used to stop the feed forward being calculated during a known discontinuity
-    void freeze_ff_xy() { _flags.freeze_ff_xy = true; }
 
     // is_active_xy - returns true if the xy position controller has been run very recently
     bool is_active_xy() const;
