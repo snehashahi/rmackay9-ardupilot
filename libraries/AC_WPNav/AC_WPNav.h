@@ -19,6 +19,8 @@
 #define WPNAV_LOITER_ACCEL              250.0f      // default acceleration in loiter mode
 #define WPNAV_LOITER_ACCEL_MIN           25.0f      // minimum acceleration in loiter mode
 #define WPNAV_LOITER_JERK_MAX_DEFAULT  1000.0f      // maximum jerk in cm/s/s/s in loiter mode
+#define WPNAV_LOITER_BREAK_START_DELAY    0.0f      // delay (in seconds) before loiter breaking begins after sticks are released
+#define WPNAV_LOITER_BREAK_TRANS_TIME     0.5f      // time (in seconds) over which loiter breaking transitions to maximum
 
 #define WPNAV_WP_SPEED                  500.0f      // default horizontal speed between waypoints in cm/s
 #define WPNAV_WP_SPEED_MIN               20.0f      // minimum horizontal speed between waypoints in cm/s
@@ -329,6 +331,8 @@ protected:
     AP_Float    _loiter_jerk_max_cmsss; // maximum jerk in cm/s/s/s while in loiter
     AP_Float    _loiter_accel_cmss;     // loiter's max acceleration in cm/s/s
     AP_Float    _loiter_accel_min_cmss; // loiter's min acceleration in cm/s/s
+    AP_Float    _loiter_break_delay;    // delay (in seconds) before loiter breaking begins after sticks are released
+    AP_Float    _loiter_break_transition; // time (in seconds) over which loiter breaking transitions to maximum
     AP_Float    _wp_speed_cms;          // maximum horizontal speed in cm/s during missions
     AP_Float    _wp_speed_up_cms;       // climb speed target in cm/s
     AP_Float    _wp_speed_down_cms;     // descent speed target in cm/s
