@@ -236,7 +236,6 @@ void AC_WPNav::loiter_soften_for_landing()
 
     // set target position to current position
     _pos_control.set_xy_target(curr_pos.x, curr_pos.y);
-    _pos_control.freeze_ff_xy();
 }
 
 /// set_pilot_desired_acceleration - sets pilot desired acceleration from roll and pitch stick input
@@ -570,7 +569,6 @@ void AC_WPNav::shift_wp_origin_to_current_pos()
 
     // move pos controller target and disable feed forward
     _pos_control.set_pos_target(curr_pos);
-    _pos_control.freeze_ff_xy();
     _pos_control.freeze_ff_z();
 }
 
@@ -786,7 +784,6 @@ bool AC_WPNav::update_wpnav()
         // TODO: why always consider Z axis discontinuous?
         if (_flags.new_wp_destination) {
             _flags.new_wp_destination = false;
-            _pos_control.freeze_ff_xy();
         }
         _pos_control.freeze_ff_z();
 
@@ -1078,7 +1075,6 @@ bool AC_WPNav::update_spline()
         // TODO: why always consider Z axis discontinuous?
         if (_flags.new_wp_destination) {
             _flags.new_wp_destination = false;
-            _pos_control.freeze_ff_xy();
         }
         _pos_control.freeze_ff_z();
 
