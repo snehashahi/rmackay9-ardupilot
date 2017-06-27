@@ -178,7 +178,7 @@ void AC_WPNav::init_loiter_target(const Vector3f& position, bool reset_I)
     _pos_control.init_xy_controller(reset_I);
 
     // initialise pos controller speed, acceleration and jerk
-    _pos_control.set_speed_xy(_loiter_speed_cms);
+    _pos_control.set_speed_xy(WPNAV_LOITER_VEL_CORRECTION_MAX);
     _pos_control.set_accel_xy(_loiter_accel_cmss);
     _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
@@ -210,7 +210,7 @@ void AC_WPNav::init_loiter_target()
     _loiter_speed_cms = MAX(_loiter_speed_cms, WPNAV_LOITER_SPEED_MIN);
 
     // initialise pos controller speed and acceleration
-    _pos_control.set_speed_xy(_loiter_speed_cms); // should be maximum correction speed.
+    _pos_control.set_speed_xy(WPNAV_LOITER_VEL_CORRECTION_MAX);
     _pos_control.set_accel_xy(_loiter_accel_cmss);
     _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
