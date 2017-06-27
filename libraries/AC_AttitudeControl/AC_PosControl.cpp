@@ -844,9 +844,6 @@ void AC_PosControl::pos_to_rate_xy(xy_mode mode, float dt, float ekfNavVelGainSc
         _pos_error.x = _pos_target.x - curr_pos.x;
         _pos_error.y = _pos_target.y - curr_pos.y;
 
-
-        // _leash needs to be calculated based on POSCONTROL_VEL_XY_MAX_FROM_POS_ERR
-
         // Constrain _pos_error and target position
         // Constrain the maximum length of _vel_target to the maximum position correction velocity
         if (limit_vector_length(_pos_error.x, _pos_error.y, _leash))
