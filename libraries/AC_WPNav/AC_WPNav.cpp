@@ -365,7 +365,7 @@ void AC_WPNav::update_loiter(float ekfGndSpdLimit, float ekfNavVelGainScaler)
         _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
         calc_loiter_desired_velocity(dt,ekfGndSpdLimit);
-        _pos_control.update_xy_controller(AC_PosControl::XY_MODE_POS_LIMITED_AND_VEL_FF, ekfNavVelGainScaler, true);
+        _pos_control.update_xy_controller(ekfNavVelGainScaler, true);
     }
 }
 
@@ -401,7 +401,7 @@ void AC_WPNav::update_brake(float ekfGndSpdLimit, float ekfNavVelGainScaler)
 
         // send adjusted feed forward velocity back to position controller
         _pos_control.set_desired_velocity_xy(0,0);
-        _pos_control.update_xy_controller(AC_PosControl::XY_MODE_POS_LIMITED_AND_VEL_FF, ekfNavVelGainScaler, true);
+        _pos_control.update_xy_controller(ekfNavVelGainScaler, true);
     }
 }
 
@@ -787,7 +787,7 @@ bool AC_WPNav::update_wpnav()
         }
         _pos_control.freeze_ff_z();
 
-        _pos_control.update_xy_controller(AC_PosControl::XY_MODE_POS_ONLY, 1.0f, true);
+        _pos_control.update_xy_controller(1.0f, true);
         check_wp_leash_length();
 
         _wp_last_update = AP_HAL::millis();
@@ -1079,7 +1079,7 @@ bool AC_WPNav::update_spline()
         _pos_control.freeze_ff_z();
 
         // run horizontal position controller
-        _pos_control.update_xy_controller(AC_PosControl::XY_MODE_POS_ONLY, 1.0f, true);
+        _pos_control.update_xy_controller(1.0f, true);
 
         _wp_last_update = AP_HAL::millis();
     }
