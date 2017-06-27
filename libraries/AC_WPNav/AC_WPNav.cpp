@@ -288,14 +288,13 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
 
     float desired_speed = desired_vel.length();
 
-    Vector2f loiter_break_accel;
     if (!is_zero(desired_speed)) {
         Vector2f desired_vel_norm = desired_vel/desired_speed;
         float drag_decel = _loiter_accel_cmss*desired_speed/gnd_speed_limit_cms;
 
         float break_decel = 0.0f;
         if (_pilot_accel_fwd_cms == 0 && _pilot_accel_rgt_cms == 0) {
-            float break_scale = constrain_float((AP_HAL::millis()-_break_timer)*0.001f-1.0f, 0.0f, 1.0f);
+            float break_scale = constrain_float(((AP_HAL::millis()-_break_timer)*0.001f-_loiter_break_delay) / _loiter_break_transition, 0.0f, 1.0f);
             break_decel = break_scale*_loiter_accel_min_cmss*desired_speed/(desired_speed+_loiter_accel_min_cmss*0.5f);
         } else {
             _break_timer = AP_HAL::millis();
