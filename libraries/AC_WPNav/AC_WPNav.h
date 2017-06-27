@@ -21,6 +21,7 @@
 #define WPNAV_LOITER_JERK_MAX_DEFAULT  1000.0f      // maximum jerk in cm/s/s/s in loiter mode
 #define WPNAV_LOITER_BREAK_START_DELAY    0.0f      // delay (in seconds) before loiter breaking begins after sticks are released
 #define WPNAV_LOITER_BREAK_TRANS_TIME     0.5f      // time (in seconds) over which loiter breaking transitions to maximum
+#define WPNAV_LOITER_VEL_CORRECTION_MAX 200.0f      // max speed used to correct position errors in loiter
 
 #define WPNAV_WP_SPEED                  500.0f      // default horizontal speed between waypoints in cm/s
 #define WPNAV_WP_SPEED_MIN               20.0f      // minimum horizontal speed between waypoints in cm/s
