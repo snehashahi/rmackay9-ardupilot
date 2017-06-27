@@ -658,7 +658,7 @@ void AC_PosControl::init_xy_controller(bool reset_I)
 }
 
 /// update_xy_controller - run the horizontal position controller - should be called at 100hz or higher
-void AC_PosControl::update_xy_controller(xy_mode mode, float ekfNavVelGainScaler, bool use_althold_lean_angle)
+void AC_PosControl::update_xy_controller(float ekfNavVelGainScaler, bool use_althold_lean_angle)
 {
     // compute dt
     uint32_t now = AP_HAL::millis();
@@ -680,7 +680,7 @@ void AC_PosControl::update_xy_controller(xy_mode mode, float ekfNavVelGainScaler
     desired_vel_to_pos(dt);
 
     // run position controller's position error to desired velocity step
-    pos_to_rate_xy(mode, dt, ekfNavVelGainScaler);
+    pos_to_rate_xy(dt, ekfNavVelGainScaler);
 
     // run position controller's velocity to acceleration step
     rate_to_accel_xy(dt, ekfNavVelGainScaler);
@@ -753,7 +753,7 @@ void AC_PosControl::update_vel_controller_xy(float ekfNavVelGainScaler)
         desired_vel_to_pos(dt);
 
         // run position controller's position error to desired velocity step
-        pos_to_rate_xy(XY_MODE_POS_LIMITED_AND_VEL_FF, dt, ekfNavVelGainScaler);
+        pos_to_rate_xy(dt, ekfNavVelGainScaler);
 
         // run velocity to acceleration step
         rate_to_accel_xy(dt, ekfNavVelGainScaler);
@@ -840,7 +840,7 @@ void AC_PosControl::desired_vel_to_pos(float nav_dt)
 ///     when use_desired_rate is set to true:
 ///         desired velocity (_vel_desired) is combined into final target velocity and
 ///         velocity due to position error is reduce to a maximum of 1m/s
-void AC_PosControl::pos_to_rate_xy(xy_mode mode, float dt, float ekfNavVelGainScaler)
+void AC_PosControl::pos_to_rate_xy(float dt, float ekfNavVelGainScaler)
 {
     Vector3f curr_pos = _inav.get_position();
     float kP = ekfNavVelGainScaler * _p_pos_xy.kP(); // scale gains to compensate for noisy optical flow measurement in the EKF
