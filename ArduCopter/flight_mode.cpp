@@ -57,6 +57,10 @@ bool Copter::set_mode(control_mode_t mode, mode_reason_t reason)
             success = loiter_init(ignore_checks);
             break;
 
+        case LOITER2GO:
+            success = loiter2go_init(ignore_checks);
+            break;
+
         case GUIDED:
             success = guided_init(ignore_checks);
             break;
@@ -194,6 +198,10 @@ void Copter::update_flight_mode()
             loiter_run();
             break;
 
+        case LOITER2GO:
+            loiter2go_run();
+            break;
+
         case GUIDED:
             guided_run();
             break;
@@ -306,6 +314,7 @@ bool Copter::mode_requires_GPS(control_mode_t mode)
         case AUTO:
         case GUIDED:
         case LOITER:
+        case LOITER2GO:
         case RTL:
         case CIRCLE:
         case DRIFT:
@@ -383,6 +392,9 @@ void Copter::notify_flight_mode(control_mode_t mode)
         case LOITER:
             notify.set_flight_mode_str("LOIT");
             break;
+        case LOITER2GO:
+            notify.set_flight_mode_str("LT2G");
+            break;
         case RTL:
             notify.set_flight_mode_str("RTL ");
             break;
@@ -448,6 +460,9 @@ void Copter::print_flight_mode(AP_HAL::BetterStream *port, uint8_t mode)
         break;
     case LOITER:
         port->printf("LOITER");
+        break;
+    case LOITER2GO:
+        port->printf("LOITER2GO");
         break;
     case RTL:
         port->printf("RTL");

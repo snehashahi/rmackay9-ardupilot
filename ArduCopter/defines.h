@@ -103,6 +103,7 @@ enum control_mode_t {
     THROW =        18,  // throw to launch mode using inertial/GPS system, no pilot input
     AVOID_ADSB =   19,  // automatic avoidance of obstacles in the macro scale - e.g. full-sized aircraft
     GUIDED_NOGPS = 20,  // guided mode but only accepts attitude and altitude
+    LOITER2GO =    22,  // add mode
 };
 
 enum mode_reason_t {
@@ -233,6 +234,14 @@ enum LoiterModeState {
     Loiter_Takeoff,
     Loiter_Flying,
     Loiter_Landed
+};
+
+// Loiter states
+enum Loiter2GoModeState {
+    Loiter2Go_MotorStopped,
+    Loiter2Go_Takeoff,
+    Loiter2Go_Flying,
+    Loiter2Go_Landed
 };
 
 // Sport states
