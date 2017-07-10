@@ -19,7 +19,7 @@ const AP_Param::GroupInfo AC_PosControl::var_info[] = {
     // @Param: _ACC_XY_JERK
     // @DisplayName: XY Jerk limit
     // @Description: Lower values will slow the response of the navigation controller and reduce twitchiness
-    // @Units: m/s^3
+    // @Units: m/s/s/s
     // @Range: 0 100
     // @Increment: 0.1
     // @User: Advanced
