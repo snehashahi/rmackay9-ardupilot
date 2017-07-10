@@ -106,7 +106,7 @@ const AP_Param::GroupInfo AC_WPNav::var_info[] = {
     // @Param: LOIT_DELA
     // @DisplayName: Loiter break start delay (in seconds)
     // @Description: Loiter break start delay (in seconds)
-    // @Units: seconds
+    // @Units: s
     // @Range: 0 2
     // @Increment: 0.1
     // @User: Advanced
@@ -115,7 +115,7 @@ const AP_Param::GroupInfo AC_WPNav::var_info[] = {
     // @Param: LOIT_TRAN
     // @DisplayName: Loiter break transition from zero to maximum (in seconds)
     // @Description: Loiter break transition from zero to maximum (in seconds)
-    // @Units: seconds
+    // @Units: s
     // @Range: 0.1 2
     // @Increment: 0.1
     // @User: Advanced
