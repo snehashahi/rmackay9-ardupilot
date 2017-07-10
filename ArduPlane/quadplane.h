@@ -161,7 +161,7 @@ private:
     void init_throttle_wait();
 
     // use multicopter rate controller
-    void multicopter_attitude_rate_update(float yaw_rate_cds, float smoothing_gain);
+    void multicopter_attitude_rate_update(float yaw_rate_cds);
     
     // main entry points for VTOL flight modes
     void init_stabilize(void);
@@ -273,7 +273,9 @@ private:
     // last throttle value when active
     float last_throttle;
 
-    const float smoothing_gain = 6;
+    // multicopter attitude control smoothing gains for modes where user controls lean angles (qstab, qalthold) and more autonomous modes (auto, qloiter, qrtl)
+    const float smoothing_gain_manual = 6.0f;
+    const float smoothing_gain_auto = 4.0f;
 
     // true if we have reached the airspeed threshold for transition
     enum {
