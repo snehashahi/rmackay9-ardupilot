@@ -11,7 +11,9 @@ Mode::Mode() :
 
 void Mode::exit()
 {
+    // call sub-classes exit
     _exit();
+
     lateral_acceleration = 0.0f;
     rover.throttle = 500;
     rover.g.pidSpeedThrottle.reset_I();
