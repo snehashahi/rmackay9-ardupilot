@@ -70,11 +70,6 @@ protected:
     class RC_Channel *&channel_steer;  // TODO : Pointer reference ?
     class RC_Channel *&channel_throttle;
     class AP_Mission &mission;
-
-
-private:
-
-    virtual bool stickmixing_enabled() const { return true; }
 };
 
 
@@ -212,6 +207,5 @@ public:
     uint32_t mode_number() const override { return INITIALISING; }
 
     bool has_manual_input() const override { return true; }
-    bool stickmixing_enabled() const override { return false; }
     bool attitude_stabilized() const override { return false; }
 };
