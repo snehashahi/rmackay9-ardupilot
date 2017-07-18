@@ -15,17 +15,20 @@ void ModeSteering::update() {
     // constrain to user set TURN_MAX_G
     max_g_force = constrain_float(max_g_force, 0.1f, g.turn_max_g * GRAVITY_MSS);
 
+    // convert pilot steering input to desired lateral acceleration
     lateral_acceleration = max_g_force * (channel_steer->get_control_in() / 4500.0f);
+
+    // run steering controller
     calc_nav_steer();
 
-    // and throttle gives speed in proportion to cruise speed, up
-    // to 50% throttle, then uses nudging above that.
+    // convert pilot throttle input to desired speed
+    // speed in proportion to cruise speed, up to 50% throttle, then uses nudging above that.
     float target_speed = channel_throttle->get_control_in() * 0.01f * 2.0f * g.speed_cruise;
+    target_speed = constrain_float(target_speed, -g.speed_cruise, g.speed_cruise);
+
+    // mark us as in_reverse when using a negative throttle to stop AHRS getting off
     rover.set_reverse(is_negative(target_speed));
-    if (rover.in_reverse) {
-        target_speed = constrain_float(target_speed, -g.speed_cruise, 0.0f);
-    } else {
-        target_speed = constrain_float(target_speed, 0.0f, g.speed_cruise);
-    }
+
+    // run speed to throttle output controller
     calc_throttle(target_speed);
 }
