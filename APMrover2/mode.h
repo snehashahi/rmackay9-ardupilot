@@ -35,7 +35,6 @@ public:
     // return if in non-manual mode : AUTO, GUIDED, RTL
     virtual bool is_autopilot_mode() const { return false; }
 
-    virtual bool angular_rate_control() const { return true; }
     virtual bool attitude_stabilized() const { return true; }
     // returns true if the throttle is controlled automatically
     virtual bool auto_throttle() { return is_autopilot_mode(); }
@@ -149,7 +148,6 @@ public:
     void update() override;
 
     uint32_t mode_number() const override { return HOLD; }
-    bool angular_rate_control() const override { return false; }
     bool attitude_stabilized() const override { return false; }
 };
 
@@ -163,7 +161,6 @@ public:
 
     uint32_t mode_number() const override { return MANUAL; }
     bool has_manual_input() const override { return true; }
-    bool angular_rate_control() const override { return false; }
     bool attitude_stabilized() const override { return false; }
 };
 
@@ -218,6 +215,5 @@ public:
 
     bool has_manual_input() const override { return true; }
     bool stickmixing_enabled() const override { return false; }
-    bool angular_rate_control() const override { return false; }
     bool attitude_stabilized() const override { return false; }
 };
