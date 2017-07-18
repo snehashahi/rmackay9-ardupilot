@@ -6,8 +6,7 @@ Mode::Mode() :
     g2(rover.g2),
     channel_steer(rover.channel_steer),
     channel_throttle(rover.channel_throttle),
-    mission(rover.mission),
-    lateral_acceleration{0}
+    mission(rover.mission)
 { }
 
 void Mode::exit()
