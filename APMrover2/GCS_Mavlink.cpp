@@ -55,7 +55,7 @@ void Rover::send_heartbeat(mavlink_channel_t chan)
 
     gcs().chan(chan-MAVLINK_COMM_0).send_heartbeat(MAV_TYPE_GROUND_ROVER,
                                             base_mode,
-                                            control_mode->mavlink_custom_mode(),
+                                            control_mode->mode_number(),
                                             system_status);
 }
 

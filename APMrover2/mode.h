@@ -30,8 +30,6 @@ public:
 
     // returns a unique number specific to this mode
     virtual uint32_t mode_number() const = 0;
-    // return the mode number for mavlink msg
-    uint32_t mavlink_custom_mode() const { return mode_number(); }  // for heartbeat.custom_mode
     // return if in non-manual mode : AUTO, GUIDED, RTL
     virtual bool is_autopilot_mode() const { return false; }
 

@@ -304,7 +304,7 @@ bool Rover::set_mode(Mode &new_mode)
     old_mode.exit();
 
     if (should_log(MASK_LOG_MODE)) {
-        DataFlash.Log_Write_Mode(control_mode->mavlink_custom_mode());
+        DataFlash.Log_Write_Mode(control_mode->mode_number());
     }
 
     notify_mode((enum mode)control_mode->mode_number());
