@@ -66,18 +66,21 @@ bool ModeAuto::check_trigger(void)
         return true;
     }
 
+    // return true if auto trigger and kickstart are disabled
     if (g.auto_trigger_pin == -1 && is_zero(g.auto_kickstart)) {
         // no trigger configured - let's go!
         auto_triggered = true;
         return true;
     }
 
+    // check if trigger pin has been pushed
     if (g.auto_trigger_pin != -1 && rover.check_digital_pin(g.auto_trigger_pin) == 0) {
         gcs().send_text(MAV_SEVERITY_WARNING, "Triggered AUTO with pin");
         auto_triggered = true;
         return true;
     }
 
+    // check if mission is started by giving vehicle a kick with acceleration > AUTO_KICKSTART
     if (!is_zero(g.auto_kickstart)) {
         const float xaccel = rover.ins.get_accel().x;
         if (xaccel >= g.auto_kickstart) {
