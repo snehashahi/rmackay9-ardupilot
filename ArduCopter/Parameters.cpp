@@ -1014,7 +1014,14 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
 
     // ID 19 reserved for TCAL (PR pending)
     // ID 20 reserved for TX_TYPE (PR pending)
-    
+
+    // @Param: FS_GPS_GLITCH
+    // @DisplayName: Failsafe Action for GPS Glitch
+    // @Description: Controls what action will occur when a GPS Glitch occurs in Loiter or PosHold
+    // @Values: 0:Disabled,1:AltHold
+    // @User: Standard
+    AP_GROUPINFO("FS_GPS_GLITCH", 21, ParametersG2, failsafe_gpsglitch, FS_GPS_GLITCH_ALTHOLD),
+
     AP_GROUPEND
 };
 

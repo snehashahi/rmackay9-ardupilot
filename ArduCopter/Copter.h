@@ -274,7 +274,7 @@ private:
             uint8_t land_complete_maybe     : 1; // 14      // true if we may have landed (less strict version of land_complete)
             uint8_t throttle_zero           : 1; // 15      // true if the throttle stick is at zero, debounced, determines if pilot intends shut-down when not using motor interlock
             uint8_t system_time_set         : 1; // 16      // true if the system time has been set from the GPS
-            uint8_t gps_base_pos_set        : 1; // 17      // true when the gps base position has been set (used for RTK gps only)
+            uint8_t gps_glitching           : 1; // 17      // true if the gps is glitching
             enum HomeState home_state       : 2; // 18,19   // home status (unset, set, locked)
             uint8_t using_interlock         : 1; // 20      // aux switch motor interlock function is in use
             uint8_t motor_emergency_stop    : 1; // 21      // motor estop switch, shuts off motors when enabled
@@ -334,6 +334,7 @@ private:
         uint8_t ekf                 : 1; // 5   // true if ekf failsafe has occurred
         uint8_t terrain             : 1; // 6   // true if the missing terrain data failsafe has occurred
         uint8_t adsb                : 1; // 7   // true if an adsb related failsafe has occurred
+        uint8_t gps_glitch          : 1; // 8   // true if a GPS glitch failsafe has occurred
 
         int8_t radio_counter;            // number of iterations with throttle below throttle_fs_value
 
@@ -974,6 +975,9 @@ private:
     void failsafe_terrain_check();
     void failsafe_terrain_set_status(bool data_ok);
     void failsafe_terrain_on_event();
+    void gpsglitch_check();
+    void failsafe_gpsglitch_on_event();
+    void failsafe_gpsglitch_off_event();
     void set_mode_RTL_or_land_with_pause(mode_reason_t reason);
     void update_events();
     void failsafe_enable();

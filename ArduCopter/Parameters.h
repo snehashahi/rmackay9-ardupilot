@@ -570,6 +570,9 @@ public:
     
     // control over servo output ranges
     SRV_Channels servo_channels;
+
+    // gps glitch failsafe action
+    AP_Int8 failsafe_gpsglitch;
 };
 
 extern const AP_Param::Info        var_info[];

@@ -114,7 +114,7 @@ enum mode_reason_t {
     MODE_REASON_BATTERY_FAILSAFE,
     MODE_REASON_GCS_FAILSAFE,
     MODE_REASON_EKF_FAILSAFE,
-    MODE_REASON_GPS_GLITCH,
+    MODE_REASON_GPS_GLITCH_FAILSAFE,
     MODE_REASON_MISSION_END,
     MODE_REASON_THROTTLE_LAND_ESCAPE,
     MODE_REASON_FENCE_BREACH,
@@ -124,6 +124,7 @@ enum mode_reason_t {
     MODE_REASON_AVOIDANCE,
     MODE_REASON_AVOIDANCE_RECOVERY,
     MODE_REASON_THROW_COMPLETE,
+    MODE_REASON_FAILSAFE_RECOVERY
 };
 
 // Tuning enumeration
@@ -408,7 +409,7 @@ enum DevOptions {
 #define ERROR_SUBSYSTEM_FAILSAFE_GCS        8
 #define ERROR_SUBSYSTEM_FAILSAFE_FENCE      9
 #define ERROR_SUBSYSTEM_FLIGHT_MODE         10
-#define ERROR_SUBSYSTEM_GPS                 11  // not used
+#define ERROR_SUBSYSTEM_GPS                 11
 #define ERROR_SUBSYSTEM_CRASH_CHECK         12
 #define ERROR_SUBSYSTEM_FLIP                13
 #define ERROR_SUBSYSTEM_AUTOTUNE            14
@@ -422,6 +423,7 @@ enum DevOptions {
 #define ERROR_SUBSYSTEM_NAVIGATION          22
 #define ERROR_SUBSYSTEM_FAILSAFE_TERRAIN    23
 #define ERROR_SUBSYSTEM_EKF_PRIMARY         24
+#define ERROR_SUBSYSTEM_FAILSAFE_GPSGLITCH  25
 // general error codes
 #define ERROR_CODE_ERROR_RESOLVED           0
 #define ERROR_CODE_FAILED_TO_INITIALISE     1
@@ -456,6 +458,8 @@ enum DevOptions {
 #define ERROR_CODE_EKFCHECK_VARIANCE_CLEARED   0
 // Baro specific error codes
 #define ERROR_CODE_BARO_GLITCH              2
+// GPS specific error coces
+#define ERROR_CODE_GPS_GLITCH               2
 
 // Radio failsafe definitions (FS_THR parameter)
 #define FS_THR_DISABLED                    0
@@ -477,6 +481,10 @@ enum DevOptions {
 #define FS_EKF_ACTION_LAND                  1       // switch to LAND mode on EKF failsafe
 #define FS_EKF_ACTION_ALTHOLD               2       // switch to ALTHOLD mode on EKF failsafe
 #define FS_EKF_ACTION_LAND_EVEN_STABILIZE   3       // switch to Land mode on EKF failsafe even if in a manual flight mode like stabilize
+
+// GPS glitch failsafe actions (FS_GPS_GLITCH parameter)
+#define FS_GPS_GLITCH_DISABLED              0
+#define FS_GPS_GLITCH_ALTHOLD               1
 
 // for mavlink SET_POSITION_TARGET messages
 #define MAVLINK_SET_POS_TYPE_MASK_POS_IGNORE      ((1<<0) | (1<<1) | (1<<2))

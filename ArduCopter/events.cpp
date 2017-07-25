@@ -184,6 +184,65 @@ void Copter::failsafe_terrain_on_event()
     }
 }
 
+// check for gps glitch failsafe
+void Copter::gpsglitch_check()
+{
+    // get filter status
+    nav_filter_status filt_status = inertial_nav.get_filter_status();
+    bool gps_glitching = filt_status.flags.gps_glitching;
+
+    // set AP_Notify flag to notify user
+    AP_Notify::flags.gps_glitch = gps_glitching;
+
+    // log start or stop of gps glitch
+    if (ap.gps_glitching != gps_glitching) {
+        ap.gps_glitching = gps_glitching;
+        if (gps_glitching) {
+            Log_Write_Error(ERROR_SUBSYSTEM_GPS, ERROR_CODE_GPS_GLITCH);
+        } else {
+            Log_Write_Error(ERROR_SUBSYSTEM_GPS, ERROR_CODE_ERROR_RESOLVED);
+        }
+    }
+
+    // trigger gps glitch failsafe in modes that requires GPS but also have pilot input
+    bool valid_mode = (control_mode == LOITER || control_mode == POSHOLD);
+
+    // take failsafe action
+    if (gps_glitching) {
+        if (motors->armed() && valid_mode && !failsafe.gps_glitch) {
+            failsafe_gpsglitch_on_event();
+        }
+    } else {
+        // recover from failsafe
+        if (!gps_glitching && failsafe.gps_glitch) {
+            failsafe_gpsglitch_off_event();
+        }
+    }
+}
+
+// gps glitch action
+void Copter::failsafe_gpsglitch_on_event()
+{
+    failsafe.gps_glitch = true;
+    gcs().send_text(MAV_SEVERITY_CRITICAL,"Failsafe: GPS Glitch");
+    Log_Write_Error(ERROR_SUBSYSTEM_FAILSAFE_GPSGLITCH, ERROR_CODE_FAILSAFE_OCCURRED);
+    set_mode(ALT_HOLD, MODE_REASON_GPS_GLITCH_FAILSAFE);
+}
+
+// gps glitch recovery
+void Copter::failsafe_gpsglitch_off_event()
+{
+    // record recovery from failsafe
+    failsafe.gps_glitch = false;
+    gcs().send_text(MAV_SEVERITY_CRITICAL,"Failsafe: GPS Glitch cleared");
+    Log_Write_Error(ERROR_SUBSYSTEM_FAILSAFE_TERRAIN, ERROR_CODE_FAILSAFE_OCCURRED);
+
+    // if flight mode hasn't been changed by user, revert to original mode
+    if (control_mode_reason == MODE_REASON_GPS_GLITCH_FAILSAFE) {
+        set_mode(prev_control_mode, MODE_REASON_FAILSAFE_RECOVERY);
+    }
+}
+
 // set_mode_RTL_or_land_with_pause - sets mode to RTL if possible or LAND with 4 second delay before descent starts
 //  this is always called from a failsafe so we trigger notification to pilot
 void Copter::set_mode_RTL_or_land_with_pause(mode_reason_t reason)
