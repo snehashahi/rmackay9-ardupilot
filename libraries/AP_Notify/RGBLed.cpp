@@ -207,6 +207,11 @@ void RGBLed::update_colours(void)
                     _red_des = brightness;
                     _blue_des = _led_off;
                     _green_des = _led_off;
+                } else if (AP_Notify::flags.gps_glitch) {
+                    // blue on gps glitch
+                    _red_des = _led_off;
+                    _blue_des = brightness;
+                    _green_des = _led_off;
                 }else{
                     // all off for radio or battery failsafe
                     _red_des = _led_off;
