@@ -430,7 +430,7 @@ void AC_WPNav::wp_and_spline_init()
     _pos_control.set_speed_xy(_wp_speed_cms);
     _pos_control.set_accel_xy(_wp_accel_cms);
     _pos_control.set_jerk_xy_to_default();
-    _pos_control.set_speed_z(-_wp_speed_down_cms, _wp_speed_up_cms);
+    _pos_control.set_speed_z(_wp_speed_down_cms, _wp_speed_up_cms);
     _pos_control.set_accel_z(_wp_accel_z_cms);
     _pos_control.calc_leash_length_xy();
     _pos_control.calc_leash_length_z();
