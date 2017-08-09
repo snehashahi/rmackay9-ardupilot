@@ -259,15 +259,15 @@ const AP_Param::Info Copter::var_info[] = {
     // @Increment: 10
     // @User: Standard
     GSCALAR(land_speed_high,        "LAND_SPEED_HIGH",   0),
-    
-    // @Param: PILOT_VELZ_MAX
-    // @DisplayName: Pilot maximum vertical speed
-    // @Description: The maximum vertical velocity the pilot may request in cm/s
+
+    // @Param: PILOT_VELZ_UP
+    // @DisplayName: Pilot maximum climb speed
+    // @Description: The maximum vertical climb the pilot may request in cm/s
     // @Units: cm/s
     // @Range: 50 500
     // @Increment: 10
     // @User: Standard
-    GSCALAR(pilot_velocity_z_max,     "PILOT_VELZ_MAX",   PILOT_VELZ_MAX),
+    GSCALAR(pilot_velocity_z_up,     "PILOT_VELZ_UP",   PILOT_VELZ_MAX),
 
     // @Param: PILOT_ACCEL_Z
     // @DisplayName: Pilot vertical acceleration
@@ -1014,7 +1014,16 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
 
     // ID 19 reserved for TCAL (PR pending)
     // ID 20 reserved for TX_TYPE (PR pending)
-    
+
+    // @Param: PILOT_VELZ_DN
+    // @DisplayName: Pilot maximum descent speed
+    // @Description: The maximum vertical decent the pilot may request in cm/s
+    // @Units: cm/s
+    // @Range: 50 500
+    // @Increment: 10
+    // @User: Standard
+    AP_GROUPINFO("PILOT_VELZ_DN", 21, ParametersG2, pilot_velocity_z_dn, PILOT_VELZ_MAX),
+
     AP_GROUPEND
 };
 
