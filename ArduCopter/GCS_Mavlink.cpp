@@ -1666,6 +1666,16 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 #endif
         break;
 
+    case MAVLINK_MSG_ID_VISION_POSITION_SLAM:
+    {
+        // decode message
+        mavlink_vision_position_slam_t packet;
+        mavlink_msg_vision_position_slam_decode(msg, &packet);
+        ::printf("vp-slam:%lu",(unsigned long)packet.time_usec);
+        // To-Do: pass this message to the EKF
+        break;
+    }
+
     default:
         handle_common_message(msg);
         break;
