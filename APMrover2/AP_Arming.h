@@ -34,6 +34,7 @@ protected:
 
     enum HomeState home_status() const override;
     bool fence_checks(bool report);
+    bool proximity_check(bool report);
 
 private:
     const AC_Fence& _fence;
