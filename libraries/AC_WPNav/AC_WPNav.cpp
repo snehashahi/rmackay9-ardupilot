@@ -487,9 +487,7 @@ bool AC_WPNav::set_wp_origin_and_destination(const Vector3f& origin, const Vecto
     // calculate each axis' percentage of the total distance to the destination
     if (is_zero(_track_length)) {
         // avoid possible divide by zero
-        _pos_delta_unit.x = 0;
-        _pos_delta_unit.y = 0;
-        _pos_delta_unit.z = 0;
+        _pos_delta_unit.zero();
     }else{
         _pos_delta_unit = pos_delta/_track_length;
     }
