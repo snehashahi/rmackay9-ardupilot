@@ -19,6 +19,11 @@ bool ModeGuided::_enter()
 
 void ModeGuided::update()
 {
+    // if not armed return immediately
+    if (!rover.arming.is_armed()) {
+        return;
+    }
+
     switch (_guided_mode) {
         case Guided_WP:
         {
