@@ -3,6 +3,11 @@
 
 void ModeSteering::update()
 {
+    // if not armed return immediately
+    if (!rover.arming.is_armed()) {
+        return;
+    }
+
     // convert pilot throttle input to desired speed (up to twice the cruise speed)
     float target_speed = channel_throttle->get_control_in() * 0.01f * calc_speed_max(g.speed_cruise, g.throttle_cruise * 0.01f);
 

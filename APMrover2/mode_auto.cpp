@@ -34,6 +34,11 @@ void ModeAuto::_exit()
 
 void ModeAuto::update()
 {
+    // if not armed return immediately
+    if (!rover.arming.is_armed()) {
+        return;
+    }
+
     switch (_submode) {
         case Auto_WP:
         {

@@ -20,6 +20,11 @@ bool ModeRTL::_enter()
 
 void ModeRTL::update()
 {
+    // if not armed return immediately
+    if (!rover.arming.is_armed()) {
+        return;
+    }
+
     if (!_reached_destination) {
         // calculate distance to home
         _distance_to_destination = get_distance(rover.current_loc, _destination);
