@@ -208,16 +208,18 @@ void Mode::calc_steering_to_waypoint(const struct Location &origin, const struct
         } else {
             lateral_acceleration = -g.turn_max_g * GRAVITY_MSS;
         }
+        // call lateral acceleration controller but never reverse because vehicle is stopped
+        calc_steering_from_lat_accel(false);
     } else {
         // use L1 controller to calculate the desired lateral acceleration
         // negative error = left turn, positive error = right turn
         rover.nav_controller->set_reverse(reversed);
         rover.nav_controller->update_waypoint(origin, destination);
         lateral_acceleration = rover.nav_controller->lateral_acceleration();
-    }
 
-    // call lateral acceleration controller
-    calc_steering_from_lat_accel(reversed);
+        // call lateral acceleration controller
+        calc_steering_from_lat_accel(reversed);
+    }
 }
 
 // calculate steering output given a desired lateral acceleration
