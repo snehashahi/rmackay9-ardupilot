@@ -149,7 +149,7 @@ float Mode::calc_speed_nudge(float target_speed, float cruise_speed, float cruis
 }
 
 // calculated a reduced speed(in m/s) based on yaw error and lateral acceleration and/or distance to a waypoint
-// should be called after calc_lateral_acceleration and before calc_throttle
+// should be called after calc_steering_to_waypoint and before calc_throttle
 // relies on these internal members being updated: lateral_acceleration, _yaw_error_cd, _distance_to_destination
 float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
 {
@@ -189,34 +189,39 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
     return speed_scaled;
 }
 
-// calculate the lateral acceleration target to cause the vehicle to drive along the path from origin to destination
+// calculate the steering output to drive the vehicle to drive along the path from origin to destination
 // this function update lateral_acceleration and _yaw_error_cd members
-void Mode::calc_lateral_acceleration(const struct Location &origin, const struct Location &destination, bool reversed)
+void Mode::calc_steering_to_waypoint(const struct Location &origin, const struct Location &destination, bool reversed)
 {
-    // Calculate the required turn of the wheels
-    // negative error = left turn
-    // positive error = right turn
-    rover.nav_controller->set_reverse(reversed);
-    rover.nav_controller->update_waypoint(origin, destination);
-    lateral_acceleration = rover.nav_controller->lateral_acceleration();
+    // calculate yaw error
+    const float target_bearing_cd = get_bearing_cd(rover.current_loc, destination);
     if (reversed) {
-        _yaw_error_cd = wrap_180_cd(rover.nav_controller->target_bearing_cd() - ahrs.yaw_sensor + 18000);
+        _yaw_error_cd = wrap_180_cd(target_bearing_cd - ahrs.yaw_sensor + 18000);
     } else {
-        _yaw_error_cd = wrap_180_cd(rover.nav_controller->target_bearing_cd() - ahrs.yaw_sensor);
+        _yaw_error_cd = wrap_180_cd(target_bearing_cd - ahrs.yaw_sensor);
     }
+
+    // determine if we should pivot to destination
     if (rover.use_pivot_steering(_yaw_error_cd)) {
         if (_yaw_error_cd >= 0.0f) {
             lateral_acceleration = g.turn_max_g * GRAVITY_MSS;
         } else {
             lateral_acceleration = -g.turn_max_g * GRAVITY_MSS;
         }
+    } else {
+        // use L1 controller to calculate the desired lateral acceleration
+        // negative error = left turn, positive error = right turn
+        rover.nav_controller->set_reverse(reversed);
+        rover.nav_controller->update_waypoint(origin, destination);
+        lateral_acceleration = rover.nav_controller->lateral_acceleration();
     }
+
+    // call lateral acceleration controller
+    calc_steering_from_lat_accel(reversed);
 }
 
-/*
-    calculate steering angle given lateral_acceleration
-*/
-void Mode::calc_nav_steer(bool reversed)
+// calculate steering output given a desired lateral acceleration
+void Mode::calc_steering_from_lat_accel(bool reversed)
 {
     // add obstacle avoidance response to lateral acceleration target
     if (!reversed) {

@@ -46,7 +46,7 @@ void ModeSteering::update()
         stop_vehicle();
     } else {
         // run steering controller
-        calc_nav_steer(reversed);
+        calc_steering_from_lat_accel(reversed);
         calc_throttle(target_speed, false);
     }
 }
