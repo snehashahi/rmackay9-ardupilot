@@ -131,7 +131,7 @@ AR_AttitudeControl::AR_AttitudeControl(AP_AHRS &ahrs) :
 
 // return a steering servo output from -1.0 to +1.0 given a desired lateral acceleration rate in m/s/s.
 // positive lateral acceleration is to the right.
-float AR_AttitudeControl::get_steering_out_lat_accel(float desired_accel, bool skid_steering, bool motor_limit_left, bool motor_limit_right)
+float AR_AttitudeControl::get_steering_out_lat_accel(float desired_accel, bool skid_steering, bool motor_limit_left, bool motor_limit_right, bool reversed)
 {
     // get speed forward
     float speed;
@@ -143,7 +143,7 @@ float AR_AttitudeControl::get_steering_out_lat_accel(float desired_accel, bool s
 
     // enforce minimum speed to stop oscillations when first starting to move
     if (fabsf(speed) < AR_ATTCONTROL_STEER_SPEED_MIN) {
-        if (is_negative(speed)) {
+        if (reversed) {
             speed = -AR_ATTCONTROL_STEER_SPEED_MIN;
         } else {
             speed = AR_ATTCONTROL_STEER_SPEED_MIN;
@@ -152,21 +152,21 @@ float AR_AttitudeControl::get_steering_out_lat_accel(float desired_accel, bool s
 
     // Calculate the desired steering rate given desired_accel and speed
     float desired_rate = desired_accel / speed;
-    return get_steering_out_rate(desired_rate, skid_steering, motor_limit_left, motor_limit_right);
+    return get_steering_out_rate(desired_rate, skid_steering, motor_limit_left, motor_limit_right, reversed);
 }
 
 // return a steering servo output from -1 to +1 given a yaw error in radians
-float AR_AttitudeControl::get_steering_out_angle_error(float angle_err, bool skid_steering, bool motor_limit_left, bool motor_limit_right)
+float AR_AttitudeControl::get_steering_out_angle_error(float angle_err, bool skid_steering, bool motor_limit_left, bool motor_limit_right, bool reversed)
 {
     // Calculate the desired turn rate (in radians) from the angle error (also in radians)
     float desired_rate = _steer_angle_p.get_p(angle_err);
 
-    return get_steering_out_rate(desired_rate, skid_steering, motor_limit_left, motor_limit_right);
+    return get_steering_out_rate(desired_rate, skid_steering, motor_limit_left, motor_limit_right, reversed);
 }
 
 // return a steering servo output from -1 to +1 given a
 // desired yaw rate in radians/sec. Positive yaw is to the right.
-float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_steering, bool motor_limit_left, bool motor_limit_right)
+float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_steering, bool motor_limit_left, bool motor_limit_right, bool reversed)
 {
     // calculate dt
     uint32_t now = AP_HAL::millis();
@@ -191,7 +191,7 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
     bool low_speed = false;
     if (fabsf(speed) < AR_ATTCONTROL_STEER_SPEED_MIN) {
         low_speed = true;
-        if (is_negative(speed)) {
+        if (reversed) {
             speed = -AR_ATTCONTROL_STEER_SPEED_MIN;
         } else {
             speed = AR_ATTCONTROL_STEER_SPEED_MIN;
@@ -208,7 +208,7 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
     // We do this in earth frame to allow for rover leaning over in hard corners
     float yaw_rate_earth = _ahrs.get_yaw_rate_earth();
     // check if reversing
-    if (is_negative(speed)) {
+    if (reversed) {
         yaw_rate_earth *= -1.0f;
     }
     float rate_error = (desired_rate - yaw_rate_earth) * scaler;
