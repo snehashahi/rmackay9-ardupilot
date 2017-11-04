@@ -404,13 +404,19 @@ void Plane::set_mode(enum FlightMode mode, mode_reason_t reason)
         auto_throttle_mode = true;
         auto_navigation_mode = true;
         do_loiter_at_location();
-		
+
         if (g2.soaring_controller.is_active() &&
             g2.soaring_controller.suppress_throttle()) {
 			g2.soaring_controller.init_thermalling();
 			g2.soaring_controller.get_target(next_WP_loc); // ahead on flight path
 		}
-		
+
+        break;
+
+    case NEWMODE:
+        auto_throttle_mode = true;
+        auto_navigation_mode = true;
+        do_newmode();
         break;
 
     case AVOID_ADSB:
@@ -661,6 +667,9 @@ void Plane::notify_flight_mode(enum FlightMode mode)
         break;
     case QRTL:
         notify.set_flight_mode_str("QRTL");
+        break;
+    case NEWMODE:
+        notify.set_flight_mode_str("NEWM");
         break;
     default:
         notify.set_flight_mode_str("----");

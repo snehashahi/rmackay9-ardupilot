@@ -269,6 +269,7 @@ void Plane::update_sensor_status_flags(void)
     case GUIDED:
     case CIRCLE:
     case QRTL:
+    case NEWMODE:
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL; // 3D angular rate control
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION; // attitude stabilisation
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_YAW_POSITION; // yaw position

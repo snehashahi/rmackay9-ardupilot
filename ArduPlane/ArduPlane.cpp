@@ -617,6 +617,7 @@ void Plane::update_flight_mode(void)
 
     case RTL:
     case LOITER:
+    case NEWMODE:
         calc_nav_roll();
         calc_nav_pitch();
         calc_throttle();
@@ -858,6 +859,10 @@ void Plane::update_navigation()
 
     case CRUISE:
         update_cruise();
+        break;
+
+    case NEWMODE:
+        update_newmode();
         break;
 
     case MANUAL:

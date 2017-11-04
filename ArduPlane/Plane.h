@@ -888,6 +888,7 @@ private:
     bool verify_vtol_takeoff(const AP_Mission::Mission_Command &cmd);
     bool verify_vtol_land(const AP_Mission::Mission_Command &cmd);
     void do_loiter_at_location();
+    void do_newmode();
     bool verify_loiter_heading(bool init);
     void exit_mission_callback();
     void mavlink_delay(uint32_t ms);
@@ -930,6 +931,7 @@ private:
     void update_loiter(uint16_t radius);
     void update_cruise();
     void update_fbwb_speed_height(void);
+    void update_newmode();
     void setup_turn_angle(void);
     bool reached_loiter_target(void);
     bool print_buffer(char *&buf, uint16_t &buf_size, const char *fmt, ...);

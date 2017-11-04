@@ -891,6 +891,13 @@ void Plane::do_loiter_at_location()
     next_WP_loc = current_loc;
 }
 
+// perform initialisation for newmode flight mode
+void Plane::do_newmode()
+{
+    next_WP_loc = current_loc;
+    loiter.direction = 1;
+}
+
 void Plane::do_change_speed(const AP_Mission::Mission_Command& cmd)
 {
     switch (cmd.content.speed.speed_type)

@@ -26,6 +26,7 @@ void Plane::update_soaring() {
         }
         break;
     case LOITER:
+    case NEWMODE:
         // Do nothing. We will switch back to auto/rtl before enabling throttle.
         break;
     default:

@@ -297,6 +297,15 @@ void Plane::update_fbwb_speed_height(void)
     calc_nav_pitch();
 }
 
+void Plane::update_newmode()
+{
+    if (get_distance(current_loc, next_WP_loc) > 6.0f) {
+        nav_controller->update_waypoint(prev_WP_loc, next_WP_loc);
+    } else {
+        nav_controller->update_loiter(next_WP_loc, 2.0f, loiter.direction);
+    }
+}
+
 /*
   calculate the turn angle for the next leg of the mission
  */

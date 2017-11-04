@@ -50,6 +50,7 @@ void Plane::send_heartbeat(mavlink_channel_t chan)
     case GUIDED:
     case CIRCLE:
     case QRTL:
+    case NEWMODE:
         base_mode = MAV_MODE_FLAG_GUIDED_ENABLED |
                     MAV_MODE_FLAG_STABILIZE_ENABLED;
         // note that MAV_MODE_FLAG_AUTO_ENABLED does not match what
@@ -1984,6 +1985,7 @@ bool GCS_MAVLINK_Plane::set_mode(const uint8_t mode)
     case QLOITER:
     case QLAND:
     case QRTL:
+    case NEWMODE:
         plane.set_mode((enum FlightMode)mode, MODE_REASON_GCS_COMMAND);
         return true;
     }
