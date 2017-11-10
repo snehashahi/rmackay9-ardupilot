@@ -315,7 +315,7 @@ public:
 
     bool requires_GPS() const override { return false; }
     bool has_manual_throttle() const override { return false; }
-    bool allows_arming(bool from_gcs) const override { return false; };
+    bool allows_arming(bool from_gcs) const override { return false; }
     bool is_autopilot() const override { return false; }
 
     float get_autotune_descent_speed();
@@ -497,12 +497,7 @@ public:
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
-    bool allows_arming(bool from_gcs) const override {
-        if (from_gcs) {
-            return true;
-        }
-        return false;
-    };
+    bool allows_arming(bool from_gcs) const override { return from_gcs; }
     bool is_autopilot() const override { return true; }
 
     void set_angle(const Quaternion &q, float climb_rate_cms, bool use_yaw_rate, float yaw_rate_rads);
@@ -558,12 +553,7 @@ public:
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
-    bool allows_arming(bool from_gcs) const override {
-        if (from_gcs) {
-            return true;
-        }
-        return false;
-    }
+    bool allows_arming(bool from_gcs) const override { return from_gcs; }
     bool is_autopilot() const override { return true; }
 
 protected:
@@ -765,9 +755,7 @@ public:
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
-    bool allows_arming(bool from_gcs) const override {
-        return false;
-    }
+    bool allows_arming(bool from_gcs) const override { return false; }
     bool is_autopilot() const override { return true; }
 
     void save_position();
