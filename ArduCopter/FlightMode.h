@@ -36,7 +36,7 @@ public:
 protected:
 
     virtual bool init(bool ignore_checks) = 0;
-    virtual void run() = 0; // should be called at 100hz or more
+    virtual void run() = 0;
 
     virtual bool is_autopilot() const { return false; }
     virtual bool requires_GPS() const = 0;
@@ -168,7 +168,7 @@ public:
         Copter::FlightMode(copter)
         { }
     virtual bool init(bool ignore_checks) override;
-    virtual void run() override; // should be called at 100hz or more
+    virtual void run() override;
 
     virtual bool is_autopilot() const override { return false; }
     virtual bool requires_GPS() const override { return false; }
@@ -196,7 +196,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
 protected:
 private:
@@ -214,7 +214,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return false; }
     bool has_manual_throttle() const override { return false; }
@@ -241,7 +241,7 @@ public:
         { }
 
     virtual bool init(bool ignore_checks) override;
-    virtual void run() override; // should be called at 100hz or more
+    virtual void run() override;
 
     virtual bool requires_GPS() const override { return false; }
     virtual bool has_manual_throttle() const override { return true; }
@@ -289,7 +289,7 @@ public:
         { }
 
     virtual bool init(bool ignore_checks) override;
-    virtual void run() override; // should be called at 100hz or more
+    virtual void run() override;
 
     virtual bool is_autopilot() const override { return true; }
     virtual bool requires_GPS() const override { return true; }
@@ -359,7 +359,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -390,7 +390,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -429,7 +429,7 @@ public:
         Copter::FlightMode(copter)        { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -492,7 +492,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return false; }
     bool has_manual_throttle() const override { return false; }
@@ -527,10 +527,10 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override { // should be called at 100hz or more
+    void run() override {
         return run(true);
     }
-    void run(bool disarm_on_land); // should be called at 100hz or more
+    void run(bool disarm_on_land);
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -597,7 +597,7 @@ public:
         { }
 
     virtual bool init(bool ignore_checks) override;
-    virtual void run() override; // should be called at 100hz or more
+    virtual void run() override;
 
     virtual bool requires_GPS() const override { return true; }
     virtual bool has_manual_throttle() const override { return false; }
@@ -626,7 +626,7 @@ public:
         { }
 
     virtual bool init(bool ignore_checks) override;
-    virtual void run() override; // should be called at 100hz or more
+    virtual void run() override;
 
     virtual bool requires_GPS() const override { return false; }
     virtual bool has_manual_throttle() const override { return false; }
@@ -653,7 +653,7 @@ public:
         { }
 
     virtual bool init(bool ignore_checks) override;
-    virtual void run() override; // should be called at 100hz or more
+    virtual void run() override;
 
     virtual bool requires_GPS() const override { return false; }
     virtual bool has_manual_throttle() const override { return false; }
@@ -684,7 +684,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return false; }
     bool has_manual_throttle() const override { return false; }
@@ -750,7 +750,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -786,7 +786,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -817,7 +817,7 @@ public:
         Copter::FlightMode_GUIDED(copter)        { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -846,7 +846,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -885,7 +885,7 @@ public:
         Copter::FlightMode_GUIDED(copter)        { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
@@ -916,7 +916,7 @@ public:
         { }
 
     bool init(bool ignore_checks) override;
-    void run() override; // should be called at 100hz or more
+    void run() override;
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
