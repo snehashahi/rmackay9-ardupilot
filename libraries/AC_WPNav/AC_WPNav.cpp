@@ -133,8 +133,6 @@ AC_WPNav::AC_WPNav(const AP_InertialNav& inav, const AP_AHRS_View& ahrs, AC_PosC
     _ahrs(ahrs),
     _pos_control(pos_control),
     _attitude_control(attitude_control),
-    _pilot_accel_fwd_cms(0),
-    _pilot_accel_rgt_cms(0),
     _wp_last_update(0),
     _wp_step(0),
     _track_length(0.0f),
@@ -191,10 +189,6 @@ void AC_WPNav::init_loiter_target(const Vector3f& position, bool reset_I)
     // initialise desired accel and add fake wind
     _loiter_desired_accel.x = 0;
     _loiter_desired_accel.y = 0;
-
-    // initialise pilot input
-    _pilot_accel_fwd_cms = 0;
-    _pilot_accel_rgt_cms = 0;
 }
 
 /// init_loiter_target - initialize's loiter position and feed-forward velocity from current pos and velocity
@@ -223,10 +217,6 @@ void AC_WPNav::init_loiter_target()
     // initialise desired accel and add fake wind
     _loiter_desired_accel.x = (_loiter_accel_cmss)*curr_vel.x/_loiter_speed_cms;
     _loiter_desired_accel.y = (_loiter_accel_cmss)*curr_vel.y/_loiter_speed_cms;
-
-    // initialise pilot input
-    _pilot_accel_fwd_cms = 0;
-    _pilot_accel_rgt_cms = 0;
 }
 
 /// loiter_soften_for_landing - reduce response for landing
@@ -239,11 +229,32 @@ void AC_WPNav::loiter_soften_for_landing()
 }
 
 /// set_pilot_desired_acceleration - sets pilot desired acceleration from roll and pitch stick input
-void AC_WPNav::set_pilot_desired_acceleration(float control_roll, float control_pitch)
+void AC_WPNav::set_pilot_desired_acceleration(float euler_roll_angle_cd, float euler_pitch_angle_cd)
 {
-    // convert pilot input to desired acceleration in cm/s/s
-    _pilot_accel_fwd_cms = -control_pitch * _loiter_accel_cmss / 4500.0f;
-    _pilot_accel_rgt_cms = control_roll * _loiter_accel_cmss / 4500.0f;
+    float nav_dt = 0.0025f;
+
+    // Convert from centidegrees on public interface to radians
+    float euler_roll_angle = radians(euler_roll_angle_cd*0.01f);
+    float euler_pitch_angle = radians(euler_pitch_angle_cd*0.01f);
+
+    Vector2f angle_error(wrap_PI(euler_roll_angle-_loiter_predicted_euler_angle.x), wrap_PI(euler_pitch_angle-_loiter_predicted_euler_angle.y));
+    _attitude_control.input_shaping_rate_predictor(angle_error, _loiter_predicted_euler_rate, nav_dt);
+    _loiter_predicted_euler_angle += _loiter_predicted_euler_rate * nav_dt;
+
+    float pilot_cos_pitch_target = cosf(euler_pitch_angle);
+    float pilot_accel_rgt_cms = GRAVITY_MSS*100.0f * tanf(euler_roll_angle)/pilot_cos_pitch_target;
+    float pilot_accel_fwd_cms = -GRAVITY_MSS*100.0f * tanf(euler_pitch_angle);
+
+    float pilot_predicted_cos_pitch_target = cosf(_loiter_predicted_euler_angle.y);
+    float pilot_predicted_accel_rgt_cms = GRAVITY_MSS*100.0f * tanf(_loiter_predicted_euler_angle.x)/pilot_predicted_cos_pitch_target;
+    float pilot_predicted_accel_fwd_cms = -GRAVITY_MSS*100.0f * tanf(_loiter_predicted_euler_angle.y);
+
+    // rotate pilot input to lat/lon frame
+    _loiter_desired_accel.x = (pilot_accel_fwd_cms*_ahrs.cos_yaw() - pilot_accel_rgt_cms*_ahrs.sin_yaw());
+    _loiter_desired_accel.y = (pilot_accel_fwd_cms*_ahrs.sin_yaw() + pilot_accel_rgt_cms*_ahrs.cos_yaw());
+
+    _loiter_predicted_accel.x = (pilot_predicted_accel_fwd_cms*_ahrs.cos_yaw() - pilot_predicted_accel_rgt_cms*_ahrs.sin_yaw());
+    _loiter_predicted_accel.y = (pilot_predicted_accel_fwd_cms*_ahrs.sin_yaw() + pilot_predicted_accel_rgt_cms*_ahrs.cos_yaw());
 }
 
 /// get_loiter_stopping_point_xy - returns vector to stopping point based on a horizontal position and velocity
@@ -270,31 +281,6 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     _pos_control.set_accel_xy(_loiter_accel_cmss);
     _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
-    // rotate pilot input to lat/lon frame
-    Vector2f desired_accel;
-    desired_accel.x = (_pilot_accel_fwd_cms*_ahrs.cos_yaw() - _pilot_accel_rgt_cms*_ahrs.sin_yaw());
-    desired_accel.y = (_pilot_accel_fwd_cms*_ahrs.sin_yaw() + _pilot_accel_rgt_cms*_ahrs.cos_yaw());
-
-    // calculate the difference
-    Vector2f des_accel_diff = (desired_accel - _loiter_desired_accel);
-
-    // constrain and scale the desired acceleration
-    float des_accel_change_total = norm(des_accel_diff.x, des_accel_diff.y);
-    float accel_change_max = _loiter_jerk_max_cmsss * nav_dt;
-
-    if (_loiter_jerk_max_cmsss > 0.0f && des_accel_change_total > accel_change_max && des_accel_change_total > 0.0f) {
-        des_accel_diff.x = accel_change_max * des_accel_diff.x/des_accel_change_total;
-        des_accel_diff.y = accel_change_max * des_accel_diff.y/des_accel_change_total;
-    }
-
-    // adjust the desired acceleration
-    _loiter_desired_accel += des_accel_diff;
-
-    _loiter_predicted_jerk.x = AC_AttitudeControl::input_shaping_angle(_loiter_desired_accel.x-_loiter_predicted_accel.x, _attitude_control.get_smoothing_gain(), 0.5f*(_attitude_control.get_accel_roll_max_radss()+_attitude_control.get_accel_pitch_max_radss())*980, _loiter_predicted_jerk.x, nav_dt);
-    _loiter_predicted_jerk.y = AC_AttitudeControl::input_shaping_angle(_loiter_desired_accel.y-_loiter_predicted_accel.y, _attitude_control.get_smoothing_gain(), 0.5f*(_attitude_control.get_accel_roll_max_radss()+_attitude_control.get_accel_pitch_max_radss())*980, _loiter_predicted_jerk.y, nav_dt);
-    _loiter_predicted_accel.x += _loiter_predicted_jerk.x * nav_dt;
-    _loiter_predicted_accel.y += _loiter_predicted_jerk.y * nav_dt;
-
     // get pos_control's feed forward velocity
     const Vector3f &desired_vel_3d = _pos_control.get_desired_velocity();
     Vector2f desired_vel(desired_vel_3d.x,desired_vel_3d.y);
@@ -307,12 +293,16 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
 
     if (!is_zero(desired_speed)) {
         Vector2f desired_vel_norm = desired_vel/desired_speed;
+
+        // todo: consider using a velocity squared relationship like
+        // _loiter_accel_cmss*(desired_speed/gnd_speed_limit_cms)^2;
         float drag_decel = _loiter_accel_cmss*desired_speed/gnd_speed_limit_cms;
 
         float break_decel = 0.0f;
-        if (_pilot_accel_fwd_cms == 0 && _pilot_accel_rgt_cms == 0) {
+        if (_loiter_desired_accel.is_zero()) {
             float break_scale = constrain_float(((AP_HAL::millis()-_break_timer)*0.001f-_loiter_break_delay) / MAX(_loiter_break_transition,0.1f), 0.0f, 1.0f);
             break_decel = break_scale*_loiter_accel_min_cmss*desired_speed/(desired_speed+_loiter_accel_min_cmss*0.5f);
+            _loiter_desired_accel = -desired_vel_norm*break_decel;
         } else {
             _break_timer = AP_HAL::millis();
         }
@@ -322,7 +312,7 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     }
 
     // Apply EKF limit to desired velocity -  this limit is calculated by the EKF and adjusted as required to ensure certain sensor limits are respected (eg optical flow sensing)
-    float horizSpdDem = sqrtf(sq(desired_vel.x) + sq(desired_vel.y));
+    float horizSpdDem = desired_vel.length();
     if (horizSpdDem > gnd_speed_limit_cms) {
         desired_vel.x = desired_vel.x * gnd_speed_limit_cms / horizSpdDem;
         desired_vel.y = desired_vel.y * gnd_speed_limit_cms / horizSpdDem;

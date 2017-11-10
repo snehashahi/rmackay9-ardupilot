@@ -91,9 +91,9 @@ public:
     void set_pilot_desired_acceleration(float control_roll, float control_pitch);
     /// get_pilot_desired_acceleration - gets pilot desired
     /// acceleration, body frame, [forward,right]
-    Vector2f get_pilot_desired_acceleration() const { return Vector2f(_pilot_accel_fwd_cms, _pilot_accel_rgt_cms); }
+    Vector2f get_pilot_desired_acceleration() const { return Vector2f(_loiter_desired_accel.x, _loiter_desired_accel.y); }
     /// clear_pilot_desired_acceleration - clear pilot desired acceleration
-    void clear_pilot_desired_acceleration() { _pilot_accel_fwd_cms = 0.0f; _pilot_accel_rgt_cms = 0.0f; }
+    void clear_pilot_desired_acceleration() { _loiter_desired_accel.x = 0.0f; _loiter_desired_accel.y = 0.0f; }
 
     /// get_stopping_point - returns vector to stopping point based on a horizontal position and velocity
     void get_loiter_stopping_point_xy(Vector3f& stopping_point) const;
@@ -345,11 +345,10 @@ protected:
     AP_Float    _wp_accel_z_cms;        // vertical acceleration in cm/s/s during missions
 
     // loiter controller internal variables
-    int16_t     _pilot_accel_fwd_cms; 	// pilot's desired acceleration forward (body-frame)
-    int16_t     _pilot_accel_rgt_cms;   // pilot's desired acceleration right (body-frame)
     Vector2f    _loiter_desired_accel;  // slewed pilot's desired acceleration in lat/lon frame
     Vector2f    _loiter_predicted_accel;//
-    Vector2f    _loiter_predicted_jerk; //
+    Vector2f    _loiter_predicted_euler_angle;//
+    Vector2f    _loiter_predicted_euler_rate; //
     float       _break_timer;           //
 
     // waypoint controller internal variables
