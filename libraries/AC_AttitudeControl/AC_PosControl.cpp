@@ -856,6 +856,7 @@ void AC_PosControl::pos_to_rate_xy(float dt, float ekfNavVelGainScaler)
 
         // Constrain _pos_error and target position
         // Constrain the maximum length of _vel_target to the maximum position correction velocity
+        // TODO: replace the leash length with a user definable maximum position correction
         if (limit_vector_length(_pos_error.x, _pos_error.y, _leash))
         {
             _pos_target.x = curr_pos.x + _pos_error.x;
@@ -887,6 +888,7 @@ void AC_PosControl::rate_to_accel_xy(float dt, float ekfNavVelGainScaler)
     // calculate velocity error
     _vel_error.x = _vel_target.x - _vehicle_horiz_vel.x;
     _vel_error.y = _vel_target.y - _vehicle_horiz_vel.y;
+    // TODO: constrain velocity error and velocity target
 
     // call pi controller
     _pi_vel_xy.set_input(_vel_error);
@@ -895,24 +897,26 @@ void AC_PosControl::rate_to_accel_xy(float dt, float ekfNavVelGainScaler)
     vel_xy_p = _pi_vel_xy.get_p();
 
     // update i term if we have not hit the accel or throttle limits OR the i term will reduce
+    // TODO: move limit handling into the PI and PID controller
     if (!_limit.accel_xy && !_motors.limit.throttle_upper) {
         vel_xy_i = _pi_vel_xy.get_i();
     } else {
         vel_xy_i = _pi_vel_xy.get_i_shrink();
     }
 
-    // combine feed forward accel with PID output from velocity error and scale PID output to compensate for optical flow measurement induced EKF noise
+    // acceleration to correct for velocity error and scale PID output to compensate for optical flow measurement induced EKF noise
     accel_target.x = (vel_xy_p.x + vel_xy_i.x) * ekfNavVelGainScaler;
     accel_target.y = (vel_xy_p.y + vel_xy_i.y) * ekfNavVelGainScaler;
 
-    // filter acceleration correction
+    // filter correction acceleration
     _accel_target_filter.set_cutoff_frequency(MIN(_accel_xy_filt_hz, 5.0f*ekfNavVelGainScaler));
     _accel_target_filter.apply(accel_target, dt);
 
-    // Add feed forward into the requested acceleration
+    // pass the correction acceleration to the target acceleration output
     _accel_target.x = _accel_target_filter.get().x;
     _accel_target.y = _accel_target_filter.get().y;
 
+    // Add feed forward into the target acceleration output
     _accel_target.x += _accel_desired.x;
     _accel_target.y += _accel_desired.y;
 }
