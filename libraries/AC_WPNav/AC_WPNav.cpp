@@ -237,22 +237,28 @@ void AC_WPNav::set_pilot_desired_acceleration(float euler_roll_angle_cd, float e
     float euler_roll_angle = radians(euler_roll_angle_cd*0.01f);
     float euler_pitch_angle = radians(euler_pitch_angle_cd*0.01f);
 
+    // difference between where we think we should be and where we want to be
     Vector2f angle_error(wrap_PI(euler_roll_angle-_loiter_predicted_euler_angle.x), wrap_PI(euler_pitch_angle-_loiter_predicted_euler_angle.y));
+
+    // calculate the angular velocity that we would expect given our desired and predicted attitude
     _attitude_control.input_shaping_rate_predictor(angle_error, _loiter_predicted_euler_rate, nav_dt);
+
+    // update our predicted attitude based on our predicted angular velocity
     _loiter_predicted_euler_angle += _loiter_predicted_euler_rate * nav_dt;
 
+    // convert our desired attitude to an acceleration vector assuming we are hovering
     float pilot_cos_pitch_target = cosf(euler_pitch_angle);
     float pilot_accel_rgt_cms = GRAVITY_MSS*100.0f * tanf(euler_roll_angle)/pilot_cos_pitch_target;
     float pilot_accel_fwd_cms = -GRAVITY_MSS*100.0f * tanf(euler_pitch_angle);
 
+    // convert our predicted attitude to an acceleration vector assuming we are hovering
     float pilot_predicted_cos_pitch_target = cosf(_loiter_predicted_euler_angle.y);
     float pilot_predicted_accel_rgt_cms = GRAVITY_MSS*100.0f * tanf(_loiter_predicted_euler_angle.x)/pilot_predicted_cos_pitch_target;
     float pilot_predicted_accel_fwd_cms = -GRAVITY_MSS*100.0f * tanf(_loiter_predicted_euler_angle.y);
 
-    // rotate pilot input to lat/lon frame
+    // rotate acceleration vectors input to lat/lon frame
     _loiter_desired_accel.x = (pilot_accel_fwd_cms*_ahrs.cos_yaw() - pilot_accel_rgt_cms*_ahrs.sin_yaw());
     _loiter_desired_accel.y = (pilot_accel_fwd_cms*_ahrs.sin_yaw() + pilot_accel_rgt_cms*_ahrs.cos_yaw());
-
     _loiter_predicted_accel.x = (pilot_predicted_accel_fwd_cms*_ahrs.cos_yaw() - pilot_predicted_accel_rgt_cms*_ahrs.sin_yaw());
     _loiter_predicted_accel.y = (pilot_predicted_accel_fwd_cms*_ahrs.sin_yaw() + pilot_predicted_accel_rgt_cms*_ahrs.cos_yaw());
 }
@@ -281,32 +287,38 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     _pos_control.set_accel_xy(_loiter_accel_cmss);
     _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
-    // get pos_control's feed forward velocity
+    // get loiters desired velocity from the position controller where it is being stored.
     const Vector3f &desired_vel_3d = _pos_control.get_desired_velocity();
     Vector2f desired_vel(desired_vel_3d.x,desired_vel_3d.y);
 
-    // add pilot commanded acceleration
+    // update the desired velocity using our predicted acceleration
     desired_vel.x += _loiter_predicted_accel.x * nav_dt;
     desired_vel.y += _loiter_predicted_accel.y * nav_dt;
 
     float desired_speed = desired_vel.length();
-
     if (!is_zero(desired_speed)) {
         Vector2f desired_vel_norm = desired_vel/desired_speed;
 
-        // todo: consider using a velocity squared relationship like
+        // TODO: consider using a velocity squared relationship like
         // _loiter_accel_cmss*(desired_speed/gnd_speed_limit_cms)^2;
+        // the drag characteristic of a multirotor should be examined to generate a curve
+        // we could add a expo function here to fine tune it
+
+        // calculate a drag acceleration based on the desired speed.
         float drag_decel = _loiter_accel_cmss*desired_speed/gnd_speed_limit_cms;
 
+        // calculate a breaking acceleration if sticks are at zero
         float break_decel = 0.0f;
         if (_loiter_desired_accel.is_zero()) {
             float break_scale = constrain_float(((AP_HAL::millis()-_break_timer)*0.001f-_loiter_break_delay) / MAX(_loiter_break_transition,0.1f), 0.0f, 1.0f);
             break_decel = break_scale*_loiter_accel_min_cmss*desired_speed/(desired_speed+_loiter_accel_min_cmss*0.5f);
+            // pass the breaking acceleration directly into the desired acceleration so we get minimal delay
             _loiter_desired_accel = -desired_vel_norm*break_decel;
         } else {
             _break_timer = AP_HAL::millis();
         }
 
+        // update the desired velocity using the drag and breaking accelerations
         desired_speed = MAX(desired_speed-(drag_decel+break_decel)*nav_dt,0.0f);
         desired_vel = desired_vel_norm*desired_speed;
     }
@@ -319,12 +331,12 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     }
 
     // Limit the velocity to prevent fence violations
-    // We need to also limit the acceleration
+    // TODO: We need to also limit the _loiter_desired_accel
     if (_avoid != nullptr) {
         _avoid->adjust_velocity(_pos_control.get_pos_xy_kP(), _loiter_accel_cmss, desired_vel);
     }
 
-    // send adjusted feed forward velocity back to position controller
+    // send adjusted feed forward acceleration and velocity back to the Position Controller
     _pos_control.set_desired_accel_xy(_loiter_desired_accel.x,_loiter_desired_accel.y);
     _pos_control.set_desired_velocity_xy(desired_vel.x,desired_vel.y);
 }
