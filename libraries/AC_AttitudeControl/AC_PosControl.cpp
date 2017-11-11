@@ -905,12 +905,9 @@ void AC_PosControl::rate_to_accel_xy(float dt, float ekfNavVelGainScaler)
     accel_target.x = (vel_xy_p.x + vel_xy_i.x) * ekfNavVelGainScaler;
     accel_target.y = (vel_xy_p.y + vel_xy_i.y) * ekfNavVelGainScaler;
 
-    // limit jerk and jounce to limit the angular acceleration and angular jerk.
-    float max_delta_accel = dt * _accel_xy_jerk*100.0f;
-    Vector2f accel_change = accel_target-_accel_target_filter.get();
-    limit_vector_length(accel_change.x, accel_change.y, max_delta_accel);
+    // filter acceleration correction
     _accel_target_filter.set_cutoff_frequency(MIN(_accel_xy_filt_hz, 5.0f*ekfNavVelGainScaler));
-    _accel_target_filter.apply(_accel_target_filter.get()+accel_change, dt);
+    _accel_target_filter.apply(accel_target, dt);
 
     // Add feed forward into the requested acceleration
     _accel_target.x = _accel_target_filter.get().x;
