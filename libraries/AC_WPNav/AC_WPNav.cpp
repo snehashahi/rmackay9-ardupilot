@@ -223,9 +223,14 @@ void AC_WPNav::init_loiter_target()
     // move current vehicle velocity into feed forward velocity
     _pos_control.set_desired_velocity_xy(curr_vel.x, curr_vel.y);
 
-    // initialise desired accel and add fake wind
-    _loiter_desired_accel.x = (_loiter_accel_cmss)*curr_vel.x/_loiter_speed_cms;
-    _loiter_desired_accel.y = (_loiter_accel_cmss)*curr_vel.y/_loiter_speed_cms;
+    // initialise desired acceleration based on the current velocity and the artificial drag
+    float pilot_acceleration_max = GRAVITY_MSS*100.0f * tanf(radians(get_loiter_angle_max_cd()*0.01f));
+    _loiter_predicted_accel.x = pilot_acceleration_max*curr_vel.x/_loiter_speed_cms;
+    _loiter_predicted_accel.y = pilot_acceleration_max*curr_vel.y/_loiter_speed_cms;
+    _loiter_desired_accel = _loiter_predicted_accel;
+    // this should be the current roll and pitch angle.
+    _loiter_predicted_euler_angle.x = radians(_attitude_control.get_att_target_euler_cd().x*0.01f);
+    _loiter_predicted_euler_angle.y = radians(_attitude_control.get_att_target_euler_cd().y*0.01f);
 }
 
 /// loiter_soften_for_landing - reduce response for landing
@@ -279,7 +284,7 @@ void AC_WPNav::get_loiter_stopping_point_xy(Vector3f& stopping_point) const
 }
 
 /// get_loiter_angle_max - returns the maximum pilot commanded angle in degrees
-float AC_WPNav::get_loiter_angle_max() const
+float AC_WPNav::get_loiter_angle_max_cd() const
 {
     if(is_zero(_loiter_angle_max)){
         return _attitude_control.lean_angle_max()*2.0f/3.0f;
@@ -295,6 +300,8 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
     // parameter and the value set by the EKF to observe optical flow limits
     float gnd_speed_limit_cms = MIN(_loiter_speed_cms,ekfGndSpdLimit*100.0f);
     gnd_speed_limit_cms = MAX(gnd_speed_limit_cms, WPNAV_LOITER_SPEED_MIN);
+
+    float pilot_acceleration_max = GRAVITY_MSS*100.0f * tanf(radians(get_loiter_angle_max_cd()*0.01f));
 
     // range check nav_dt
     if( nav_dt < 0 ) {
@@ -318,12 +325,12 @@ void AC_WPNav::calc_loiter_desired_velocity(float nav_dt, float ekfGndSpdLimit)
         Vector2f desired_vel_norm = desired_vel/desired_speed;
 
         // TODO: consider using a velocity squared relationship like
-        // _loiter_accel_cmss*(desired_speed/gnd_speed_limit_cms)^2;
+        // pilot_acceleration_max*(desired_speed/gnd_speed_limit_cms)^2;
         // the drag characteristic of a multirotor should be examined to generate a curve
         // we could add a expo function here to fine tune it
 
         // calculate a drag acceleration based on the desired speed.
-        float drag_decel = _loiter_accel_cmss*desired_speed/gnd_speed_limit_cms;
+        float drag_decel = pilot_acceleration_max*desired_speed/gnd_speed_limit_cms;
 
         // calculate a breaking acceleration if sticks are at zero
         float break_decel = 0.0f;

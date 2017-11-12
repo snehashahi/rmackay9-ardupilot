@@ -108,7 +108,7 @@ public:
     const Vector3f& get_loiter_target() const { return _pos_control.get_pos_target(); }
 
     /// get_loiter_angle_max - returns the maximum pilot commanded angle in degrees
-    float get_loiter_angle_max() const;
+    float get_loiter_angle_max_cd() const;
 
     /// update_loiter - run the loiter controller - should be called at 10hz
     void update_loiter(float ekfGndSpdLimit, float ekfNavVelGainScaler);
