@@ -344,7 +344,7 @@ void AC_PosControl::update_z_controller()
     calc_leash_length_z();
 
     // call position controller
-    pos_to_rate_z();
+    position_controller_z();
 }
 
 /// calc_leash_length - calculates the vertical leash lengths from maximum speed, acceleration
@@ -361,7 +361,7 @@ void AC_PosControl::calc_leash_length_z()
 // pos_to_rate_z - position to rate controller for Z axis
 // calculates desired rate in earth-frame z axis and passes to rate controller
 // vel_up_max, vel_down_max should have already been set before calling this method
-void AC_PosControl::pos_to_rate_z()
+void AC_PosControl::position_controller_z()
 {
     float curr_alt = _inav.get_altitude();
 
@@ -405,17 +405,11 @@ void AC_PosControl::pos_to_rate_z()
         _vel_target.z += _vel_desired.z;
     }
 
-    // call rate based throttle controller which will update accel based throttle controller targets
-    rate_to_accel_z();
-}
+    // the following section calculates acceleration required to achieve the velocity target
 
-// rate_to_accel_z - calculates desired accel required to achieve the velocity target
-// calculates desired acceleration and calls accel throttle controller
-void AC_PosControl::rate_to_accel_z()
-{
     const Vector3f& curr_vel = _inav.get_velocity();
-    float p;                                // used to capture pid values for logging
 
+    // TODO: remove velocity derivative calculation
     // reset last velocity target to current target
     if (_flags.reset_rate_to_accel_z) {
         _vel_last.z = _vel_target.z;
@@ -447,20 +441,12 @@ void AC_PosControl::rate_to_accel_z()
         _vel_error.z = _vel_error_filter.apply(_vel_target.z - curr_vel.z, _dt);
     }
 
-    // calculate p
-    p = _p_vel_z.kP() * _vel_error.z;
+    _accel_target.z = _p_vel_z.get_p(_vel_error.z);
 
-    // consolidate and constrain target acceleration
-    _accel_target.z = _accel_desired.z + p;
+    _accel_target.z += _accel_desired.z;
 
-    // set target for accel based throttle controller
-    accel_to_throttle(_accel_target.z);
-}
 
-// accel_to_throttle - alt hold's acceleration controller
-// calculates a desired throttle which is sent directly to the motors
-void AC_PosControl::accel_to_throttle(float accel_target_z)
-{
+    // the following section calculates a desired throttle needed to achieve the acceleration target
     float z_accel_meas;         // actual acceleration
     float p,i,d;              // used to capture pid values for logging
 
@@ -474,12 +460,12 @@ void AC_PosControl::accel_to_throttle(float accel_target_z)
         _flags.reset_accel_to_throttle = false;
     } else {
         // calculate accel error
-        _accel_error.z = accel_target_z - z_accel_meas;
+        _accel_error.z = _accel_target.z - z_accel_meas;
     }
 
     // set input to PID
     _pid_accel_z.set_input_filter_all(_accel_error.z);
-    _pid_accel_z.set_desired_rate(accel_target_z);
+    _pid_accel_z.set_desired_rate(_accel_target.z);
 
     // separately calculate p, i, d values for logging
     p = _pid_accel_z.get_p();
@@ -508,7 +494,7 @@ void AC_PosControl::accel_to_throttle(float accel_target_z)
 }
 
 ///
-/// position controller
+/// lateral position controller
 ///
 
 /// set_accel_xy - set horizontal acceleration in cm/s/s
@@ -858,7 +844,7 @@ void AC_PosControl::position_controller_xy(float dt, float ekfNavVelGainScaler)
     _vel_target.x += _vel_desired.x;
     _vel_target.y += _vel_desired.y;
 
-    // this section converts desired velocities in lat/lon directions to accelerations in lat/lon frame
+    // the following section converts desired velocities in lat/lon directions to accelerations in lat/lon frame
 
     Vector2f accel_target, vel_xy_p, vel_xy_i;
 
@@ -905,7 +891,7 @@ void AC_PosControl::position_controller_xy(float dt, float ekfNavVelGainScaler)
     _accel_target.x += _accel_desired.x;
     _accel_target.y += _accel_desired.y;
 
-    // This section converts desired accelerations provided in lat/lon frame to roll/pitch angles
+    // the following section converts desired accelerations provided in lat/lon frame to roll/pitch angles
 
     float accel_right, accel_forward;
 

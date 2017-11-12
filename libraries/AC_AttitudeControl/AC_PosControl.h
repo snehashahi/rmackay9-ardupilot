@@ -328,7 +328,7 @@ protected:
     //          set_alt_target
     //          set_target_to_stopping_point_z
     //          init_takeoff
-    void pos_to_rate_z();
+    void position_controller_z();
 
     // rate_to_accel_z - calculates desired accel required to achieve the velocity target
     void rate_to_accel_z();
