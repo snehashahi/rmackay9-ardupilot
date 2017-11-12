@@ -107,6 +107,9 @@ public:
     /// get_loiter_target - returns loiter target position
     const Vector3f& get_loiter_target() const { return _pos_control.get_pos_target(); }
 
+    /// get_loiter_angle_max - returns the maximum pilot commanded angle in degrees
+    float get_loiter_angle_max() const;
+
     /// update_loiter - run the loiter controller - should be called at 10hz
     void update_loiter(float ekfGndSpdLimit, float ekfNavVelGainScaler);
 
@@ -331,6 +334,7 @@ protected:
     AC_Avoid                *_avoid = nullptr;
 
     // parameters
+    AP_Float    _loiter_angle_max;      // maximum pilot commanded angle in degrees. Set to zero for 2/3 Angle Max
     AP_Float    _loiter_speed_cms;      // maximum horizontal speed in cm/s while in loiter
     AP_Float    _loiter_jerk_max_cmsss; // maximum jerk in cm/s/s/s while in loiter
     AP_Float    _loiter_accel_cmss;     // loiter's max acceleration in cm/s/s

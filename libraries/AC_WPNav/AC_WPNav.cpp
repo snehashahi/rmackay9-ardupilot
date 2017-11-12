@@ -121,6 +121,15 @@ const AP_Param::GroupInfo AC_WPNav::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("LOIT_TRAN",  12, AC_WPNav, _loiter_break_transition, WPNAV_LOITER_BREAK_TRANS_TIME),
 
+    // @Param: LOIT_TRAN
+    // @DisplayName: Loiter maximum pilot commanded angle (in degrees). Set to zero for 2/3 Angle Max
+    // @Description: Loiter maximum pilot commanded angle (in degrees). Set to zero for 2/3 Angle Max
+    // @Units: degrees
+    // @Range: 0 45
+    // @Increment: 1
+    // @User: Advanced
+    AP_GROUPINFO("LOIT_ANGM",  13, AC_WPNav, _loiter_angle_max, 0.0f),
+
     AP_GROUPEND
 };
 
@@ -266,7 +275,16 @@ void AC_WPNav::set_pilot_desired_acceleration(float euler_roll_angle_cd, float e
 /// get_loiter_stopping_point_xy - returns vector to stopping point based on a horizontal position and velocity
 void AC_WPNav::get_loiter_stopping_point_xy(Vector3f& stopping_point) const
 {
-	_pos_control.get_stopping_point_xy(stopping_point);
+    _pos_control.get_stopping_point_xy(stopping_point);
+}
+
+/// get_loiter_angle_max - returns the maximum pilot commanded angle in degrees
+float AC_WPNav::get_loiter_angle_max() const
+{
+    if(is_zero(_loiter_angle_max)){
+        return _attitude_control.lean_angle_max()*2.0f/3.0f;
+    }
+    return _loiter_angle_max;
 }
 
 /// calc_loiter_desired_velocity - updates desired velocity (i.e. feed forward) with pilot requested acceleration and fake wind resistance
