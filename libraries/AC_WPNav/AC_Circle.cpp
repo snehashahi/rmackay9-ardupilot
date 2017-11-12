@@ -54,8 +54,9 @@ void AC_Circle::init(const Vector3f& center)
     _center = center;
 
     // initialise position controller (sets target roll angle, pitch angle and I terms based on vehicle current lean angles)
+    _pos_control.set_desired_accel_xy(0.0f,0.0f);
+    _pos_control.set_desired_velocity_xy(0.0f,0.0f);
     _pos_control.init_xy_controller();
-    _pos_control.set_desired_velocity_xy(0,0);
 
     // set initial position target to reasonable stopping point
     _pos_control.set_target_to_stopping_point_xy();
@@ -73,8 +74,9 @@ void AC_Circle::init(const Vector3f& center)
 void AC_Circle::init()
 {
     // initialise position controller (sets target roll angle, pitch angle and I terms based on vehicle current lean angles)
+    _pos_control.set_desired_accel_xy(0.0f,0.0f);
+    _pos_control.set_desired_velocity_xy(0.0f,0.0f);
     _pos_control.init_xy_controller();
-    _pos_control.set_desired_velocity_xy(0,0);
 
     // set initial position target to reasonable stopping point
     _pos_control.set_target_to_stopping_point_xy();
