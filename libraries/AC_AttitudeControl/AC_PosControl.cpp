@@ -645,7 +645,7 @@ void AC_PosControl::init_xy_controller(bool reset_I)
     if (reset_I) {
         // reset last velocity if this controller has just been engaged or dt is zero
         lean_angles_to_accel(_accel_target.x, _accel_target.y);
-        _pi_vel_xy.set_integrator(_accel_target);
+        _pi_vel_xy.set_integrator(_accel_target-_accel_desired);
     }
 
     // flag reset required in rate to accel step
