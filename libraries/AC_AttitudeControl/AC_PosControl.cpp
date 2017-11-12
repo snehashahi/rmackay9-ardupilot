@@ -658,7 +658,7 @@ void AC_PosControl::init_xy_controller(bool reset_I)
 }
 
 /// update_xy_controller - run the horizontal position controller - should be called at 100hz or higher
-void AC_PosControl::update_xy_controller(float ekfNavVelGainScaler, bool use_althold_lean_angle)
+void AC_PosControl::update_xy_controller(float ekfNavVelGainScaler)
 {
     // compute dt
     uint32_t now = AP_HAL::millis();
@@ -679,14 +679,8 @@ void AC_PosControl::update_xy_controller(float ekfNavVelGainScaler, bool use_alt
     // translate any adjustments from pilot to loiter target
     desired_vel_to_pos(dt);
 
-    // run position controller's position error to desired velocity step
-    pos_to_rate_xy(dt, ekfNavVelGainScaler);
-
-    // run position controller's velocity to acceleration step
-    rate_to_accel_xy(dt, ekfNavVelGainScaler);
-
-    // run position controller's acceleration to lean angle step
-    accel_to_lean_angles(dt, ekfNavVelGainScaler, use_althold_lean_angle);
+    // run position controller
+    position_controller_xy(dt, ekfNavVelGainScaler);
 }
 
 float AC_PosControl::time_since_last_xy_update() const
@@ -752,14 +746,8 @@ void AC_PosControl::update_vel_controller_xy(float ekfNavVelGainScaler)
         // this will need to be removed and added to the calling function.
         desired_vel_to_pos(dt);
 
-        // run position controller's position error to desired velocity step
-        pos_to_rate_xy(dt, ekfNavVelGainScaler);
-
-        // run velocity to acceleration step
-        rate_to_accel_xy(dt, ekfNavVelGainScaler);
-
-        // run acceleration to lean angle step
-        accel_to_lean_angles(dt, ekfNavVelGainScaler, true);
+        // run position controller
+        position_controller_xy(dt, ekfNavVelGainScaler);
 
         // update xy update time
         _last_update_xy_ms = now;
@@ -840,7 +828,7 @@ void AC_PosControl::desired_vel_to_pos(float nav_dt)
 ///     when use_desired_rate is set to true:
 ///         desired velocity (_vel_desired) is combined into final target velocity and
 ///         velocity due to position error is reduce to a maximum of 1m/s
-void AC_PosControl::pos_to_rate_xy(float dt, float ekfNavVelGainScaler)
+void AC_PosControl::position_controller_xy(float dt, float ekfNavVelGainScaler)
 {
     Vector3f curr_pos = _inav.get_position();
     float kP = ekfNavVelGainScaler * _p_pos_xy.kP(); // scale gains to compensate for noisy optical flow measurement in the EKF
@@ -869,12 +857,9 @@ void AC_PosControl::pos_to_rate_xy(float dt, float ekfNavVelGainScaler)
     // add velocity feed-forward
     _vel_target.x += _vel_desired.x;
     _vel_target.y += _vel_desired.y;
-}
 
-/// rate_to_accel_xy - horizontal desired rate to desired acceleration
-///    converts desired velocities in lat/lon directions to accelerations in lat/lon frame
-void AC_PosControl::rate_to_accel_xy(float dt, float ekfNavVelGainScaler)
-{
+    // this section converts desired velocities in lat/lon directions to accelerations in lat/lon frame
+
     Vector2f accel_target, vel_xy_p, vel_xy_i;
 
     // check if vehicle velocity is being overridden
@@ -919,12 +904,9 @@ void AC_PosControl::rate_to_accel_xy(float dt, float ekfNavVelGainScaler)
     // Add feed forward into the target acceleration output
     _accel_target.x += _accel_desired.x;
     _accel_target.y += _accel_desired.y;
-}
 
-/// accel_to_lean_angles - horizontal desired acceleration to lean angles
-///    converts desired accelerations provided in lat/lon frame to roll/pitch angles
-void AC_PosControl::accel_to_lean_angles(float dt, float ekfNavVelGainScaler, bool use_althold_lean_angle)
-{
+    // This section converts desired accelerations provided in lat/lon frame to roll/pitch angles
+
     float accel_right, accel_forward;
 
     // limit acceleration using maximum lean angles
