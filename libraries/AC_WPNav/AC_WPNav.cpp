@@ -181,23 +181,28 @@ AC_WPNav::AC_WPNav(const AP_InertialNav& inav, const AP_AHRS_View& ahrs, AC_PosC
 /// init_loiter_target in cm from home
 void AC_WPNav::init_loiter_target(const Vector3f& position, bool reset_I)
 {
-    // initialise position controller
-    _pos_control.init_xy_controller(reset_I);
-
     // initialise pos controller speed, acceleration and jerk
     _pos_control.set_speed_xy(WPNAV_LOITER_VEL_CORRECTION_MAX);
     _pos_control.set_accel_xy(_loiter_accel_cmss);
     _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
+    // initialise desired acceleration and angles to zero to remain on station
+    float pilot_acceleration_max = GRAVITY_MSS*100.0f * tanf(radians(get_loiter_angle_max_cd()*0.01f));
+    _loiter_predicted_accel.x = 0.0f;
+    _loiter_predicted_accel.y = 0.0f;
+    _loiter_desired_accel = _loiter_predicted_accel;
+    _loiter_predicted_euler_angle.x = 0.0f;
+    _loiter_predicted_euler_angle.y = 0.0f;
+
     // set target position
     _pos_control.set_xy_target(position.x, position.y);
 
-    // initialise feed forward velocity to zero
-    _pos_control.set_desired_velocity_xy(0,0);
+    // set vehicle velocity and acceleration to zero
+    _pos_control.set_desired_velocity_xy(0.0f,0.0f);
+    _pos_control.set_desired_accel_xy(0.0f,0.0f);
 
-    // initialise desired accel and add fake wind
-    _loiter_desired_accel.x = 0;
-    _loiter_desired_accel.y = 0;
+    // initialise position controller
+    _pos_control.init_xy_controller();
 }
 
 /// init_loiter_target - initialize's loiter position and feed-forward velocity from current pos and velocity
@@ -205,9 +210,6 @@ void AC_WPNav::init_loiter_target()
 {
     const Vector3f& curr_pos = _inav.get_position();
     const Vector3f& curr_vel = _inav.get_velocity();
-
-    // initialise position controller
-    _pos_control.init_xy_controller();
 
     // sanity check loiter speed
     _loiter_speed_cms = MAX(_loiter_speed_cms, WPNAV_LOITER_SPEED_MIN);
@@ -217,12 +219,6 @@ void AC_WPNav::init_loiter_target()
     _pos_control.set_accel_xy(_loiter_accel_cmss);
     _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
-    // set target position
-    _pos_control.set_xy_target(curr_pos.x, curr_pos.y);
-
-    // move current vehicle velocity into feed forward velocity
-    _pos_control.set_desired_velocity_xy(curr_vel.x, curr_vel.y);
-
     // initialise desired acceleration based on the current velocity and the artificial drag
     float pilot_acceleration_max = GRAVITY_MSS*100.0f * tanf(radians(get_loiter_angle_max_cd()*0.01f));
     _loiter_predicted_accel.x = pilot_acceleration_max*curr_vel.x/_loiter_speed_cms;
@@ -231,6 +227,16 @@ void AC_WPNav::init_loiter_target()
     // this should be the current roll and pitch angle.
     _loiter_predicted_euler_angle.x = radians(_attitude_control.get_att_target_euler_cd().x*0.01f);
     _loiter_predicted_euler_angle.y = radians(_attitude_control.get_att_target_euler_cd().y*0.01f);
+
+    // set target position
+    _pos_control.set_xy_target(curr_pos.x, curr_pos.y);
+
+    // set vehicle velocity and acceleration to current state
+    _pos_control.set_desired_velocity_xy(curr_vel.x, curr_vel.y);
+    _pos_control.set_desired_accel_xy(_loiter_desired_accel.x,_loiter_desired_accel.y);
+
+    // initialise position controller
+    _pos_control.init_xy_controller();
 }
 
 /// loiter_soften_for_landing - reduce response for landing
@@ -289,7 +295,7 @@ float AC_WPNav::get_loiter_angle_max_cd() const
     if(is_zero(_loiter_angle_max)){
         return _attitude_control.lean_angle_max()*2.0f/3.0f;
     }
-    return _loiter_angle_max;
+    return _loiter_angle_max*100.0f;
 }
 
 /// calc_loiter_desired_velocity - updates desired velocity (i.e. feed forward) with pilot requested acceleration and fake wind resistance
@@ -403,6 +409,7 @@ void AC_WPNav::init_brake_target(float accel_cmss)
     Vector3f stopping_point;
 
     // initialise position controller
+    _pos_control.set_desired_accel_xy(0.0f,0.0f);
     _pos_control.init_xy_controller();
 
     // initialise pos controller speed and acceleration
@@ -447,6 +454,7 @@ void AC_WPNav::wp_and_spline_init()
     }
 
     // initialise position controller
+    _pos_control.set_desired_accel_xy(0.0f,0.0f);
     _pos_control.init_xy_controller();
     _pos_control.clear_desired_velocity_ff_z();
 
