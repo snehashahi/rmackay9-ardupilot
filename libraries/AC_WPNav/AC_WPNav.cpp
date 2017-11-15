@@ -124,7 +124,7 @@ const AP_Param::GroupInfo AC_WPNav::var_info[] = {
     // @Param: LOIT_TRAN
     // @DisplayName: Loiter maximum pilot commanded angle (in degrees). Set to zero for 2/3 Angle Max
     // @Description: Loiter maximum pilot commanded angle (in degrees). Set to zero for 2/3 Angle Max
-    // @Units: degrees
+    // @Units: deg
     // @Range: 0 45
     // @Increment: 1
     // @User: Advanced
