@@ -187,7 +187,6 @@ void AC_WPNav::init_loiter_target(const Vector3f& position, bool reset_I)
     _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
     // initialise desired acceleration and angles to zero to remain on station
-    float pilot_acceleration_max = GRAVITY_MSS*100.0f * tanf(radians(get_loiter_angle_max_cd()*0.01f));
     _loiter_predicted_accel.x = 0.0f;
     _loiter_predicted_accel.y = 0.0f;
     _loiter_desired_accel = _loiter_predicted_accel;
@@ -398,7 +397,7 @@ void AC_WPNav::update_loiter(float ekfGndSpdLimit, float ekfNavVelGainScaler)
         _pos_control.set_jerk_xy(_loiter_jerk_max_cmsss);
 
         calc_loiter_desired_velocity(dt,ekfGndSpdLimit);
-        _pos_control.update_xy_controller(ekfNavVelGainScaler, true);
+        _pos_control.update_xy_controller(ekfNavVelGainScaler);
     }
 }
 
@@ -435,7 +434,7 @@ void AC_WPNav::update_brake(float ekfGndSpdLimit, float ekfNavVelGainScaler)
 
         // send adjusted feed forward velocity back to position controller
         _pos_control.set_desired_velocity_xy(0,0);
-        _pos_control.update_xy_controller(ekfNavVelGainScaler, true);
+        _pos_control.update_xy_controller(ekfNavVelGainScaler);
     }
 }
 
@@ -832,7 +831,7 @@ bool AC_WPNav::update_wpnav()
         }
         _pos_control.freeze_ff_z();
 
-        _pos_control.update_xy_controller(1.0f, true);
+        _pos_control.update_xy_controller(1.0f);
         check_wp_leash_length();
 
         _wp_last_update = AP_HAL::millis();
@@ -1124,7 +1123,7 @@ bool AC_WPNav::update_spline()
         _pos_control.freeze_ff_z();
 
         // run horizontal position controller
-        _pos_control.update_xy_controller(1.0f, true);
+        _pos_control.update_xy_controller(1.0f);
 
         _wp_last_update = AP_HAL::millis();
     }
