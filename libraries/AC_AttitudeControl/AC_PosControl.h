@@ -217,7 +217,8 @@ public:
     // clear desired velocity feed-forward in z axis
     void clear_desired_velocity_ff_z() { _flags.use_desvel_ff_z = false; }
 
-    void set_desired_accel_xy(float accel_lat_cms, float accel_lon_cms) {_accel_desired.x = accel_lat_cms; _accel_desired.y = accel_lon_cms; }
+    // set desired acceleration in cm/s in xy axis
+    void set_desired_accel_xy(float accel_lat_cms, float accel_lon_cms) { _accel_desired.x = accel_lat_cms; _accel_desired.y = accel_lon_cms; }
 
     /// set_desired_velocity_xy - sets desired velocity in cm/s in lat and lon directions
     ///     when update_xy_controller is next called the position target is moved based on the desired velocity and
