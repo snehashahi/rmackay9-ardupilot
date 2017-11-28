@@ -4,6 +4,9 @@
 #include "AP_Arming.h"
 #include <AP_ServoRelayEvents/AP_ServoRelayEvents.h>
 
+#define AP_MOTORSUGV_STANDARD_TRACK_WIDTH   0.34f   // "standard" vehicle track width is 34cm
+#define AP_MOTORSUGV_STANDARD_WHEEL_RADIUS  0.08f   // "standard" vehicle wheel radius is 8cm
+
 class AP_MotorsUGV {
 public:
 
@@ -36,7 +39,7 @@ public:
 
     // get or set steering as a value from -4500 to +4500
     float get_steering() const { return _steering; }
-    void set_steering(float steering);
+    void set_steering(float steering, bool apply_frame_scaling = true);
 
     // get or set throttle as a value from -100 to 100
     float get_throttle() const { return _throttle; }
@@ -86,6 +89,9 @@ protected:
     // set limits based on steering and throttle input
     void set_limits_from_input(bool armed, float steering, float throttle);
 
+    // get scaled steering value based on vehicle's track width and wheel size, only used for skid-steering vehicles
+    float scale_steering_for_frame(float steering);
+
     // external references
     AP_ServoRelayEvents &_relayEvents;
 
@@ -96,6 +102,8 @@ protected:
     AP_Int16 _slew_rate; // slew rate expressed as a percentage / second
     AP_Int8 _throttle_min; // throttle minimum percentage
     AP_Int8 _throttle_max; // throttle maximum percentage
+    AP_Float _track_width;  // track width between left and right wheels. used to scale the steering response on skid-steer vehicles
+    AP_Float _wheel_radius; // wheel radius. used to scale the steering response on skid-steer vehicles
 
     // internal variables
     float   _steering;  // requested steering as a value from -4500 to +4500

@@ -72,6 +72,24 @@ const AP_Param::GroupInfo AP_MotorsUGV::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SLEWRATE", 8, AP_MotorsUGV, _slew_rate, 100),
 
+    // @Param: TRACK_WIDTH
+    // @DisplayName: Track width between left and right wheels
+    // @Description: Track width between left and right wheels. Used to scale the steering response on skid-steer vehicles
+    // @Units: m
+    // @Range: 0 10
+    // @Increment: 0.01
+    // @User: Standard
+    AP_GROUPINFO("TRACK_WIDTH", 9, AP_MotorsUGV, _track_width, 0.2f),
+
+    // @Param: WHEEL_RADIUS
+    // @DisplayName: Wheel radius
+    // @Description: Wheel radius. Used to scale the steering response on skid-steer vehicles
+    // @Units: m
+    // @Range: 0 1
+    // @Increment: 0.01
+    // @User: Standard
+    AP_GROUPINFO("WHEEL_RADIUS", 10, AP_MotorsUGV, _wheel_radius, 0.2f),
+
     AP_GROUPEND
 };
 
@@ -136,8 +154,11 @@ void AP_MotorsUGV::setup_servo_output()
 }
 
 // set steering as a value from -4500 to +4500
-void AP_MotorsUGV::set_steering(float steering)
+void AP_MotorsUGV::set_steering(float steering, bool apply_frame_scaling)
 {
+    if (apply_frame_scaling) {
+        steering = scale_steering_for_frame(steering);
+    }
     _steering = constrain_float(steering, -4500.0f, 4500.0f);
 }
 
@@ -473,4 +494,21 @@ bool AP_MotorsUGV::output_test_pwm(motor_test_order motor_seq, float pwm)
     SRV_Channels::output_ch_all();
     SRV_Channels::push();
     return true;
+}
+
+// get scaled steering value based on vehicle's track width and wheel size, only used for skid-steering vehicles
+float AP_MotorsUGV::scale_steering_for_frame(float steering)
+{
+    // only scale for skid-steering vehicles
+    if (!have_skid_steering()) {
+        return steering;
+    }
+
+    // sanity check frame values
+    if (!is_positive(_track_width) || !is_positive(_wheel_radius)) {
+        return steering;
+    }
+
+    const float scaling_factor = (_track_width / AP_MOTORSUGV_STANDARD_TRACK_WIDTH) * (AP_MOTORSUGV_STANDARD_WHEEL_RADIUS / _wheel_radius);
+    return (steering * scaling_factor);
 }
