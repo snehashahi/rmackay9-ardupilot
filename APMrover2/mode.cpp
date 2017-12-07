@@ -188,6 +188,12 @@ float Mode::get_speed_default(bool rtl) const
     }
 }
 
+// get instantaneous desired turn rate in rad/sec (only used for reporting)
+float Mode::get_desired_turn_rate() const
+{
+    return attitude_control.get_desired_turn_rate();
+}
+
 // restore desired speed to default from parameter values (CRUISE_SPEED or WP_SPEED)
 void Mode::set_desired_speed_to_default(bool rtl)
 {

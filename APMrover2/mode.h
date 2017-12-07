@@ -88,7 +88,8 @@ public:
     // rtl argument should be true if called from RTL or SmartRTL modes (handled here to avoid duplication)
     float get_speed_default(bool rtl = false) const;
 
-    // set desired speed
+    // set or set desired speed
+    float get_desired_speed() const { return _desired_speed; }
     void set_desired_speed(float speed) { _desired_speed = speed; }
 
     // restore desired speed to default from parameter values (CRUISE_SPEED or WP_SPEED)
@@ -98,6 +99,8 @@ public:
     // get instantaneous desired lateral acceleration in m/s/s (only used for reporting)
     float get_desired_lat_accel() const { return _desired_lat_accel; }
 
+    // get instantaneous desired turn rate in rad/sec (only used for reporting)
+    float get_desired_turn_rate() const;
 
 protected:
 
