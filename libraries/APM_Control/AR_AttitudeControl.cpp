@@ -242,6 +242,17 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
     return constrain_float(p + i + d, -1.0f, 1.0f);
 }
 
+// get actual lateral acceleration in m/s/s.  returns true on success
+bool AR_AttitudeControl::get_lateral_acceleration(float &lat_accel) const
+{
+    float speed;
+    if (!get_forward_speed(speed)) {
+        return false;
+    }
+    lat_accel = speed * _ahrs.get_yaw_rate_earth();
+    return true;
+}
+
 // return a throttle output from -1 to +1 given a desired speed in m/s (use negative speeds to travel backwards)
 //   motor_limit should be true if motors have hit their upper or lower limits
 //   cruise speed should be in m/s, cruise throttle should be a number from -1 to +1

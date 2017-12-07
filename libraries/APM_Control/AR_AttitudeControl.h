@@ -53,6 +53,9 @@ public:
     // get latest desired turn rate in rad/sec (recorded during calls to get_steering_out_rate)
     float get_desired_turn_rate() const { return _desired_turn_rate; }
 
+    // get actual lateral acceleration in m/s/s.  returns true on success.  For reporting purposes only
+    bool get_lateral_acceleration(float &lat_accel) const;
+
     //
     // throttle / speed controller
     //
