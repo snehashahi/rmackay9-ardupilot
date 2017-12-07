@@ -50,6 +50,9 @@ public:
     // desired yaw rate in radians/sec. Positive yaw is to the right.
     float get_steering_out_rate(float desired_rate, bool skid_steering, bool motor_limit_left, bool motor_limit_right, bool reverse);
 
+    // get latest desired turn rate in rad/sec (recorded during calls to get_steering_out_rate)
+    float get_desired_turn_rate() const { return _desired_turn_rate; }
+
     //
     // throttle / speed controller
     //
@@ -96,6 +99,7 @@ private:
 
     // steering control
     uint32_t _steer_turn_last_ms;   // system time of last call to steering rate controller
+    float    _desired_turn_rate;    // desired turn rate either from external caller or from lateral acceleration controller (for reporting purpose)
 
     // throttle control
     uint32_t _speed_last_ms;        // system time of last call to get_throttle_out_speed

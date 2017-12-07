@@ -173,6 +173,9 @@ float AR_AttitudeControl::get_steering_out_angle_error(float angle_err, bool ski
 // desired yaw rate in radians/sec. Positive yaw is to the right.
 float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_steering, bool motor_limit_left, bool motor_limit_right, bool reversed)
 {
+    // record desired turn rate for reporting purposes
+    _desired_turn_rate = desired_rate;
+
     // calculate dt
     const uint32_t now = AP_HAL::millis();
     float dt = (now - _steer_turn_last_ms) / 1000.0f;
