@@ -1331,8 +1331,8 @@ Format characters in the format string for binary log messages
       "PIDP", PID_FMT,  PID_LABELS, PID_UNITS, PID_MULTS }, \
     { LOG_PIDY_MSG, sizeof(log_PID), \
       "PIDY", PID_FMT,  PID_LABELS, PID_UNITS, PID_MULTS }, \
-    { LOG_PIDA_MSG, sizeof(log_PID), \
-      "PIDA", PID_FMT,  PID_LABELS, PID_UNITS, PID_MULTS }, \
+    { LOG_PIDT_MSG, sizeof(log_PID), \
+      "PIDT", PID_FMT,  PID_LABELS, PID_UNITS, PID_MULTS }, \
     { LOG_PIDS_MSG, sizeof(log_PID), \
       "PIDS", PID_FMT,  PID_LABELS, PID_UNITS, PID_MULTS }, \
     { LOG_DSTL_MSG, sizeof(log_DSTL), \
@@ -1448,7 +1448,7 @@ enum LogMessages {
     LOG_PIDR_MSG,
     LOG_PIDP_MSG,
     LOG_PIDY_MSG,
-    LOG_PIDA_MSG,
+    LOG_PIDT_MSG,
     LOG_PIDS_MSG,
     LOG_DSTL_MSG,
     LOG_VIBE_MSG,
