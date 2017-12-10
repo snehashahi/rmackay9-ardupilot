@@ -530,6 +530,8 @@ void AC_AttitudeControl::thrust_heading_rotation_angles(Quaternion& att_to_quat,
     // Todo: Limit roll an pitch error based on output saturation and maximum error.
 
     // Limit Yaw Error based on maximum acceleration - Update to include output saturation and maximum error.
+    // Currently the limit is based on the maximum acceleration using the linear part of the SQRT controller.
+    // This should be updated to be based on an angle limit, saturation, or unlimited based on user defined parameters.
     if(!is_zero(_p_angle_yaw.kP()) && fabsf(att_diff_angle.z) > AC_ATTITUDE_ACCEL_Y_CONTROLLER_MAX_RADSS/_p_angle_yaw.kP()){
         att_diff_angle.z = constrain_float(wrap_PI(att_diff_angle.z), -AC_ATTITUDE_ACCEL_Y_CONTROLLER_MAX_RADSS/_p_angle_yaw.kP(), AC_ATTITUDE_ACCEL_Y_CONTROLLER_MAX_RADSS/_p_angle_yaw.kP());
         heading_quat.from_axis_angle(Vector3f(0.0f,0.0f,att_diff_angle.z));
