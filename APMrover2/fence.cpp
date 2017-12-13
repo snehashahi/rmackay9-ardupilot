@@ -10,7 +10,7 @@ void Rover::fence_check()
     g2.fence.set_home_distance(get_distance(current_loc, home));
 
     // check for a breach
-    new_breaches = g2.fence.check_fence(current_loc.alt / 100.0f);
+    new_breaches = g2.fence.check_fence(0.0f);
 
     // return immediately if motors are not armed
     if (!arming.is_armed()) {
