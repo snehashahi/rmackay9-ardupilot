@@ -7,7 +7,7 @@ void ModeSteering::update()
     get_pilot_desired_steering_and_throttle(desired_steering, desired_throttle);
 
     // convert pilot throttle input to desired speed (up to twice the cruise speed)
-    const float target_speed = desired_throttle * 0.01f * calc_speed_max(g.speed_cruise, g.throttle_cruise * 0.01f);
+    float target_speed = desired_throttle * 0.01f * calc_speed_max(g.speed_cruise, g.throttle_cruise * 0.01f);
 
     // get speed forward
     float speed;
@@ -54,6 +54,11 @@ void ModeSteering::update()
     } else {
         // run lateral acceleration to steering controller
         calc_steering_from_lateral_acceleration(false);
+
+        // apply object avoidance to desired speed
+        rover.g2.avoid.adjust_speed(attitude_control.get_throttle_speed_pid().kP().get(), attitude_control.get_accel_max(), ahrs.yaw, target_speed);
+
+        // run speed to throttle controller
         calc_throttle(target_speed, false);
     }
 }
