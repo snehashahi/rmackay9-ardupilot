@@ -53,6 +53,7 @@ public:
     // accel (maximum acceleration/deceleration) is in m/s/s
     // heading is in radians
     // speed is in m/s
+    // kP should be zero for linear response, non-zero for non-linear response
     void adjust_speed(float kP, float accel, float heading, float &speed);
 
     // adjust vertical climb rate so vehicle does not break the vertical fence
@@ -117,13 +118,14 @@ private:
     /*
      * Computes the speed such that the stopping distance
      * of the vehicle will be exactly the input distance.
+     * kP should be non-zero for Copter which has a non-linear response
      */
-    float get_max_speed(float kP, float accel_cmss, float distance) const;
+    float get_max_speed(float kP, float accel_cmss, float distance_cm) const;
 
     /*
      * Computes distance required to stop, given current speed.
      */
-    float get_stopping_distance(float kP, float accel_cmss, float speed) const;
+    float get_stopping_distance(float kP, float accel_cmss, float speed_cms) const;
 
     /*
      * methods for avoidance in non-GPS flight modes
