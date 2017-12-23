@@ -371,3 +371,30 @@ void Mode::calc_steering_to_heading(float desired_heading_cd, bool reversed)
     const float steering_out = attitude_control.get_steering_out_angle_error(yaw_error, g2.motors.have_skid_steering(), g2.motors.limit.steer_left, g2.motors.limit.steer_right, reversed);
     g2.motors.set_steering(steering_out * 4500.0f);
 }
+
+// calculate steering output to drive towards desired heading
+void Mode::calc_steering_from_lateral_acceleration_or_heading(float lat_accel, float desired_heading_cd, bool reversed)
+{
+    // add obstacle avoidance response to lateral acceleration target
+    if (!reversed) {
+        lat_accel += (rover.obstacle.turn_angle / 45.0f) * g.turn_max_g;
+    }
+
+    // constrain to max G force
+    lat_accel = constrain_float(lat_accel, -g.turn_max_g * GRAVITY_MSS, g.turn_max_g * GRAVITY_MSS);
+
+    // get steering out from lat accel controller
+    float steering_out = attitude_control.get_steering_out_lat_accel(lat_accel, g2.motors.have_skid_steering(), g2.motors.limit.steer_left, g2.motors.limit.steer_right, reversed);
+
+    // calculate yaw error (in radians) and pass to steering angle controller
+    const float yaw_error = wrap_PI(radians((desired_heading_cd - ahrs.yaw_sensor) * 0.01f));
+    const float steering_out_from_heading = attitude_control.get_steering_out_angle_error(yaw_error, g2.motors.have_skid_steering(), g2.motors.limit.steer_left, g2.motors.limit.steer_right, reversed);
+
+    // use steering_out_from_heading if larger
+    if (fabsf(steering_out) < fabsf(steering_out_from_heading)) {
+        steering_out = steering_out_from_heading;
+    }
+
+    // pass steering output to motors library
+    g2.motors.set_steering(steering_out * 4500.0f);
+}
