@@ -252,6 +252,14 @@ float AR_AttitudeControl::get_steering_out_lat_accel_or_angle_error(float desire
 // desired yaw rate in radians/sec. Positive yaw is to the right.
 float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_steering, bool motor_limit_left, bool motor_limit_right, bool reversed)
 {
+    // get speed forward
+    float speed;
+    if (!get_forward_speed(speed)) {
+        // we expect caller will not try to control heading using rate control without a valid speed estimate
+        // on failure to get speed we do not attempt to steer
+        return 0.0f;
+    }
+
     // calculate dt
     const uint32_t now = AP_HAL::millis();
     float dt = (now - _steer_turn_last_ms) / 1000.0f;
@@ -269,14 +277,6 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
         _desired_turn_rate = constrain_float(desired_rate, _desired_turn_rate - change_max, _desired_turn_rate + change_max);
     } else {
         _desired_turn_rate = desired_rate;
-    }
-
-    // get speed forward
-    float speed;
-    if (!get_forward_speed(speed)) {
-        // we expect caller will not try to control heading using rate control without a valid speed estimate
-        // on failure to get speed we do not attempt to steer
-        return 0.0f;
     }
 
     // only use positive speed. Use reverse flag instead of negative speeds.
