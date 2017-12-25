@@ -150,6 +150,15 @@ const AP_Param::GroupInfo AR_AttitudeControl::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("_ANG_ACC_MAX", 7, AR_AttitudeControl, _steer_angle_accel_max, AR_ATTCONTROL_STEER_ANG_ACC_MAX),
 
+    // @Param: _STR_RAT_MAX
+    // @DisplayName: Steering control rotation rate maximum
+    // @Description: Steering control rotation rate maximum in deg/s.  0 to remove rate limiting
+    // @Range: 0 1000
+    // @Increment: 0.1
+    // @Units: deg/s
+    // @User: Standard
+    AP_GROUPINFO("_STR_RAT_MAX", 8, AR_AttitudeControl, _steer_rate_max, AR_ATTCONTROL_STEER_RATE_MAX),
+
     AP_GROUPEND
 };
 
@@ -279,6 +288,11 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
         desired_rate = constrain_float(desired_rate, _desired_turn_rate - change_max, _desired_turn_rate + change_max);
     }
     _desired_turn_rate = desired_rate;
+
+    // rate limit desired turn rate
+    if (is_positive(_steer_rate_max)) {
+        _desired_turn_rate = constrain_float(_desired_turn_rate, -_steer_rate_max, _steer_rate_max);
+    }
 
     // only use positive speed. Use reverse flag instead of negative speeds.
     speed = fabsf(speed);
