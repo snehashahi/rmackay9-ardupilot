@@ -273,11 +273,10 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
 
     // acceleration limit desired turn rate
     const float change_max = radians(_steer_angle_accel_max) * dt;
-    if (is_positive(dt)) {
-        _desired_turn_rate = constrain_float(desired_rate, _desired_turn_rate - change_max, _desired_turn_rate + change_max);
-    } else {
-        _desired_turn_rate = desired_rate;
+    if (is_positive(dt) && !is_zero(change_max)) {
+        desired_rate = constrain_float(desired_rate, _desired_turn_rate - change_max, _desired_turn_rate + change_max);
     }
+    _desired_turn_rate = desired_rate;
 
     // only use positive speed. Use reverse flag instead of negative speeds.
     speed = fabsf(speed);
