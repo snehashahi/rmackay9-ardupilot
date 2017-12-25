@@ -141,6 +141,15 @@ const AP_Param::GroupInfo AR_AttitudeControl::var_info[] = {
     // @User: Standard
     AP_SUBGROUPINFO(_steer_angle_p, "_STR_ANG_", 6, AR_AttitudeControl, AC_P),
 
+    // @Param: _ANG_ACC_MAX
+    // @DisplayName: Steering control angular acceleration maximum
+    // @Description: Steering control angular acceleartion maximum (in deg/s/s).  0 to disable acceleration limiting
+    // @Range: 0 1000
+    // @Increment: 0.1
+    // @Units: deg/s/s
+    // @User: Standard
+    AP_GROUPINFO("_ANG_ACC_MAX", 7, AR_AttitudeControl, _steer_angle_accel_max, AR_ATTCONTROL_STEER_ANG_ACC_MAX),
+
     AP_GROUPEND
 };
 
@@ -243,19 +252,25 @@ float AR_AttitudeControl::get_steering_out_lat_accel_or_angle_error(float desire
 // desired yaw rate in radians/sec. Positive yaw is to the right.
 float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_steering, bool motor_limit_left, bool motor_limit_right, bool reversed)
 {
-    // record desired turn rate for reporting purposes
-    _desired_turn_rate = desired_rate;
-
     // calculate dt
     const uint32_t now = AP_HAL::millis();
     float dt = (now - _steer_turn_last_ms) / 1000.0f;
     if ((_steer_turn_last_ms == 0) || (dt > (AR_ATTCONTROL_TIMEOUT_MS / 1000.0f))) {
         dt = 0.0f;
         _steer_rate_pid.reset_filter();
+        // reset desired turn rate to actual turn rate for accel limiting
+        _desired_turn_rate = _ahrs.get_yaw_rate_earth();
     } else {
         _steer_rate_pid.set_dt(dt);
     }
     _steer_turn_last_ms = now;
+
+    // acceleration limit desired turn rate
+    const float change_max = radians(_steer_angle_accel_max) * dt;
+    if (is_positive(dt) && !is_zero(change_max)) {
+        desired_rate = constrain_float(desired_rate, _desired_turn_rate - change_max, _desired_turn_rate + change_max);
+    }
+    _desired_turn_rate = desired_rate;
 
     // get speed forward
     float speed;
