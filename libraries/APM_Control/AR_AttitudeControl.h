@@ -7,6 +7,7 @@
 
 // attitude control default definition
 #define AR_ATTCONTROL_STEER_ANG_P       1.00f
+#define AR_ATTCONTROL_STEER_ANG_ACC_MAX 1000
 #define AR_ATTCONTROL_STEER_RATE_P      1.00f
 #define AR_ATTCONTROL_STEER_RATE_I      0.50f
 #define AR_ATTCONTROL_STEER_RATE_IMAX   1.00f
@@ -109,6 +110,7 @@ private:
     AP_Float _throttle_accel_max;   // speed/throttle control acceleration (and deceleration) maximum in m/s/s.  0 to disable limits
     AP_Int8  _brake_enable;         // speed control brake enable/disable. if set to 1 a reversed output to the motors to slow the vehicle.
     AP_Float _stop_speed;           // speed control stop speed.  Motor outputs to zero once vehicle speed falls below this value
+    AP_Float _steer_angle_accel_max;// steering angle acceleration max in deg/s/s
 
     // steering control
     uint32_t _steer_lat_accel_last_ms;  // system time of last call to lateral acceleration controller (i.e. get_steering_out_lat_accel)
