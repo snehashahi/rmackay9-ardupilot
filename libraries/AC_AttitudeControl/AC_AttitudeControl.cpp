@@ -385,7 +385,7 @@ void AC_AttitudeControl::input_rate_bf_roll_pitch_yaw(float roll_rate_bf_cds, fl
     _attitude_target_quat.to_euler(_attitude_target_euler_angle.x, _attitude_target_euler_angle.y, _attitude_target_euler_angle.z);
 
     if (_rate_bf_ff_enabled) {
-        // Compute acceleration-limited euler rates
+        // Compute acceleration-limited body frame rates
         // When acceleration limiting is enabled, the input shaper constrains angular acceleration about the axis, slewing
         // the output rate towards the input rate.
         _attitude_target_ang_vel.x = input_shaping_ang_vel(_attitude_target_ang_vel.x, roll_rate_rads, get_accel_roll_max_radss(), _dt);
@@ -408,6 +408,28 @@ void AC_AttitudeControl::input_rate_bf_roll_pitch_yaw(float roll_rate_bf_cds, fl
 
     // Call quaternion attitude controller
     attitude_controller_run_quat();
+}
+
+// Command an angular velocity with angular velocity smoothing using rate loops only with no attitude loop stabilization
+void AC_AttitudeControl::input_rate_bf_roll_pitch_yaw_2(float roll_rate_bf_cds, float pitch_rate_bf_cds, float yaw_rate_bf_cds)
+{
+    // Convert from centidegrees on public interface to radians
+    float roll_rate_rads = radians(roll_rate_bf_cds*0.01f);
+    float pitch_rate_rads = radians(pitch_rate_bf_cds*0.01f);
+    float yaw_rate_rads = radians(yaw_rate_bf_cds*0.01f);
+
+    // Compute acceleration-limited body frame rates
+    // When acceleration limiting is enabled, the input shaper constrains angular acceleration about the axis, slewing
+    // the output rate towards the input rate.
+    _attitude_target_ang_vel.x = input_shaping_ang_vel(_attitude_target_ang_vel.x, roll_rate_rads, get_accel_roll_max_radss(), _dt);
+    _attitude_target_ang_vel.y = input_shaping_ang_vel(_attitude_target_ang_vel.y, pitch_rate_rads, get_accel_pitch_max_radss(), _dt);
+    _attitude_target_ang_vel.z = input_shaping_ang_vel(_attitude_target_ang_vel.z, yaw_rate_rads, get_accel_yaw_max_radss(), _dt);
+
+    // Update the unused targets attitude based on current attitude to condition mode change
+    _attitude_target_quat.from_rotation_matrix(_ahrs.get_rotation_body_to_ned());
+    _attitude_target_quat.to_euler(_attitude_target_euler_angle.x, _attitude_target_euler_angle.y, _attitude_target_euler_angle.z);
+    // Convert body-frame angular velocity into euler angle derivative of desired attitude
+    ang_vel_to_euler_rate(_attitude_target_euler_angle, _attitude_target_ang_vel, _attitude_target_euler_rate);
 }
 
 // Command an angular step (i.e change) in body frame angle
