@@ -353,7 +353,7 @@ protected:
     // Intersampling period in seconds
     float               _dt;
 
-    // This represents a 321-intrinsic rotation from NED frame to the target (setpoint)
+    // This represents a 321-intrinsic rotation in NED frame to the target (setpoint)
     // attitude used in the attitude controller, in radians.
     Vector3f            _attitude_target_euler_angle;
 
@@ -362,7 +362,7 @@ protected:
     // second.
     Vector3f            _attitude_target_euler_rate;
 
-    // This represents a quaternion rotation from NED frame to the target (setpoint)
+    // This represents a quaternion rotation in NED frame to the target (setpoint)
     // attitude used in the attitude controller.
     Quaternion          _attitude_target_quat;
 
