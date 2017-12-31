@@ -430,6 +430,7 @@ protected:
     Vector2f    _vehicle_horiz_vel;     // velocity to use if _flags.vehicle_horiz_vel_override is set
     float       _distance_to_target;    // distance to position target - for reporting only
     LowPassFilterFloat _vel_error_filter;   // low-pass-filter on z-axis velocity error
+    uint32_t _log_count;
 
     LowPassFilterVector2f _accel_target_filter; // acceleration target filter
 

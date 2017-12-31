@@ -993,6 +993,21 @@ void AC_PosControl::run_xy_controller(float dt, float ekfNavVelGainScaler)
     accel_target.x = (vel_xy_p.x + vel_xy_i.x + vel_xy_d.x) * ekfNavVelGainScaler;
     accel_target.y = (vel_xy_p.y + vel_xy_i.y + vel_xy_d.y) * ekfNavVelGainScaler;
 
+    _log_count += 1;
+    if(_log_count > 2){
+        DataFlash_Class::instance()->Log_Write("PSC", "TimeUS,dex,dey,vpx,vpy,vix,viy,vdx,vdy", "Qffffffff",
+                                               AP_HAL::micros64(),
+                                               (double)_vel_desired.x,
+                                               (double)_vel_desired.y,
+                                               (double)vel_xy_p.x,
+                                               (double)vel_xy_p.y,
+                                               (double)vel_xy_i.x,
+                                               (double)vel_xy_i.y,
+                                               (double)vel_xy_d.x,
+                                               (double)vel_xy_d.y);
+        _log_count = 0;
+    }
+
     // reset accel to current desired acceleration
      if (_flags.reset_accel_to_lean_xy) {
          _accel_target_filter.reset(Vector2f(accel_target.x, accel_target.y));
