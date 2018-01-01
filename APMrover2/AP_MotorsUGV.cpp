@@ -284,11 +284,13 @@ void AP_MotorsUGV::output(bool armed, float dt)
     // slew limit throttle
     slew_limit_throttle(dt);
 
-    // output for regular steering/throttle style frames
-    output_regular(armed, _steering, _throttle);
-
-    // output for skid steering style frames
-    output_skid_steering(armed, _steering, _throttle);
+    if (have_skid_steering()) {
+        // output for skid steering style frames
+        output_skid_steering(armed, _steering, _throttle);
+    } else {
+        // output for regular steering/throttle style frames
+        output_regular(armed, _steering, _throttle);
+    }
 
     // send values to the PWM timers for output
     SRV_Channels::calc_pwm();
@@ -472,10 +474,6 @@ void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle)
 // output to skid steering channels
 void AP_MotorsUGV::output_skid_steering(bool armed, float steering, float throttle)
 {
-    if (!have_skid_steering()) {
-        return;
-    }
-
     // handle simpler disarmed case
     if (!armed) {
         if (_disarm_disable_pwm) {
