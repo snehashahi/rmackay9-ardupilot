@@ -552,7 +552,7 @@ ParametersG2::ParametersG2(void)
     afs(rover.mission, rover.barometer, rover.gps, rover.rcmap),
 #endif
     beacon(rover.serial_manager),
-    motors(rover.ServoRelayEvents),
+    motors(rover.ServoRelayEvents, wheel_encoder),
     attitude_control(rover.ahrs),
     smart_rtl(rover.ahrs)
 {

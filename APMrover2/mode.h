@@ -130,6 +130,9 @@ protected:
     // cruise_speed is in m/s, cruise_throttle should be in the range -1 to +1
     float calc_speed_max(float cruise_speed, float cruise_throttle) const;
 
+    // send estimated maximum vehicle speed (in m/s) to motors library (used for wheel rate control)
+    void send_speed_max_estimate_to_motors();
+
     // calculate pilot input to nudge speed up or down
     //  target_speed should be in meters/sec
     //  cruise_speed is vehicle's cruising speed, cruise_throttle is the throttle (from -1 to +1) that achieves the cruising speed

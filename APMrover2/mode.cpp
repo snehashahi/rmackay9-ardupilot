@@ -242,6 +242,12 @@ float Mode::calc_speed_max(float cruise_speed, float cruise_throttle) const
     return constrain_float(speed_max, 0.0f, 30.0f);
 }
 
+// send estimated maximum vehicle speed (in m/s) to motors library (used for wheel rate control)
+void Mode::send_speed_max_estimate_to_motors()
+{
+    g2.motors.set_speed_max(calc_speed_max(g.speed_cruise, g.throttle_cruise * 0.01f));
+}
+
 // calculate pilot input to nudge speed up or down
 //  target_speed should be in meters/sec
 //  cruise_speed is vehicle's cruising speed, cruise_throttle is the throttle (from -1 to +1) that achieves the cruising speed
