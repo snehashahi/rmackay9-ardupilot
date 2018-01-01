@@ -79,11 +79,88 @@ const AP_Param::GroupInfo AP_MotorsUGV::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("THST_EXPO", 9, AP_MotorsUGV, _thrust_curve_expo, 0.0f),
 
+    // @Param: _WL_P
+    // @DisplayName: Wheel rate controller (Left) P gain
+    // @Description: Wheel rate controller (Left) P gain.  Converts wheel rate error (as a percentage of full range) to wheel output (in the range -1 to +1)
+    // @Range: 0.100 2.000
+    // @User: Standard
+
+    // @Param: _WL_I
+    // @DisplayName: Wheel rate controller (Left) I gain
+    // @Description: Wheel rate controller (Left) I gain.  Corrects long term error between the desired rate (in rad/s) and actual
+    // @Range: 0.000 2.000
+    // @User: Standard
+
+    // @Param: _WL_IMAX
+    // @DisplayName: Wheel rate controller (Left) I gain maximum
+    // @Description: Wheel rate controller (Left) I gain maximum.  Constrains the output (range -1 to +1) that the I term will generate
+    // @Range: 0.000 1.000
+    // @User: Standard
+
+    // @Param: _WL_D
+    // @DisplayName: Wheel rate controller (Left) D gain
+    // @Description: Wheel rate controller (Left) D gain.  Compensates for short-term change in desired rate vs actual
+    // @Range: 0.000 0.400
+    // @User: Standard
+
+    // @Param: _WL_FILT
+    // @DisplayName: Wheel rate controller (Left) filter frequency
+    // @Description: Wheel rate controller (Left) input filter.  Lower values reduce noise but add delay.
+    // @Range: 0.000 100.000
+    // @Units: Hz
+    // @User: Standard
+
+    // @Param: _WL_FF
+    // @DisplayName: Wheel rate controller (Left) feed-forward gain
+    // @Description: Wheel rate controller (Left) feed-forward gain.  Converts wheel rate error (as a percentage of full range) to wheel output (in the range -1 to +1)
+    // @Range: 0.0 2.000
+    // @User: Standard
+    AP_SUBGROUPINFO(_wheel_control_state[0].pid, "WL_", 10, AP_MotorsUGV, AC_PID),
+
+    // @Param: _WR_P
+    // @DisplayName: Wheel rate controller (Right) P gain
+    // @Description: Wheel rate controller (Right) P gain.  Converts wheel rate error (as a percentage of full range) to wheel output (in the range -1 to +1)
+    // @Range: 0.100 2.000
+    // @User: Standard
+
+    // @Param: _WR_I
+    // @DisplayName: Wheel rate controller (Right) I gain
+    // @Description: Wheel rate controller (Right) I gain.  Corrects long term error between the desired rate (in rad/s) and actual
+    // @Range: 0.000 2.000
+    // @User: Standard
+
+    // @Param: _WR_IMAX
+    // @DisplayName: Wheel rate controller (Right) I gain maximum
+    // @Description: Wheel rate controller (Right) I gain maximum.  Constrains the output (range -1 to +1) that the I term will generate
+    // @Range: 0.000 1.000
+    // @User: Standard
+
+    // @Param: _WR_D
+    // @DisplayName: Wheel rate controller (Right) D gain
+    // @Description: Wheel rate controller (Right) D gain.  Compensates for short-term change in desired rate vs actual
+    // @Range: 0.000 0.400
+    // @User: Standard
+
+    // @Param: _WR_FILT
+    // @DisplayName: Wheel rate controller (Right) filter frequency
+    // @Description: Wheel rate controller (Right) input filter.  Lower values reduce noise but add delay.
+    // @Range: 0.000 100.000
+    // @Units: Hz
+    // @User: Standard
+
+    // @Param: _WR_FF
+    // @DisplayName: Wheel rate controller (Right) feed-forward gain
+    // @Description: Wheel rate controller (Right) feed-forward gain.  Converts wheel rate error (as a percentage of full range) to wheel output (in the range -1 to +1)
+    // @Range: 0.0 2.000
+    // @User: Standard
+    AP_SUBGROUPINFO(_wheel_control_state[1].pid, "WR_", 11, AP_MotorsUGV, AC_PID),
+
     AP_GROUPEND
 };
 
-AP_MotorsUGV::AP_MotorsUGV(AP_ServoRelayEvents &relayEvents) :
-        _relayEvents(relayEvents)
+AP_MotorsUGV::AP_MotorsUGV(AP_ServoRelayEvents &relayEvents, AP_WheelEncoder &wenc) :
+        _relayEvents(relayEvents),
+        _wenc(wenc)
 {
     AP_Param::setup_object_defaults(this, var_info);
 }
@@ -162,6 +239,22 @@ void AP_MotorsUGV::set_throttle(float throttle)
             _throttle = -_throttle_min;
         } else {
             _throttle = _throttle_min;
+        }
+    }
+}
+
+// inform motor library of maximum vehicle speed
+// used for estimate wheel's maximum turn rate which is required for wheel rate control
+void AP_MotorsUGV::set_speed_max(float speed_max)
+{
+    _vehicle_speed_max = speed_max;
+
+    // calculate left and right wheel's maximum rotation rate (vehicle's maximum speed / circumference of wheel)
+    for (uint8_t i = 0; i <= 1; i++) {
+        if (is_positive(speed_max) && _wenc.enabled(i) && is_positive(_wenc.get_wheel_radius(i))) {
+            _wheel_control_state[i].rate_max = speed_max / (2.0f * M_PI * _wenc.get_wheel_radius(i));
+        } else {
+            _wheel_control_state[i].rate_max = 0.0f;
         }
     }
 }
@@ -430,6 +523,12 @@ void AP_MotorsUGV::output_throttle(SRV_Channel::Aux_servo_function_t function, f
         return;
     }
 
+    // index number is "0" for main throttle and left wheel, "1" for right wheel.  Used to index into relay and wheel encoder objects
+    uint8_t index_num = (function == SRV_Channel::k_throttleRight) ? 1 : 0;
+
+    // run pid controller?
+    throttle = get_rate_controlled_throttle(throttle, index_num);
+
     // constrain and scale output
     throttle = get_scaled_throttle(throttle);
 
@@ -442,19 +541,7 @@ void AP_MotorsUGV::output_throttle(SRV_Channel::Aux_servo_function_t function, f
         }
         const int8_t reverse_multiplier = out_chan->get_reversed() ? -1 : 1;
         bool relay_high = is_negative(reverse_multiplier * throttle);
-
-        switch (function) {
-            case SRV_Channel::k_throttle:
-            case SRV_Channel::k_throttleLeft:
-                _relayEvents.do_set_relay(0, relay_high);
-                break;
-            case SRV_Channel::k_throttleRight:
-                _relayEvents.do_set_relay(1, relay_high);
-                break;
-            default:
-                // do nothing
-                break;
-        }
+        _relayEvents.do_set_relay(index_num, relay_high);
         // invert the output to always have positive value calculated by calc_pwm
         throttle = reverse_multiplier * fabsf(throttle);
     }
@@ -513,4 +600,82 @@ float AP_MotorsUGV::get_scaled_throttle(float throttle) const
     const float sign = (throttle < 0.0f) ? -1.0f : 1.0f;
     const float throttle_pct = constrain_float(throttle, -100.0f, 100.0f) / 100.0f;
     return 100.0f * sign * ((_thrust_curve_expo - 1.0f) + safe_sqrt((1.0f - _thrust_curve_expo) * (1.0f - _thrust_curve_expo) + 4.0f * _thrust_curve_expo * fabsf(throttle_pct))) / (2.0f * _thrust_curve_expo);
+}
+
+// run wheel rate control
+// throttle should be in the range -100 to +100
+float AP_MotorsUGV::get_rate_controlled_throttle(float throttle, uint8_t wenc_idx)
+{
+    // return unmodified throttle if no wheel encoder enabled
+    if (!_wenc.enabled(wenc_idx) || is_zero(_wheel_control_state[wenc_idx].rate_max)) {
+        return throttle;
+    }
+
+    // return immediately if input throttle is zero
+    // this is safer because the motors should always stop even if the wheel encoders are setup incorrectly
+    if (is_zero(throttle)) {
+        return throttle;
+    }
+
+    // calculate dt since last iteration
+    uint32_t now = AP_HAL::millis();
+    float dt = (now - _wheel_control_state[wenc_idx].last_update_ms) / 1000.0f;
+    if (dt > 1.0f) {
+        dt = 0.0f;
+        // initialise limits and PID I term and input filter
+        _wheel_control_state[wenc_idx].limit_lower = false;
+        _wheel_control_state[wenc_idx].limit_upper = false;
+        _wheel_control_state[wenc_idx].pid.reset_I();
+        _wheel_control_state[wenc_idx].pid.reset_filter();
+    }
+    _wheel_control_state[wenc_idx].last_update_ms = now;
+
+    // calculate wheel rotation rate since last update
+    float dist = _wenc.get_distance(wenc_idx);
+    if (is_positive(dt)) {
+        _wheel_control_state[wenc_idx].rate = (dist - _wheel_control_state[wenc_idx].distance_prev) / dt;
+        // update pid controller with latest dt value
+        _wheel_control_state[wenc_idx].pid.set_dt(dt);
+    } else {
+        _wheel_control_state[wenc_idx].rate = 0.0f;
+    }
+    _wheel_control_state[wenc_idx].distance_prev = dist;
+
+    // calculate desired rate as a percentage of maximum rotation rate
+    float rate_desired_pct = (throttle * 0.01f);
+    float rate_desired = rate_desired_pct * _wheel_control_state[wenc_idx].rate_max;
+
+    // record desired rate for reporting
+    _wheel_control_state[wenc_idx].pid.set_desired_rate(rate_desired);
+
+    // calculate rate error (as a percentage of maximum rotation rate) and pass to pid controller
+    float rate_error_pct = (rate_desired - _wheel_control_state[wenc_idx].rate) / _wheel_control_state[wenc_idx].rate_max;
+    _wheel_control_state[wenc_idx].pid.set_input_filter_all(rate_error_pct);
+
+    // get feed forward
+    float ff = _wheel_control_state[wenc_idx].pid.get_ff(rate_desired_pct);
+
+    // get p
+    float p = _wheel_control_state[wenc_idx].pid.get_p();
+
+    // get i unless winch hit limit on last iteration
+    float i = _wheel_control_state[wenc_idx].pid.get_integrator();
+    if (((is_negative(rate_desired_pct) && !_wheel_control_state[wenc_idx].limit_lower) || (is_positive(rate_desired_pct) && !_wheel_control_state[wenc_idx].limit_upper))) {
+        i = _wheel_control_state[wenc_idx].pid.get_i();
+    }
+
+    // get d
+    float d = _wheel_control_state[wenc_idx].pid.get_d();
+
+    // final output uses input throttle as base and adds correction to achieve desired rate
+    // multiplied by 100 to convert from -1 to +1 range to -100 to +100 range
+    float output_total = throttle + ((ff + p + i + d) * 100.0f);
+
+    // constrain and set limit flags
+    _wheel_control_state[wenc_idx].limit_lower = (output_total <= -100.0f);
+    _wheel_control_state[wenc_idx].limit_upper = (output_total >= 100.0f);
+    output_total = constrain_float(output_total, -100.0f, 100.0f);
+
+    // return controlled throttle
+    return output_total;
 }

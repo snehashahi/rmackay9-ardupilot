@@ -3,12 +3,22 @@
 #include "defines.h"
 #include "AP_Arming.h"
 #include <AP_ServoRelayEvents/AP_ServoRelayEvents.h>
+#include <AC_PID/AC_PID.h>
+#include <AP_WheelEncoder/AP_WheelEncoder.h>
+
+// default gains for wheel rate control
+#define AP_MOTORS_UGV_WHEEL_P       1.0f
+#define AP_MOTORS_UGV_WHEEL_I       0.2f
+#define AP_MOTORS_UGV_WHEEL_D       0.0f
+#define AP_MOTORS_UGV_WHEEL_IMAX    1.0f
+#define AP_MOTORS_UGV_WHEEL_FILT    50.0f
+#define AP_MOTORS_UGV_WHEEL_DT      0.02f
 
 class AP_MotorsUGV {
 public:
 
     // Constructor
-    AP_MotorsUGV(AP_ServoRelayEvents &relayEvents);
+    AP_MotorsUGV(AP_ServoRelayEvents &relayEvents, AP_WheelEncoder &wenc);
 
     enum pwm_type {
         PWM_TYPE_NORMAL = 0,
@@ -42,6 +52,10 @@ public:
     float get_throttle() const { return _throttle; }
     void set_throttle(float throttle);
 
+    // inform motor library of maximum vehicle speed
+    // used for estimate wheel's maximum turn rate which is required for wheel rate control
+    void set_speed_max(float speed_max);
+
     // true if vehicle is capable of skid steering
     bool have_skid_steering() const;
 
@@ -65,6 +79,10 @@ public:
         uint8_t throttle_lower  : 1; // we have reached throttle's lower limit
         uint8_t throttle_upper  : 1; // we have reached throttle's upper limit
     } limit;
+
+    // accessor to wheel rate pid controllers (for reporting)
+    const AC_PID& get_wheel_rate_pid(uint8_t idx) const { return _wheel_control_state[idx].pid; }
+    float get_wheel_rate(uint8_t idx) const { return _wheel_control_state[idx].rate; }
 
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo var_info[];
@@ -92,8 +110,13 @@ protected:
     // scale a throttle using the _thrust_curve_expo parameter.  throttle should be in the range -100 to +100
     float get_scaled_throttle(float throttle) const;
 
+    // run wheel rate control
+    // throttle should be in the range -100 to +100
+    float get_rate_controlled_throttle(float throttle, uint8_t wenc_idx);
+
     // external references
     AP_ServoRelayEvents &_relayEvents;
+    AP_WheelEncoder &_wenc;
 
     // parameters
     AP_Int8 _pwm_type;  // PWM output type
@@ -108,4 +131,16 @@ protected:
     float   _steering;  // requested steering as a value from -4500 to +4500
     float   _throttle;  // requested throttle as a value from -100 to 100
     float   _throttle_prev; // throttle input from previous iteration
+
+    // wheel rate control variables
+    float _vehicle_speed_max;   // vehicle's maximum speed
+    struct Wheel_Rate_Control_State {
+        AC_PID pid = AC_PID(AP_MOTORS_UGV_WHEEL_P, AP_MOTORS_UGV_WHEEL_I, AP_MOTORS_UGV_WHEEL_D, AP_MOTORS_UGV_WHEEL_IMAX, AP_MOTORS_UGV_WHEEL_FILT, AP_MOTORS_UGV_WHEEL_DT); // wheel PID controller
+        float rate;                 // wheel's latest rotation rate (for reporting purposes)
+        float rate_max;             // wheel's maximum rotation rate
+        float distance_prev;        // total distance from wheel encoder from previous iteration
+        uint32_t last_update_ms;    // system time of last call to wheel controller
+        bool limit_lower;           // output has hit its lower limit
+        bool limit_upper;           // output has hit it's upper limit
+    } _wheel_control_state[2];  // left wheel index 0, right wheel index 1
 };
