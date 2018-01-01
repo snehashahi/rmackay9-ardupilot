@@ -252,6 +252,24 @@ void Rover::send_pid_tuning(mavlink_channel_t chan)
             return;
         }
     }
+    // wheel rate PID
+    for (uint8_t idx = 0; idx <= 1; idx++) {
+        uint8_t pid_mask_check = (idx == 0) ? 4 : 8;
+        if (g.gcs_pid_mask & pid_mask_check) {
+            pid_info = &g2.motors.get_wheel_rate_pid(idx).get_pid_info();
+            float rate = g2.motors.get_wheel_rate(idx);
+            mavlink_msg_pid_tuning_send(chan, (7+idx),    // ToDo: add definition for left wheel to PID_TUNING_AXIS
+                                        pid_info->desired,
+                                        rate,
+                                        pid_info->FF,
+                                        pid_info->P,
+                                        pid_info->I,
+                                        pid_info->D);
+            if (!HAVE_PAYLOAD_SPACE(chan, PID_TUNING)) {
+                return;
+            }
+        }
+    }
 }
 
 void Rover::send_wheel_encoder(mavlink_channel_t chan)
