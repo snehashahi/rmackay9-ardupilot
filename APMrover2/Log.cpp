@@ -337,6 +337,10 @@ void Rover::Log_Write_WheelEncoder()
         rpm_1       : wheel_encoder_rpm[1]
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
+
+    // log encoder based wheel control
+    DataFlash.Log_Write_PID(LOG_PIDW_MSG, g2.motors.get_wheel_rate_pid(0).get_pid_info());
+    DataFlash.Log_Write_PID(LOG_PIDX_MSG, g2.motors.get_wheel_rate_pid(1).get_pid_info());
 }
 
 // type and unit information can be found in
