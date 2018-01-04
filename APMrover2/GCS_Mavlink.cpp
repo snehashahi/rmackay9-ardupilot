@@ -260,11 +260,11 @@ void Rover::send_pid_tuning(mavlink_channel_t chan)
             float rate = g2.motors.get_wheel_rate(idx);
             mavlink_msg_pid_tuning_send(chan, (7+idx),    // ToDo: add definition for left wheel to PID_TUNING_AXIS
                                         pid_info->desired,
-                                        rate,
+                                        pid_info->actual,
                                         pid_info->FF,
                                         pid_info->P,
                                         pid_info->I,
-                                        pid_info->D);
+                                        rate);
             if (!HAVE_PAYLOAD_SPACE(chan, PID_TUNING)) {
                 return;
             }
