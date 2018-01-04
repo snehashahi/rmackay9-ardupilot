@@ -643,12 +643,13 @@ float AP_MotorsUGV::get_rate_controlled_throttle(float throttle, uint8_t wenc_id
     float rate_desired_pct = (throttle * 0.01f);
     float rate_desired = rate_desired_pct * _wheel_control_state[wenc_idx].rate_max;
 
-    // record desired rate for reporting
-    _wheel_control_state[wenc_idx].pid.set_desired_rate(rate_desired);
-
     // calculate rate error (as a percentage of maximum rotation rate) and pass to pid controller
     float rate_error_pct = (rate_desired - _wheel_control_state[wenc_idx].rate) / _wheel_control_state[wenc_idx].rate_max;
     _wheel_control_state[wenc_idx].pid.set_input_filter_all(rate_error_pct);
+
+    // record desired and actual rate for dataflash logging
+    _wheel_control_state[wenc_idx].pid.set_desired_rate(rate_desired);
+    _wheel_control_state[wenc_idx].pid.set_actual_rate(_wheel_control_state[wenc_idx].rate);
 
     // get feed forward
     float ff = _wheel_control_state[wenc_idx].pid.get_ff(rate_desired_pct);
