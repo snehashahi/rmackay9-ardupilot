@@ -524,7 +524,7 @@ void AP_MotorsUGV::output_throttle(SRV_Channel::Aux_servo_function_t function, f
     // index number is "0" for main throttle and left wheel, "1" for right wheel.  Used to index into relay and wheel encoder objects
     uint8_t index_num = (function == SRV_Channel::k_throttleRight) ? 1 : 0;
 
-    // run pid controller?
+    // run pid controller
     throttle = get_rate_controlled_throttle(throttle, index_num);
 
     // constrain and scale output
