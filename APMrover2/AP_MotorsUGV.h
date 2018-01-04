@@ -7,6 +7,7 @@
 #include <AP_WheelEncoder/AP_WheelEncoder.h>
 
 // default gains for wheel rate control
+#define AP_MOTORS_UGV_WHEEL_FF      0.0f
 #define AP_MOTORS_UGV_WHEEL_P       1.0f
 #define AP_MOTORS_UGV_WHEEL_I       0.2f
 #define AP_MOTORS_UGV_WHEEL_D       0.0f
@@ -135,7 +136,7 @@ protected:
     // wheel rate control variables
     float _vehicle_speed_max;   // vehicle's maximum speed
     struct Wheel_Rate_Control_State {
-        AC_PID pid = AC_PID(AP_MOTORS_UGV_WHEEL_P, AP_MOTORS_UGV_WHEEL_I, AP_MOTORS_UGV_WHEEL_D, AP_MOTORS_UGV_WHEEL_IMAX, AP_MOTORS_UGV_WHEEL_FILT, AP_MOTORS_UGV_WHEEL_DT); // wheel PID controller
+        AC_PID pid = AC_PID(AP_MOTORS_UGV_WHEEL_P, AP_MOTORS_UGV_WHEEL_I, AP_MOTORS_UGV_WHEEL_D, AP_MOTORS_UGV_WHEEL_IMAX, AP_MOTORS_UGV_WHEEL_FILT, AP_MOTORS_UGV_WHEEL_DT, AP_MOTORS_UGV_WHEEL_FF); // wheel PID controller
         float rate;                 // wheel's latest rotation rate (for reporting purposes)
         float rate_max;             // wheel's maximum rotation rate
         float distance_prev;        // total distance from wheel encoder from previous iteration
