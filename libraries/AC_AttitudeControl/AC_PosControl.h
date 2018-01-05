@@ -16,9 +16,7 @@
 // position controller default definitions
 #define POSCONTROL_ACCELERATION_MIN             50.0f   // minimum horizontal acceleration in cm/s/s - used for sanity checking acceleration in leash length calculation
 #define POSCONTROL_ACCEL_XY                     100.0f  // default horizontal acceleration in cm/s/s.  This is overwritten by waypoint and loiter controllers
-#define POSCONTROL_ACCEL_XY_MAX                 980.0f  // max horizontal acceleration in cm/s/s that the position velocity controller will ask from the lower accel controller
-                                                        // should be 1.5 times larger than POSCONTROL_ACCELERATION.
-                                                        // max acceleration = max lean angle * 980 * pi / 180.  i.e. 23deg * 980 * 3.141 / 180 = 393 cm/s/s
+#define POSCONTROL_ACCEL_XY_MAX                 980.0f  // max horizontal acceleration in cm/s/s that the position velocity controller will ask from the lower accel controller.
 #define POSCONTROL_STOPPING_DIST_UP_MAX         300.0f  // max stopping distance (in cm) vertically while climbing
 #define POSCONTROL_STOPPING_DIST_DOWN_MAX       200.0f  // max stopping distance (in cm) vertically while descending
 
@@ -53,7 +51,7 @@
 #define POSCONTROL_POS_XY_P                     1.0f    // horizontal position controller P gain default
 #define POSCONTROL_VEL_XY_P                     2.0f    // horizontal velocity controller P gain default
 #define POSCONTROL_VEL_XY_I                     1.0f    // horizontal velocity controller I gain default
-#define POSCONTROL_VEL_XY_D                     1.0f    // horizontal velocity controller D gain default
+#define POSCONTROL_VEL_XY_D                     0.5f    // horizontal velocity controller D gain default
 #define POSCONTROL_VEL_XY_IMAX                  1000.0f // horizontal velocity controller IMAX gain default
 #define POSCONTROL_VEL_XY_FILT_HZ               5.0f    // horizontal velocity controller input filter
 #define POSCONTROL_VEL_XY_FILT_D_HZ             5.0f    // horizontal velocity controller input filter for D
