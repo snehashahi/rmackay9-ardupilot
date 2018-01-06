@@ -199,7 +199,7 @@ void Copter::check_ekf_reset()
     float yaw_angle_change_rad = 0.0f;
     uint32_t new_ekfYawReset_ms = ahrs.getLastYawResetAngle(yaw_angle_change_rad);
     if (new_ekfYawReset_ms != ekfYawReset_ms) {
-        attitude_control->shift_ef_yaw_target(ToDeg(yaw_angle_change_rad) * 100.0f);
+        attitude_control->inertial_frame_reset();
         ekfYawReset_ms = new_ekfYawReset_ms;
         Log_Write_Event(DATA_EKF_YAW_RESET);
     }
@@ -207,6 +207,7 @@ void Copter::check_ekf_reset()
 #if AP_AHRS_NAVEKF_AVAILABLE
     // check for change in primary EKF (log only, AC_WPNav handles position target adjustment)
     if ((EKF2.getPrimaryCoreIndex() != ekf_primary_core) && (EKF2.getPrimaryCoreIndex() != -1)) {
+        attitude_control->inertial_frame_reset();
         ekf_primary_core = EKF2.getPrimaryCoreIndex();
         Log_Write_Error(ERROR_SUBSYSTEM_EKF_PRIMARY, ekf_primary_core);
         gcs().send_text(MAV_SEVERITY_WARNING, "EKF primary changed:%d\n", (unsigned)ekf_primary_core);
