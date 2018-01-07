@@ -473,6 +473,9 @@ void AC_AttitudeControl::input_rate_bf_roll_pitch_yaw_3(float roll_rate_bf_cds, 
     _attitude_ang_error.to_axis_angle(attitude_error_vector);
     _rate_target_ang_vel = update_ang_vel_target_from_att_error(attitude_error_vector);
     _rate_target_ang_vel += _attitude_target_ang_vel;
+
+    // ensure Quaternions stay normalized
+    _attitude_ang_error.normalize();
 }
 
 // Command an angular step (i.e change) in body frame angle
@@ -550,6 +553,9 @@ void AC_AttitudeControl::attitude_controller_run_quat()
         _attitude_target_quat = _attitude_target_quat * attitude_target_update_quat;
         _attitude_target_quat.normalize();
     }
+
+    // ensure Quaternions stay normalized
+    _attitude_target_quat.normalize();
 
     // Record error to handle EKF resets
     _attitude_ang_error = attitude_vehicle_quat.inverse() * _attitude_target_quat;
