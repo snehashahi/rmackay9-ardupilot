@@ -559,6 +559,9 @@ public:
 
     // Land alt final stage
     AP_Int16 land_alt_low;
+
+    // follow
+    AP_Follow follow;
 };
 
 extern const AP_Param::Info        var_info[];

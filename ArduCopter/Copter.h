@@ -97,6 +97,7 @@
 #include <AP_SmartRTL/AP_SmartRTL.h>
 #include <AP_WheelEncoder/AP_WheelEncoder.h>
 #include <AP_Winch/AP_Winch.h>
+#include <AP_Follow/AP_Follow.h>
 
 // Configuration
 #include "defines.h"
