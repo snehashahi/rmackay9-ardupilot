@@ -697,7 +697,8 @@ void GCS_MAVLINK_Copter::packetReceived(const mavlink_status_t &status,
         // optional handling of GLOBAL_POSITION_INT as a MAVLink based avoidance source
         copter.avoidance_adsb.handle_msg(msg);
     }
-    copter.mode_chase.mavlink_packet_received(msg);
+    // pass message to follow library
+    copter.g2.follow.handle_msg(msg);
     GCS_MAVLINK::packetReceived(status, msg);
 }
 
