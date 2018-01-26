@@ -100,7 +100,7 @@ const AP_Param::GroupInfo AC_AttitudeControl::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("ANG_LIM_TC", 16, AC_AttitudeControl, _angle_limit_tc, AC_ATTITUDE_CONTROL_ANGLE_LIMIT_TC_DEFAULT),
 
-    // @Param: ANG_V_R_MAX
+    // @Param: RATE_R_MAX
     // @DisplayName: Angular Velocity Max for Roll
     // @Description: Maximum angular velocity in roll axis
     // @Units: deg/s
@@ -108,9 +108,9 @@ const AP_Param::GroupInfo AC_AttitudeControl::var_info[] = {
     // @Increment: 1
     // @Values: 0:Disabled, 360:Slow, 720:Medium, 1080:Fast
     // @User: Advanced
-    AP_GROUPINFO("ANG_V_R_MAX", 17, AC_AttitudeControl, _ang_vel_roll_max, 0.0f),
+    AP_GROUPINFO("RATE_R_MAX", 17, AC_AttitudeControl, _ang_vel_roll_max, 0.0f),
 
-    // @Param: ANG_V_P_MAX
+    // @Param: RATE_P_MAX
     // @DisplayName: Angular Velocity Max for Pitch
     // @Description: Maximum angular velocity in pitch axis
     // @Units: deg/s
@@ -118,9 +118,9 @@ const AP_Param::GroupInfo AC_AttitudeControl::var_info[] = {
     // @Increment: 1
     // @Values: 0:Disabled, 360:Slow, 720:Medium, 1080:Fast
     // @User: Advanced
-    AP_GROUPINFO("ANG_V_P_MAX", 18, AC_AttitudeControl, _ang_vel_pitch_max, 0.0f),
+    AP_GROUPINFO("RATE_P_MAX", 18, AC_AttitudeControl, _ang_vel_pitch_max, 0.0f),
 
-    // @Param: ANG_V_Y_MAX
+    // @Param: RATE_Y_MAX
     // @DisplayName: Angular Velocity Max for Pitch
     // @Description: Maximum angular velocity in pitch axis
     // @Units: deg/s
@@ -128,7 +128,7 @@ const AP_Param::GroupInfo AC_AttitudeControl::var_info[] = {
     // @Increment: 1
     // @Values: 0:Disabled, 360:Slow, 720:Medium, 1080:Fast
     // @User: Advanced
-    AP_GROUPINFO("ANG_V_Y_MAX", 19, AC_AttitudeControl, _ang_vel_yaw_max, 0.0f),
+    AP_GROUPINFO("RATE_Y_MAX", 19, AC_AttitudeControl, _ang_vel_yaw_max, 0.0f),
 
     // @Param: INPUT_TC
     // @DisplayName: Attitude control input time constant (aka smoothing)
