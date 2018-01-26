@@ -39,9 +39,6 @@ bool Sub::auto_init()
 // should be called at 100hz or more
 void Sub::auto_run()
 {
-    // initialize smoothing gain
-    attitude_control.set_smoothing_gain(get_smoothing_gain());
-
     mission.update();
 
     // call the correct auto controller

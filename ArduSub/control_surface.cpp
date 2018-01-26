@@ -27,9 +27,6 @@ void Sub::surface_run()
     float target_roll, target_pitch;
     float target_yaw_rate;
 
-    // initialize smoothing gain
-    attitude_control.set_smoothing_gain(get_smoothing_gain());
-
     // if not armed set throttle to zero and exit immediately
     if (!motors.armed()) {
         motors.output_min();
