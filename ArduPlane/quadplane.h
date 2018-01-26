@@ -300,10 +300,6 @@ private:
     // pitch when we enter loiter mode
     int32_t loiter_initial_pitch_cd;
 
-    // multicopter attitude control smoothing gains for modes where user controls lean angles (qstab, qalthold) and more autonomous modes (auto, qloiter, qrtl)
-    const float smoothing_gain_manual = 6.0f;
-    const float smoothing_gain_auto = 4.0f;
-
     // true if we have reached the airspeed threshold for transition
     enum {
         TRANSITION_AIRSPEED_WAIT,
