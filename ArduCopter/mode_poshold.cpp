@@ -134,9 +134,6 @@ void Copter::ModePosHold::run()
     float vel_fw, vel_right;            // vehicle's current velocity in body-frame forward and right directions
     const Vector3f& vel = inertial_nav.get_velocity();
 
-    // initialize smoothing gain
-    attitude_control->set_smoothing_gain(get_smoothing_gain());
-
     // initialize vertical speeds and acceleration
     pos_control->set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control->set_accel_z(g.pilot_accel_z);

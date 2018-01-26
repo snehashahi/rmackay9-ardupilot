@@ -46,9 +46,6 @@ void Copter::ModeDrift::run()
     float target_yaw_rate;
     float pilot_throttle_scaled;
 
-    // initialize smoothing gain
-    attitude_control->set_smoothing_gain(get_smoothing_gain());
-
     // if landed and throttle at zero, set throttle to zero and exit immediately
     if (!motors->armed() || !motors->get_interlock() || (ap.land_complete && ap.throttle_zero)) {
         zero_throttle_and_relax_ac();

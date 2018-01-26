@@ -26,9 +26,6 @@ void Copter::ModeStabilize_Heli::run()
     float target_yaw_rate;
     float pilot_throttle_scaled;
 
-    // initialize smoothing gain
-    attitude_control->set_smoothing_gain(get_smoothing_gain());
-
     // Tradheli should not reset roll, pitch, yaw targets when motors are not runup, because
     // we may be in autorotation flight.  These should be reset only when transitioning from disarmed
     // to armed, because the pilot will have placed the helicopter down on the landing pad.  This is so
