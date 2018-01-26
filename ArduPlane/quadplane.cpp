@@ -656,9 +656,6 @@ void QuadPlane::run_esc_calibration(void)
 // init quadplane stabilize mode 
 void QuadPlane::init_stabilize(void)
 {
-    // initialise smoothing gain
-    attitude_control->set_smoothing_gain(smoothing_gain_manual);
-
     throttle_wait = false;
 }
 
@@ -748,9 +745,6 @@ void QuadPlane::run_z_controller(void)
 // init quadplane hover mode 
 void QuadPlane::init_hover(void)
 {
-    // initialise smoothing gain
-    attitude_control->set_smoothing_gain(smoothing_gain_manual);
-
     // initialize vertical speeds and leash lengths
     pos_control->set_speed_z(-pilot_velocity_z_max, pilot_velocity_z_max);
     pos_control->set_accel_z(pilot_accel_z);
@@ -825,9 +819,6 @@ void QuadPlane::init_loiter(void)
     }
     
     wp_nav->init_loiter_target(stopping_point);
-
-    // initialise smoothing gain
-    attitude_control->set_smoothing_gain(smoothing_gain_auto);
 
     // initialize vertical speed and acceleration
     pos_control->set_speed_z(-pilot_velocity_z_max, pilot_velocity_z_max);
@@ -1933,9 +1924,6 @@ void QuadPlane::setup_target_position(void)
 
     motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
 
-    // initialise multicopter attitude controller smoothing gain
-    attitude_control->set_smoothing_gain(smoothing_gain_auto);
-
     diff2d = location_diff(origin, loc);
     poscontrol.target.x = diff2d.x * 100;
     poscontrol.target.y = diff2d.y * 100;
@@ -2073,9 +2061,6 @@ void QuadPlane::init_qrtl(void)
     poscontrol.slow_descent = (plane.current_loc.alt > plane.next_WP_loc.alt);
     poscontrol.state = QPOS_POSITION1;
     poscontrol.speed_scale = 0;
-
-    // initialise multicopter attitude controller smoothing gain
-    attitude_control->set_smoothing_gain(smoothing_gain_auto);
 }
 
 /*
@@ -2093,9 +2078,6 @@ bool QuadPlane::do_vtol_takeoff(const AP_Mission::Mission_Command& cmd)
 
     // set target to current position
     wp_nav->init_loiter_target();
-
-    // initialise multicopter attitude controller smoothing gain
-    attitude_control->set_smoothing_gain(smoothing_gain_auto);
 
     // initialize vertical speed and acceleration
     pos_control->set_speed_z(-pilot_velocity_z_max, pilot_velocity_z_max);
