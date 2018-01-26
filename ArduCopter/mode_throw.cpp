@@ -33,9 +33,6 @@ void Copter::ModeThrow::run()
     Throw_PosHold - the copter is kept at a constant position and height
     */
 
-    // initialize smoothing gain
-    attitude_control->set_smoothing_gain(get_smoothing_gain());
-
     // Don't enter THROW mode if interlock will prevent motors running
     if (!motors->armed() && motors->get_interlock()) {
         // state machine entry is always from a disarmed state

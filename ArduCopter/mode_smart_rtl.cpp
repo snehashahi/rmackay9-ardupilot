@@ -38,9 +38,6 @@ void Copter::ModeSmartRTL::exit()
 
 void Copter::ModeSmartRTL::run()
 {
-    // initialize smoothing gain
-    attitude_control->set_smoothing_gain(get_smoothing_gain());
-
     switch (smart_rtl_state) {
         case SmartRTL_WaitForPathCleanup:
             wait_cleanup_run();
