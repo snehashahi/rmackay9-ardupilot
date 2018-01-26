@@ -32,9 +32,6 @@ void Sub::circle_run()
     float target_yaw_rate = 0;
     float target_climb_rate = 0;
 
-    // initialize smoothing gain
-    attitude_control.set_smoothing_gain(get_smoothing_gain());
-
     // update parameters, to allow changing at runtime
     pos_control.set_speed_xy(wp_nav.get_speed_xy());
     pos_control.set_accel_xy(wp_nav.get_wp_acceleration());

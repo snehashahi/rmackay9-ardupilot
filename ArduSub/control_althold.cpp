@@ -35,9 +35,6 @@ void Sub::althold_run()
 {
     uint32_t tnow = AP_HAL::millis();
 
-    // initialize smoothing gain
-    attitude_control.set_smoothing_gain(get_smoothing_gain());
-
     // initialize vertical speeds and acceleration
     pos_control.set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control.set_accel_z(g.pilot_accel_z);
