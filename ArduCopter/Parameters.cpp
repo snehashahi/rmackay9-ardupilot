@@ -976,6 +976,7 @@ ParametersG2::ParametersG2(void)
     ,afs(copter.mission, copter.barometer, copter.gps, copter.rcmap)
 #endif
     ,smart_rtl(copter.ahrs)
+    ,follow(copter.ahrs)
 {
     AP_Param::setup_object_defaults(this, var_info);
 }

@@ -103,7 +103,7 @@ void Copter::init_ardupilot()
     gcs().setup_uarts(serial_manager);
 
     // init follow
-    g2.follow.init(gcs());
+    g2.follow.init();
 
 #if FRSKY_TELEM_ENABLED == ENABLED
     // setup frsky, and pass a number of parameters to the library
