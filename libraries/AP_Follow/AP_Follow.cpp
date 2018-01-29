@@ -23,8 +23,6 @@ extern const AP_HAL::HAL& hal;
 
 #define AP_FOLLOW_TIMEOUT_MS    1000    // position estimate timeout after 1 second
 
-AP_Follow* AP_Follow::_static_follow_ptr = nullptr;
-
 // table of user settable parameters
 const AP_Param::GroupInfo AP_Follow::var_info[] = {
 
@@ -72,12 +70,7 @@ AP_Follow::AP_Follow()
 // initialise follow subsystem
 void AP_Follow::init(GCS &gcs)
 {
-    // store pointer to this object
-    _static_follow_ptr = this;
-
-    for (uint8_t i = 1; i < gcs.num_gcs(); i++) {
-        gcs.chan(i).set_snoop(mavlink_snoop);
-    }
+    // nothing to do
 }
 
 // update the state of the sensor
@@ -140,7 +133,7 @@ bool AP_Follow::get_target_heading(float &heading) const
 }
 
 // handle mavlink DISTANCE_SENSOR messages
-void AP_Follow::handle_msg(const mavlink_message_t *msg)
+void AP_Follow::handle_msg(const mavlink_message_t &msg)
 {
     // exit immediately if not enabled
     if (!_enabled) {
@@ -148,15 +141,15 @@ void AP_Follow::handle_msg(const mavlink_message_t *msg)
     }
 
     // skip message if not from our target
-    if (msg->sysid != _target_sysid) {
+    if (msg.sysid != _target_sysid) {
         return;
     }
 
     // decode global-position-int message
-    if (msg->msgid == MAVLINK_MSG_ID_GLOBAL_POSITION_INT) {
+    if (msg.msgid == MAVLINK_MSG_ID_GLOBAL_POSITION_INT) {
         // decode message
         mavlink_global_position_int_t packet;
-        mavlink_msg_global_position_int_decode(msg, &packet);
+        mavlink_msg_global_position_int_decode(&msg, &packet);
         _target_location.lat = packet.lat;
         _target_location.lng = packet.lon;
         _target_location.alt = packet.alt/10;       // convert millimeters to cm
@@ -170,14 +163,5 @@ void AP_Follow::handle_msg(const mavlink_message_t *msg)
             _have_heading = true;
         }
         _last_update_ms = AP_HAL::millis();
-    }
-}
-
-// mavlink snoop to listen for messages from other vehicles
-void AP_Follow::mavlink_snoop(const mavlink_message_t* msg)
-{
-    // pass message to the last follow object created
-    if (_static_follow_ptr != nullptr) {
-        _static_follow_ptr->handle_msg(msg);
     }
 }

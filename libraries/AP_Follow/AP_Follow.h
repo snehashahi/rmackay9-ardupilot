@@ -47,10 +47,7 @@ public:
     bool get_target_heading(float &heading) const;
 
     // parse mavlink messages which may hold target's position, velocity and attitude
-    void handle_msg(const mavlink_message_t *msg);
-
-    // mavlink snoop to listen for messages from other vehicles
-    static void mavlink_snoop(const mavlink_message_t* msg);
+    void handle_msg(const mavlink_message_t &msg);
 
     // parameter list
     static const struct AP_Param::GroupInfo var_info[];
@@ -72,7 +69,4 @@ private:
     Location _target_location;      // last known location of target
     Vector3f _target_velocity_ned;  // last known velocity of target in NED frame in m/s
     float _target_heading;          // heading in degrees
-
-    // naughty way to let static mavlink snoop call this function
-    static AP_Follow* _static_follow_ptr;
 };
