@@ -1180,7 +1180,5 @@ private:
     const float closure_speed = 10.0f; // metres/second
     const float distance_slop = 2.0f; // metres
 
-    void run_lonely_mode();
-    Copter::Mode *lonely_mode;
 
 };
