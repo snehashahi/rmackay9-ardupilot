@@ -18,6 +18,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Param/AP_Param.h>
 #include <AP_Math/AP_Math.h>
+#include <AP_AHRS/AP_AHRS.h>
 #include <GCS_MAVLink/GCS.h>
 
 class AP_Follow
@@ -26,10 +27,10 @@ class AP_Follow
 public:
 
     // constructor
-    AP_Follow();
+    AP_Follow(const AP_AHRS &ahrs);
 
     // initialise follow subsystem
-    void init(GCS &gcs);
+    void init();
 
     // update follow subsystem
     void update();
@@ -43,6 +44,9 @@ public:
     // get target's estimated location
     bool get_target_location(Location &target_loc) const;
 
+    // get distance vector to target in meters in neu frame
+    bool get_distance_to_target_ned(Vector3f &dist_to_target) const;
+
     // get target's heading in degrees (0 = north, 90 = east)
     bool get_target_heading(float &heading) const;
 
@@ -54,11 +58,15 @@ public:
 
 private:
 
+    // references
+    const AP_AHRS &_ahrs;
+
     // parameters
-    AP_Int8     _enabled;            // 1 if this subsystem is enabled
+    AP_Int8     _enabled;           // 1 if this subsystem is enabled
     AP_Int8     _type;              // follow type (keep initial offset, maintain margin)
     AP_Int16    _target_sysid;      // target's mavlink system id
     AP_Float    _margin;            // minimum target distance to target
+    AP_Float    _dist_max;          // maximum distance to target.  targets further than this will be ignored
 
     // local variables
     bool _healthy;                  // true if we are receiving mavlink messages (regardless of whether they have target position info within them)

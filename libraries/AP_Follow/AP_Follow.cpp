@@ -63,12 +63,13 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
    constructor is not called until detect() returns true, so we
    already know that we should setup the proximity sensor
 */
-AP_Follow::AP_Follow()
+AP_Follow::AP_Follow(const AP_AHRS &ahrs) :
+        _ahrs(ahrs)
 {
 }
 
 // initialise follow subsystem
-void AP_Follow::init(GCS &gcs)
+void AP_Follow::init()
 {
     // nothing to do
 }
@@ -118,6 +119,26 @@ bool AP_Follow::get_target_location(Location &target_loc) const
 
     // return latest position estimate
     return false;
+}
+
+// get distance vector to target in meters in neu frame
+bool AP_Follow::get_distance_to_target_ned(Vector3f &dist_to_target) const
+{
+    // get our location
+    Location current_loc;
+    if (!_ahrs.get_position(current_loc)) {
+        return false;
+    }
+
+    // get target location
+    Location target_loc;
+    if (!get_target_location(target_loc)) {
+        return false;
+    }
+
+    // calculate difference
+    dist_to_target = location_3d_diff_NED(current_loc, target_loc);
+    return true;
 }
 
 // get target's heading in degrees (0 = north, 90 = east)
