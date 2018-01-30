@@ -1161,8 +1161,4 @@ protected:
 
     const char *name() const override { return "CHASE"; }
     const char *name4() const override { return "CHAS"; }
-
-private:
-
-    const float closure_speed = 10.0f; // metres/second
 };
