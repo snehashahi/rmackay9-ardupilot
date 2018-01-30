@@ -85,7 +85,7 @@ void AP_Follow::init()
 // update the state of the sensor
 void AP_Follow::update(void)
 {
-    // exit immediately if not healthy
+    // exit immediately if not enabled
     if (!_enabled) {
         _healthy = false;
     }
@@ -101,8 +101,8 @@ void AP_Follow::update(void)
 // true if we have a valid target location estimate
 bool AP_Follow::have_target() const
 {
-    // exit immediately if not healthy
-    if (!_enabled || !_healthy) {
+    // exit immediately if not enabled
+    if (!_enabled) {
         return false;
     }
 
@@ -118,8 +118,8 @@ bool AP_Follow::have_target() const
 // get target's estimated location
 bool AP_Follow::get_target_location(Location &target_loc) const
 {
-    // exit immediately if not healthy
-    if (!_enabled || !_healthy) {
+    // exit immediately if not enabled
+    if (!_enabled) {
         return false;
     }
 
@@ -164,8 +164,8 @@ bool AP_Follow::get_distance_to_target_ned(Vector3f &dist_to_target) const
 // get target's heading in degrees (0 = north, 90 = east)
 bool AP_Follow::get_target_heading(float &heading) const
 {
-    // exit immediately if not enabled, healthy or don't have the heading
-    if (!_enabled || !_healthy) {
+    // exit immediately if not enabled
+    if (!_enabled) {
         return false;
     }
 
