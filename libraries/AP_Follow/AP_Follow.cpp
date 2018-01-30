@@ -74,6 +74,7 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
 AP_Follow::AP_Follow(const AP_AHRS &ahrs) :
         _ahrs(ahrs)
 {
+    AP_Param::setup_object_defaults(this, var_info);
 }
 
 // initialise follow subsystem
