@@ -55,6 +55,14 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("_MARGIN", 4, AP_Follow, _margin, 5),
 
+    // @Param: _DIST_MAX
+    // @DisplayName: Follow distance maximum
+    // @Description: Follow distance maximum.  targets further than this will be ignored
+    // @Units: m
+    // @Range: 1 1000
+    // @User: Standard
+    AP_GROUPINFO("_DIST_MAX", 5, AP_Follow, _dist_max, 100),
+
     AP_GROUPEND
 };
 
@@ -83,42 +91,54 @@ void AP_Follow::update(void)
     }
 
     // check for timeout and set health status
-    if (_last_update_ms == 0 || (AP_HAL::millis() - _last_update_ms > AP_FOLLOW_TIMEOUT_MS)) {
+    if (_last_location_update_ms == 0 || (AP_HAL::millis() - _last_location_update_ms > AP_FOLLOW_TIMEOUT_MS)) {
         _healthy = false;
     } else {
         _healthy = true;
     }
 }
 
+// true if we have a valid target location estimate
+bool AP_Follow::have_target() const
+{
+    // exit immediately if not healthy
+    if (!_enabled || !_healthy) {
+        return false;
+    }
+
+    // check for timeout
+    if ((_last_location_update_ms == 0) || (AP_HAL::millis() - _last_location_update_ms > AP_FOLLOW_TIMEOUT_MS)) {
+        return false;
+    }
+
+    // we must have a valid target estimate
+    return true;
+}
+
 // get target's estimated location
 bool AP_Follow::get_target_location(Location &target_loc) const
 {
     // exit immediately if not healthy
-    if (!_enabled || !_healthy || !_have_location) {
+    if (!_enabled || !_healthy) {
         return false;
     }
 
-    /*
-    // calculate time since last actual position update
-    float dt = (AP_HAL::micros() - vehicle.last_update_us) * 1.0e-6f;
+    // check for timeout
+    if ((_last_location_update_ms == 0) || (AP_HAL::millis() - _last_location_update_ms > AP_FOLLOW_TIMEOUT_MS)) {
+        return false;
+    }
 
-    // if less than 5 seconds since last position update estimate the position
-    if (dt < TRACKING_TIMEOUT_SEC) {
-        // project the vehicle position to take account of lost radio packets
-        vehicle.location_estimate = vehicle.location;
-        float north_offset = vehicle.vel.x * dt;
-        float east_offset = vehicle.vel.y * dt;
-        location_offset(vehicle.location_estimate, north_offset, east_offset);
-        vehicle.location_estimate.alt += vehicle.vel.z * 100.0f * dt;
-        // set valid_location flag
-        vehicle.location_valid = true;
-    } else {
-        // vehicle has been lost, set lost flag
-        vehicle.location_valid = false;
-    }*/
+    // calculate time since last actual position update
+    float dt = (AP_HAL::millis() - _last_location_update_ms) / 1000.0f;
+
+    // project the vehicle position
+    Location loc = _target_location;
+    location_offset(loc, _target_velocity_ned.x * dt, _target_velocity_ned.y * dt);
+    loc.alt -= _target_velocity_ned.z * 10.0f * dt; // convert m/s to cm/s, multiply by dt.  minus because NED
 
     // return latest position estimate
-    return false;
+    target_loc = loc;
+    return true;
 }
 
 // get distance vector to target in meters in neu frame
@@ -145,12 +165,18 @@ bool AP_Follow::get_distance_to_target_ned(Vector3f &dist_to_target) const
 bool AP_Follow::get_target_heading(float &heading) const
 {
     // exit immediately if not enabled, healthy or don't have the heading
-    if (!_enabled || !_healthy || !_have_heading) {
+    if (!_enabled || !_healthy) {
+        return false;
+    }
+
+    // check for timeout
+    if ((_last_heading_update_ms == 0) || (AP_HAL::millis() - _last_heading_update_ms > AP_FOLLOW_TIMEOUT_MS)) {
         return false;
     }
 
     // return latest heading estimate
-    return false;
+    heading = _target_heading;
+    return true;
 }
 
 // handle mavlink DISTANCE_SENSOR messages
@@ -168,21 +194,20 @@ void AP_Follow::handle_msg(const mavlink_message_t &msg)
 
     // decode global-position-int message
     if (msg.msgid == MAVLINK_MSG_ID_GLOBAL_POSITION_INT) {
+        uint32_t now = AP_HAL::millis();
         // decode message
         mavlink_global_position_int_t packet;
         mavlink_msg_global_position_int_decode(&msg, &packet);
         _target_location.lat = packet.lat;
         _target_location.lng = packet.lon;
         _target_location.alt = packet.alt/10;       // convert millimeters to cm
-        _have_location = true;
         _target_velocity_ned.x = packet.vx/100.0f;  // velocity north
         _target_velocity_ned.y = packet.vy/100.0f;  // velocity east
         _target_velocity_ned.z = packet.vz/100.0f;  // velocity down
-        _have_velocity = true;
-        if (packet.hdg <= 36000) {
-            _target_heading = packet.hdg / 100.0f;      // heading (UINT16_MAX if unknown)
-            _have_heading = true;
+        _last_location_update_ms = now;
+        if (packet.hdg <= 36000) {                  // heading (UINT16_MAX if unknown)
+            _target_heading = packet.hdg / 100.0f;  // convert centi-degrees to degrees
+            _last_heading_update_ms = now;
         }
-        _last_update_ms = AP_HAL::millis();
     }
 }

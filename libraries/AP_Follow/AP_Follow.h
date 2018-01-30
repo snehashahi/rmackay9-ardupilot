@@ -39,7 +39,7 @@ public:
     bool healthy() const { return _healthy; }
 
     // true if we have a valid target location estimate
-    bool have_target() const { return _have_location; }
+    bool have_target() const;
 
     // get target's estimated location
     bool get_target_location(Location &target_loc) const;
@@ -70,11 +70,9 @@ private:
 
     // local variables
     bool _healthy;                  // true if we are receiving mavlink messages (regardless of whether they have target position info within them)
-    bool _have_location;            // true if we have the target's location
-    bool _have_velocity;            // true if we have the target's velocity
-    bool _have_heading;             // true if we have the target's heading
-    uint32_t _last_update_ms;       // system time of last position update
+    uint32_t _last_location_update_ms;  // system time of last position update
     Location _target_location;      // last known location of target
     Vector3f _target_velocity_ned;  // last known velocity of target in NED frame in m/s
+    uint32_t _last_heading_update_ms;   // system time of last heading update
     float _target_heading;          // heading in degrees
 };
