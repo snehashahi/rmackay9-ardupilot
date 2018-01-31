@@ -60,7 +60,7 @@ void Copter::ModeChase::run()
         // calculate desired velocity vector in cm/s in NEU
         desired_velocity.x = dist_vec_to_target_neu.x * pos_control->get_pos_xy_p().kP();
         desired_velocity.y = dist_vec_to_target_neu.y * pos_control->get_pos_xy_p().kP();
-        desired_velocity.z = dist_vec_to_target_neu.y * pos_control->get_pos_z_p().kP();
+        desired_velocity.z = dist_vec_to_target_neu.z * pos_control->get_pos_z_p().kP();
 
         // scale desired velocity to stay within horizontal speed limit
         float desired_speed_xy = safe_sqrt(sq(desired_velocity.x) + sq(desired_velocity.y));
