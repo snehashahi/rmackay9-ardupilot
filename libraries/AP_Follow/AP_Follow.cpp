@@ -71,7 +71,7 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @Description: Follow offset type
     // @Values: 0:North-East-Down, 1:Relative to lead vehicle heading
     // @User: Standard
-    AP_GROUPINFO("OFS_TYPE", 6, AP_Follow, _offset_type, AP_FOLLOW_OFFSET_TYPE_NED),
+    AP_GROUPINFO("_OFS_TYPE", 6, AP_Follow, _offset_type, AP_FOLLOW_OFFSET_TYPE_NED),
 
     // @Param: OFS_X
     // @DisplayName: Follow offsets in meters north/forward
@@ -96,7 +96,7 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @Units: m
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("OFS", 7, AP_Follow, _offset, 0),
+    AP_GROUPINFO("_OFS", 7, AP_Follow, _offset, 0),
 
     AP_GROUPEND
 };
@@ -276,9 +276,9 @@ bool AP_Follow::get_offsets_ned(Vector3f& offset) const
 
     // rotate roll, pitch input from north facing to vehicle's perspective
     const float veh_cos_yaw = cosf(radians(_target_heading));
-    const float veh_sin_yaw = cosf(radians(_target_heading));
-    offset.y = (off.y * veh_cos_yaw) + (off.y * veh_sin_yaw);
-    offset.x = (-off.x * veh_sin_yaw) + (off.y * veh_cos_yaw);
+    const float veh_sin_yaw = sinf(radians(_target_heading));
+    offset.x = (off.x * veh_cos_yaw) - (off.y * veh_sin_yaw);
+    offset.y = (off.y * veh_cos_yaw) + (off.x * veh_sin_yaw);
     offset.z = off.z;
     return true;
 }
