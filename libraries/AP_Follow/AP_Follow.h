@@ -58,6 +58,9 @@ public:
 
 private:
 
+    // get offsets in NED frame
+    bool get_offsets_ned(Vector3f& offsets) const;
+
     // references
     const AP_AHRS &_ahrs;
 
@@ -67,6 +70,8 @@ private:
     AP_Int16    _target_sysid;      // target's mavlink system id
     AP_Float    _margin;            // minimum target distance to target
     AP_Float    _dist_max;          // maximum distance to target.  targets further than this will be ignored
+    AP_Int8     _offset_type;       // offset frame type (0:North-East-Down, 1:RelativeToLeadVehicleHeading)
+    AP_Vector3f _offset;            // offset from lead vehicle in meters
 
     // local variables
     bool _healthy;                  // true if we are receiving mavlink messages (regardless of whether they have target position info within them)

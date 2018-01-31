@@ -23,6 +23,9 @@ extern const AP_HAL::HAL& hal;
 
 #define AP_FOLLOW_TIMEOUT_MS    1000    // position estimate timeout after 1 second
 
+#define AP_FOLLOW_OFFSET_TYPE_NED       0   // offsets are in north-east-down frame
+#define AP_FOLLOW_OFFSET_TYPE_RELATIVE  0   // offsets are relative to lead vehicle's heading
+
 // table of user settable parameters
 const AP_Param::GroupInfo AP_Follow::var_info[] = {
 
@@ -62,6 +65,38 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @Range: 1 1000
     // @User: Standard
     AP_GROUPINFO("_DIST_MAX", 5, AP_Follow, _dist_max, 100),
+
+    // @Param: OFS_TYPE
+    // @DisplayName: Follow offset type
+    // @Description: Follow offset type
+    // @Values: 0:North-East-Down, 1:Relative to lead vehicle heading
+    // @User: Standard
+    AP_GROUPINFO("OFS_TYPE", 6, AP_Follow, _offset_type, AP_FOLLOW_OFFSET_TYPE_NED),
+
+    // @Param: OFS_X
+    // @DisplayName: Follow offsets in meters north/forward
+    // @Description: Follow offsets in meters north/forward.  If positive, this vehicle fly ahead or north of lead vehicle
+    // @Range: -100 100
+    // @Units: m
+    // @Increment: 1
+    // @User: Standard
+
+    // @Param: OFS_Y
+    // @DisplayName: Follow offsets in meters east/right
+    // @Description: Follow offsets in meters east/right.  If positive, this vehicle fly to the right or east of lead vehicle
+    // @Range: -100 100
+    // @Units: m
+    // @Increment: 1
+    // @User: Standard
+
+    // @Param: OFS_Z
+    // @DisplayName: Follow offsets in meters down
+    // @Description: Follow offsets in meters down.  If positive, this vehicle fly below the lead vehicle
+    // @Range: -100 100
+    // @Units: m
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("OFS", 7, AP_Follow, _offset, 0),
 
     AP_GROUPEND
 };
@@ -158,7 +193,16 @@ bool AP_Follow::get_distance_to_target_ned(Vector3f &dist_to_target) const
     }
 
     // calculate difference
-    dist_to_target = location_3d_diff_NED(current_loc, target_loc);
+    Vector3f dist_vec = location_3d_diff_NED(current_loc, target_loc);
+
+    // add offsets
+    Vector3f offsets;
+    if (!get_offsets_ned(offsets)) {
+        return false;
+    }
+
+    // return result
+    dist_to_target = dist_vec + offsets;
     return true;
 }
 
@@ -211,4 +255,30 @@ void AP_Follow::handle_msg(const mavlink_message_t &msg)
             _last_heading_update_ms = now;
         }
     }
+}
+
+// get offsets in NED frame
+bool AP_Follow::get_offsets_ned(Vector3f& offset) const
+{
+    const Vector3f &off = _offset.get();
+
+    // if offsets are zero or type if NED, simply return offset vector
+    if (off.is_zero() || (_offset_type == AP_FOLLOW_OFFSET_TYPE_NED)) {
+        offset = off;
+        return true;
+    }
+
+    // offset_type == AP_FOLLOW_OFFSET_TYPE_RELATIVE
+    // check if we have a valid heading for target vehicle
+    if ((_last_heading_update_ms == 0) || (AP_HAL::millis() - _last_heading_update_ms > AP_FOLLOW_TIMEOUT_MS)) {
+        return false;
+    }
+
+    // rotate roll, pitch input from north facing to vehicle's perspective
+    const float veh_cos_yaw = cosf(radians(_target_heading));
+    const float veh_sin_yaw = cosf(radians(_target_heading));
+    offset.y = (off.y * veh_cos_yaw) + (off.y * veh_sin_yaw);
+    offset.x = (-off.x * veh_sin_yaw) + (off.y * veh_cos_yaw);
+    offset.z = off.z;
+    return true;
 }
