@@ -57,6 +57,23 @@ void Copter::ModeChase::run()
         // convert dist_vec_to_target to cm in NEU
         Vector3f dist_vec_to_target_neu(dist_vec_to_target.x * 100.0f, dist_vec_to_target.y * 100.0f, -dist_vec_to_target.z * 100.0f);
 
+        // calculate desired velocity vector in cm/s in NEU
+        desired_velocity.x = dist_vec_to_target_neu.x * pos_control->get_pos_xy_p().kP();
+        desired_velocity.y = dist_vec_to_target_neu.y * pos_control->get_pos_xy_p().kP();
+        desired_velocity.z = dist_vec_to_target_neu.y * pos_control->get_pos_z_p().kP();
+
+        // scale desired velocity to stay within horizontal speed limit
+        float desired_speed_xy = safe_sqrt(sq(desired_velocity.x) + sq(desired_velocity.y));
+        if (!is_zero(desired_speed_xy) && (desired_speed_xy > pos_control->get_speed_xy())) {
+            const float scalar_xy = pos_control->get_speed_xy() / desired_speed_xy;
+            desired_velocity.x *= scalar_xy;
+            desired_velocity.y *= scalar_xy;
+            desired_speed_xy = pos_control->get_speed_xy();
+        }
+
+        // limit desired velocity to be between maximum climb and descent rates
+        desired_velocity.z = constrain_float(desired_velocity.z, -fabsf(pos_control->get_speed_down()), pos_control->get_speed_up());
+
         // unit vector towards target
         Vector3f dir_to_target_neu = dist_vec_to_target_neu;
         const float dir_to_target_neu_len = dir_to_target_neu.length();
@@ -64,46 +81,18 @@ void Copter::ModeChase::run()
             dir_to_target_neu /= dir_to_target_neu_len;
         }
 
-        // calculate maximum desired velocity vector in cm/s in NEU
-        const float scalar_max = MAX(wp_nav->get_speed_xy(), MAX(wp_nav->get_speed_up(),wp_nav->get_speed_down()));
-        desired_velocity = dir_to_target_neu * scalar_max;
+        // create horizontal desired velocity vector (required for slow down calculations)
         Vector2f desired_velocity_xy(desired_velocity.x, desired_velocity.y);
-        float desired_speed_xy = desired_velocity_xy.length();
 
-        // scale back desired-velocity so we stay within horizontal speed limit
-        if (desired_speed_xy > wp_nav->get_speed_xy()) {
-            const float scalar_xyz = wp_nav->get_speed_xy() / desired_speed_xy;
-            desired_velocity *= scalar_xyz;
-            desired_velocity_xy *= scalar_xyz;
-            desired_speed_xy *= scalar_xyz;
-        }
-
-        // scale back desired-velocity so we stay within maximum climb and descent rates
-        if (desired_velocity.z >= 0.0f) {
-            if (desired_velocity.z > wp_nav->get_speed_up()) {
-                const float scalar_xyz = wp_nav->get_speed_up() / desired_velocity.z;
-                desired_velocity *= scalar_xyz;
-                desired_velocity_xy *= scalar_xyz;
-                desired_speed_xy *= scalar_xyz;
-            }
-        } else {
-            if (fabsf(desired_velocity.z) > wp_nav->get_speed_down()) {
-                const float scalar_xyz = wp_nav->get_speed_down() / fabsf(desired_velocity.z);
-                desired_velocity *= scalar_xyz;
-                desired_velocity_xy *= scalar_xyz;
-                desired_speed_xy *= scalar_xyz;
-            }
-        }
-
-        // calculate 2D unit vector towards target
+        // create horizontal unit vector towards target (required for slow down calculations)
         Vector2f dir_to_target_xy(desired_velocity_xy.x, desired_velocity_xy.y);
-        if (!is_zero(desired_speed_xy)) {
-            dir_to_target_xy /= desired_speed_xy;
+        if (!dir_to_target_xy.is_zero()) {
+            dir_to_target_xy.normalize();
         }
 
-        // slow down as we approach target (horizontal axis)
+        // slow down horizontally as we approach target (use 1/2 of maximum deceleration for gentle slow down)
         const float dist_to_target_xy = Vector2f(dist_vec_to_target_neu.x, dist_vec_to_target_neu.y).length();
-        _copter.avoid.limit_velocity(pos_control->get_pos_xy_p().kP().get(), pos_control->get_accel_xy(), desired_velocity_xy, dir_to_target_xy, dist_to_target_xy, _copter.G_Dt);
+        _copter.avoid.limit_velocity(pos_control->get_pos_xy_p().kP().get(), pos_control->get_accel_xy() / 2.0f, desired_velocity_xy, dir_to_target_xy, dist_to_target_xy, _copter.G_Dt);
 
         // limit the horizontal velocity to prevent fence violations
         _copter.avoid.adjust_velocity(pos_control->get_pos_xy_p().kP().get(), pos_control->get_accel_xy(), desired_velocity_xy, G_Dt);
@@ -112,8 +101,8 @@ void Copter::ModeChase::run()
         desired_velocity.x = desired_velocity_xy.x;
         desired_velocity.y = desired_velocity_xy.y;
 
-        // get maximum climb/descent rate
-        const float des_vel_z_max = _copter.avoid.get_max_speed(pos_control->get_pos_z_p().kP().get(), pos_control->get_accel_z(), fabsf(dist_vec_to_target_neu.z), _copter.G_Dt);
+        // limit vertical desired_velocity to slow as we approach target (we use 1/2 of maximum deceleration for gentle slow down)
+        const float des_vel_z_max = _copter.avoid.get_max_speed(pos_control->get_pos_z_p().kP().get(), pos_control->get_accel_z() / 2.0f, fabsf(dist_vec_to_target_neu.z), _copter.G_Dt);
         desired_velocity.z = constrain_float(desired_velocity.z, -des_vel_z_max, des_vel_z_max);
 
         // get avoidance adjusted climb rate
