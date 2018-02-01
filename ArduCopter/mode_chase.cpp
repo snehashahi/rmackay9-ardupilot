@@ -52,19 +52,20 @@ void Copter::ModeChase::run()
     bool use_yaw = false;
     float yaw_cd = 0.0f;
 
-    Vector3f dist_vec_to_target;
-    Vector3f vel_of_target;
-    if (g2.follow.get_target_dist_and_vel_ned(dist_vec_to_target, vel_of_target)) {
+    Vector3f dist_vec;  // vector to lead vehicle
+    Vector3f dist_vec_offs;  // vector to lead vehicle + offset
+    Vector3f vel_of_target;  // velocity of lead vehicle
+    if (g2.follow.get_target_dist_and_vel_ned(dist_vec, dist_vec_offs, vel_of_target)) {
         // debug
-        Debug("dist to vec: %f %f %f", (double)dist_vec_to_target.x, (double)dist_vec_to_target.y, (double)dist_vec_to_target.z);
+        Debug("dist to veh: %f %f %f", (double)dist_vec.x, (double)dist_vec.y, (double)dist_vec.z);
 
-        // convert dist_vec_to_target to cm in NEU
-        const Vector3f dist_vec_to_target_neu(dist_vec_to_target.x * 100.0f, dist_vec_to_target.y * 100.0f, -dist_vec_to_target.z * 100.0f);
+        // convert dist_vec_offs to cm in NEU
+        const Vector3f dist_vec_offs_neu(dist_vec_offs.x * 100.0f, dist_vec_offs.y * 100.0f, -dist_vec_offs.z * 100.0f);
 
         // calculate desired velocity vector in cm/s in NEU
-        desired_velocity.x = (vel_of_target.x * 100.0f) + (dist_vec_to_target_neu.x * pos_control->get_pos_xy_p().kP());
-        desired_velocity.y = (vel_of_target.y * 100.0f) + dist_vec_to_target_neu.y * pos_control->get_pos_xy_p().kP();
-        desired_velocity.z = (-vel_of_target.z * 100.0f) + dist_vec_to_target_neu.z * pos_control->get_pos_z_p().kP();
+        desired_velocity.x = (vel_of_target.x * 100.0f) + (dist_vec_offs_neu.x * pos_control->get_pos_xy_p().kP());
+        desired_velocity.y = (vel_of_target.y * 100.0f) + dist_vec_offs_neu.y * pos_control->get_pos_xy_p().kP();
+        desired_velocity.z = (-vel_of_target.z * 100.0f) + dist_vec_offs_neu.z * pos_control->get_pos_z_p().kP();
 
         // scale desired velocity to stay within horizontal speed limit
         float desired_speed_xy = safe_sqrt(sq(desired_velocity.x) + sq(desired_velocity.y));
@@ -78,8 +79,8 @@ void Copter::ModeChase::run()
         // limit desired velocity to be between maximum climb and descent rates
         desired_velocity.z = constrain_float(desired_velocity.z, -fabsf(pos_control->get_speed_down()), pos_control->get_speed_up());
 
-        // unit vector towards target
-        Vector3f dir_to_target_neu = dist_vec_to_target_neu;
+        // unit vector towards target position
+        Vector3f dir_to_target_neu = dist_vec_offs_neu;
         const float dir_to_target_neu_len = dir_to_target_neu.length();
         if (!is_zero(dir_to_target_neu_len)) {
             dir_to_target_neu /= dir_to_target_neu_len;
@@ -95,7 +96,7 @@ void Copter::ModeChase::run()
         }
 
         // slow down horizontally as we approach target (use 1/2 of maximum deceleration for gentle slow down)
-        const float dist_to_target_xy = Vector2f(dist_vec_to_target_neu.x, dist_vec_to_target_neu.y).length();
+        const float dist_to_target_xy = Vector2f(dist_vec_offs_neu.x, dist_vec_offs_neu.y).length();
         _copter.avoid.limit_velocity(pos_control->get_pos_xy_p().kP().get(), pos_control->get_accel_xy() / 2.0f, desired_velocity_xy, dir_to_target_xy, dist_to_target_xy, _copter.G_Dt);
 
         // limit the horizontal velocity to prevent fence violations
@@ -106,7 +107,7 @@ void Copter::ModeChase::run()
         desired_velocity.y = desired_velocity_xy.y;
 
         // limit vertical desired_velocity to slow as we approach target (we use 1/2 of maximum deceleration for gentle slow down)
-        const float des_vel_z_max = _copter.avoid.get_max_speed(pos_control->get_pos_z_p().kP().get(), pos_control->get_accel_z() / 2.0f, fabsf(dist_vec_to_target_neu.z), _copter.G_Dt);
+        const float des_vel_z_max = _copter.avoid.get_max_speed(pos_control->get_pos_z_p().kP().get(), pos_control->get_accel_z() / 2.0f, fabsf(dist_vec_offs_neu.z), _copter.G_Dt);
         desired_velocity.z = constrain_float(desired_velocity.z, -des_vel_z_max, des_vel_z_max);
 
         // get avoidance adjusted climb rate
@@ -115,10 +116,9 @@ void Copter::ModeChase::run()
         // calculate vehicle heading
         switch (g2.follow.get_yaw_behave()) {
             case AP_Follow::YAW_BEHAVE_FACE_LEAD_VEHICLE: {
-                // TODO: use distance vector without offsets included
-                Vector3f dist_vec(dist_vec_to_target.x, dist_vec_to_target.y, 0.0f);
-                if (dist_vec.length() > 1.0f) {
-                    yaw_cd = get_bearing_cd(Vector3f(), dist_vec);
+                Vector3f dist_vec_xy(dist_vec.x, dist_vec.y, 0.0f);
+                if (dist_vec_xy.length() > 1.0f) {
+                    yaw_cd = get_bearing_cd(Vector3f(), dist_vec_xy);
                     use_yaw = true;
                 }
                 break;
