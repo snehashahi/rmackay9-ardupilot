@@ -98,6 +98,13 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("_OFS", 7, AP_Follow, _offset, 0),
 
+    // @Param: _YAW_BEHAVE
+    // @DisplayName: Follow yaw behaviour
+    // @Description: Follow yaw behaviour
+    // @Values: 0:None,1:Face Lead Vehicle,2:Same as Lead vehicle,3:Direction of Flight
+    // @User: Standard
+    AP_GROUPINFO("_YAW_BEHAVE", 8, AP_Follow, _yaw_behave, 1),
+
     AP_GROUPEND
 };
 

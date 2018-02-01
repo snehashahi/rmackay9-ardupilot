@@ -26,6 +26,14 @@ class AP_Follow
 
 public:
 
+    // enum for YAW_BEHAVE parameter
+    enum YawBehave {
+        YAW_BEHAVE_NONE = 0,
+        YAW_BEHAVE_FACE_LEAD_VEHICLE = 1,
+        YAW_BEHAVE_SAME_AS_LEAD_VEHICLE = 2,
+        YAW_BEHAVE_DIR_OF_FLIGHT = 3
+    };
+
     // constructor
     AP_Follow(const AP_AHRS &ahrs);
 
@@ -38,6 +46,10 @@ public:
     // true if follow subsystem is healthy (i.e. we are receiving messages)
     bool healthy() const { return _healthy; }
 
+    //
+    // position tracking related methods
+    //
+
     // true if we have a valid target location estimate
     bool have_target() const;
 
@@ -46,6 +58,13 @@ public:
 
     // get distance vector to target (in meters) and target's velocity all in NED frame
     bool get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &vel) const;
+
+    //
+    // yaw/heading related methods
+    //
+
+    // get user defined yaw behaviour
+    YawBehave get_yaw_behave() const { return (YawBehave)_yaw_behave.get(); }
 
     // get target's heading in degrees (0 = north, 90 = east)
     bool get_target_heading(float &heading) const;
@@ -75,6 +94,7 @@ private:
     AP_Float    _dist_max;          // maximum distance to target.  targets further than this will be ignored
     AP_Int8     _offset_type;       // offset frame type (0:North-East-Down, 1:RelativeToLeadVehicleHeading)
     AP_Vector3f _offset;            // offset from lead vehicle in meters
+    AP_Int8     _yaw_behave;        // following vehicle's yaw/heading behaviour
 
     // local variables
     bool _healthy;                  // true if we are receiving mavlink messages (regardless of whether they have target position info within them)
