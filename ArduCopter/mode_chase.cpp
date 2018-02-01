@@ -47,7 +47,10 @@ void Copter::ModeChase::run()
     // Note: this is safe from interference from GCSs and companion computer's whose guided mode
     //       position and velocity requests will be ignored while the vehicle is not in guided mode
 
+    // variables to be sent to velocity controller
     Vector3f desired_velocity;
+    bool use_yaw = false;
+    float yaw_cd = 0.0f;
 
     Vector3f dist_vec_to_target;
     Vector3f vel_of_target;
@@ -108,10 +111,47 @@ void Copter::ModeChase::run()
 
         // get avoidance adjusted climb rate
         desired_velocity.z = get_avoidance_adjusted_climbrate(desired_velocity.z);
+
+        // calculate vehicle heading
+        switch (g2.follow.get_yaw_behave()) {
+            case AP_Follow::YAW_BEHAVE_FACE_LEAD_VEHICLE: {
+                // TODO: use distance vector without offsets included
+                Vector3f dist_vec(dist_vec_to_target.x, dist_vec_to_target.y, 0.0f);
+                if (dist_vec.length() > 1.0f) {
+                    yaw_cd = get_bearing_cd(Vector3f(), dist_vec);
+                    use_yaw = true;
+                }
+                break;
+            }
+
+            case AP_Follow::YAW_BEHAVE_SAME_AS_LEAD_VEHICLE: {
+                float target_hdg = 0.0f;;
+                if (g2.follow.get_target_heading(target_hdg)) {
+                    yaw_cd = target_hdg * 100.0f;
+                    use_yaw = true;
+                }
+                break;
+            }
+
+            case AP_Follow::YAW_BEHAVE_DIR_OF_FLIGHT: {
+                Vector3f vel_vec(desired_velocity.x, desired_velocity.y, 0.0f);
+                if (vel_vec.length() > 100.0f) {
+                    yaw_cd = get_bearing_cd(Vector3f(), vel_vec);
+                    use_yaw = true;
+                }
+                break;
+            }
+
+            case AP_Follow::YAW_BEHAVE_NONE:
+            default:
+                // do nothing
+               break;
+
+        }
     }
 
     // re-use guided mode's velocity controller (takes NEU)
-    Copter::ModeGuided::set_velocity(desired_velocity);
+    Copter::ModeGuided::set_velocity(desired_velocity, use_yaw, yaw_cd);
 
     Copter::ModeGuided::run();
 }
