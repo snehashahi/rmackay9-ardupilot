@@ -41,11 +41,11 @@ public:
     // true if we have a valid target location estimate
     bool have_target() const;
 
-    // get target's estimated location
-    bool get_target_location(Location &target_loc) const;
+    // get target's estimated location and velocity (in NED)
+    bool get_target_location_and_velocity(Location &loc, Vector3f &vel) const;
 
-    // get distance vector to target in meters in neu frame
-    bool get_distance_to_target_ned(Vector3f &dist_to_target) const;
+    // get distance vector to target (in meters) and target's velocity all in NED frame
+    bool get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &vel) const;
 
     // get target's heading in degrees (0 = north, 90 = east)
     bool get_target_heading(float &heading) const;
@@ -57,6 +57,9 @@ public:
     static const struct AP_Param::GroupInfo var_info[];
 
 private:
+
+    // get velocity estimate in NED frame using dt since last update
+    bool get_velocity_ned(Vector3f& vel, float dt) const;
 
     // get offsets in NED frame
     bool get_offsets_ned(Vector3f& offsets) const;
@@ -78,6 +81,7 @@ private:
     uint32_t _last_location_update_ms;  // system time of last position update
     Location _target_location;      // last known location of target
     Vector3f _target_velocity_ned;  // last known velocity of target in NED frame in m/s
+    Vector3f _target_accel_ned;     // last known acceleration of target in NED frame in m/s/s
     uint32_t _last_heading_update_ms;   // system time of last heading update
     float _target_heading;          // heading in degrees
 };

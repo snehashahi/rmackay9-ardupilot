@@ -152,7 +152,7 @@ bool AP_Follow::have_target() const
 }
 
 // get target's estimated location
-bool AP_Follow::get_target_location(Location &target_loc) const
+bool AP_Follow::get_target_location_and_velocity(Location &loc, Vector3f& vel) const
 {
     // exit immediately if not enabled
     if (!_enabled) {
@@ -167,28 +167,33 @@ bool AP_Follow::get_target_location(Location &target_loc) const
     // calculate time since last actual position update
     float dt = (AP_HAL::millis() - _last_location_update_ms) / 1000.0f;
 
+    // get velocity estimate
+    if (!get_velocity_ned(vel, dt)) {
+        return false;
+    }
+
     // project the vehicle position
-    Location loc = _target_location;
-    location_offset(loc, _target_velocity_ned.x * dt, _target_velocity_ned.y * dt);
-    loc.alt -= _target_velocity_ned.z * 10.0f * dt; // convert m/s to cm/s, multiply by dt.  minus because NED
+    Location last_loc = _target_location;
+    location_offset(last_loc, vel.x * dt, vel.y * dt);
+    last_loc.alt -= vel.z * 10.0f * dt; // convert m/s to cm/s, multiply by dt.  minus because NED
 
     // return latest position estimate
-    target_loc = loc;
+    loc = last_loc;
     return true;
 }
 
-// get distance vector to target in meters in neu frame
-bool AP_Follow::get_distance_to_target_ned(Vector3f &dist_to_target) const
+// get distance vector to target (in meters) and target's velocity all in NED frame
+bool AP_Follow::get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &vel) const
 {
     // get our location
     Location current_loc;
     if (!_ahrs.get_position(current_loc)) {
-        return false;
-    }
+         return false;
+     }
 
-    // get target location
+    // get target location and velocity
     Location target_loc;
-    if (!get_target_location(target_loc)) {
+    if (!get_target_location_and_velocity(target_loc, vel)) {
         return false;
     }
 
@@ -202,7 +207,7 @@ bool AP_Follow::get_distance_to_target_ned(Vector3f &dist_to_target) const
     }
 
     // return result
-    dist_to_target = dist_vec + offsets;
+    dist = dist_vec + offsets;
     return true;
 }
 
@@ -255,6 +260,13 @@ void AP_Follow::handle_msg(const mavlink_message_t &msg)
             _last_heading_update_ms = now;
         }
     }
+}
+
+// get velocity estimate in NED frame
+bool AP_Follow::get_velocity_ned(Vector3f& vel, float dt) const
+{
+    vel = _target_velocity_ned + (_target_accel_ned * dt);
+    return true;
 }
 
 // get offsets in NED frame
