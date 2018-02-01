@@ -190,13 +190,19 @@ bool AP_Follow::get_target_location_and_velocity(Location &loc, Vector3f& vel) c
 }
 
 // get distance vector to target (in meters) and target's velocity all in NED frame
-bool AP_Follow::get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &vel) const
+bool AP_Follow::get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &dist_with_offs, Vector3f &vel) const
 {
     // get our location
     Location current_loc;
     if (!_ahrs.get_position(current_loc)) {
          return false;
      }
+
+    // get offsets
+    Vector3f offsets;
+    if (!get_offsets_ned(offsets)) {
+        return false;
+    }
 
     // get target location and velocity
     Location target_loc;
@@ -207,14 +213,9 @@ bool AP_Follow::get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &vel) const
     // calculate difference
     Vector3f dist_vec = location_3d_diff_NED(current_loc, target_loc);
 
-    // add offsets
-    Vector3f offsets;
-    if (!get_offsets_ned(offsets)) {
-        return false;
-    }
-
-    // return result
-    dist = dist_vec + offsets;
+    // return results
+    dist = dist_vec;
+    dist_with_offs = dist_vec + offsets;
     return true;
 }
 

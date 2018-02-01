@@ -56,8 +56,8 @@ public:
     // get target's estimated location and velocity (in NED)
     bool get_target_location_and_velocity(Location &loc, Vector3f &vel) const;
 
-    // get distance vector to target (in meters) and target's velocity all in NED frame
-    bool get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &vel) const;
+    // get distance vector to target (in meters), target plus offsets, and target's velocity all in NED frame
+    bool get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &dist_with_ofs, Vector3f &vel) const;
 
     //
     // yaw/heading related methods
