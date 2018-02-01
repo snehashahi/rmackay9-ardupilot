@@ -50,17 +50,18 @@ void Copter::ModeChase::run()
     Vector3f desired_velocity;
 
     Vector3f dist_vec_to_target;
-    if (g2.follow.get_distance_to_target_ned(dist_vec_to_target)) {
+    Vector3f vel_of_target;
+    if (g2.follow.get_target_dist_and_vel_ned(dist_vec_to_target, vel_of_target)) {
         // debug
         Debug("dist to vec: %f %f %f", (double)dist_vec_to_target.x, (double)dist_vec_to_target.y, (double)dist_vec_to_target.z);
 
         // convert dist_vec_to_target to cm in NEU
-        Vector3f dist_vec_to_target_neu(dist_vec_to_target.x * 100.0f, dist_vec_to_target.y * 100.0f, -dist_vec_to_target.z * 100.0f);
+        const Vector3f dist_vec_to_target_neu(dist_vec_to_target.x * 100.0f, dist_vec_to_target.y * 100.0f, -dist_vec_to_target.z * 100.0f);
 
         // calculate desired velocity vector in cm/s in NEU
-        desired_velocity.x = dist_vec_to_target_neu.x * pos_control->get_pos_xy_p().kP();
-        desired_velocity.y = dist_vec_to_target_neu.y * pos_control->get_pos_xy_p().kP();
-        desired_velocity.z = dist_vec_to_target_neu.z * pos_control->get_pos_z_p().kP();
+        desired_velocity.x = (vel_of_target.x * 100.0f) + (dist_vec_to_target_neu.x * pos_control->get_pos_xy_p().kP());
+        desired_velocity.y = (vel_of_target.y * 100.0f) + dist_vec_to_target_neu.y * pos_control->get_pos_xy_p().kP();
+        desired_velocity.z = (-vel_of_target.z * 100.0f) + dist_vec_to_target_neu.z * pos_control->get_pos_z_p().kP();
 
         // scale desired velocity to stay within horizontal speed limit
         float desired_speed_xy = safe_sqrt(sq(desired_velocity.x) + sq(desired_velocity.y));
