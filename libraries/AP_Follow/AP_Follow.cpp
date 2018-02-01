@@ -29,7 +29,7 @@ extern const AP_HAL::HAL& hal;
 // table of user settable parameters
 const AP_Param::GroupInfo AP_Follow::var_info[] = {
 
-    // @Param: ENABLE
+    // @Param: _ENABLE
     // @DisplayName: Follow enable/disable
     // @Description: Enabled/disable following a target
     // @Values: 0:Disabled,1:Enabled
@@ -66,14 +66,14 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("_DIST_MAX", 5, AP_Follow, _dist_max, 100),
 
-    // @Param: OFS_TYPE
+    // @Param: _OFS_TYPE
     // @DisplayName: Follow offset type
     // @Description: Follow offset type
     // @Values: 0:North-East-Down, 1:Relative to lead vehicle heading
     // @User: Standard
     AP_GROUPINFO("_OFS_TYPE", 6, AP_Follow, _offset_type, AP_FOLLOW_OFFSET_TYPE_NED),
 
-    // @Param: OFS_X
+    // @Param: _OFS_X
     // @DisplayName: Follow offsets in meters north/forward
     // @Description: Follow offsets in meters north/forward.  If positive, this vehicle fly ahead or north of lead vehicle
     // @Range: -100 100
@@ -81,7 +81,7 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @Increment: 1
     // @User: Standard
 
-    // @Param: OFS_Y
+    // @Param: _OFS_Y
     // @DisplayName: Follow offsets in meters east/right
     // @Description: Follow offsets in meters east/right.  If positive, this vehicle fly to the right or east of lead vehicle
     // @Range: -100 100
@@ -89,7 +89,7 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @Increment: 1
     // @User: Standard
 
-    // @Param: OFS_Z
+    // @Param: _OFS_Z
     // @DisplayName: Follow offsets in meters down
     // @Description: Follow offsets in meters down.  If positive, this vehicle fly below the lead vehicle
     // @Range: -100 100
