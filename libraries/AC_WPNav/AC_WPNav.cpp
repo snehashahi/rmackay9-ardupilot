@@ -453,7 +453,7 @@ void AC_WPNav::wp_and_spline_init()
     _pos_control.clear_desired_velocity_ff_z();
 
     // initialise feed forward velocity to zero
-    _pos_control.set_desired_velocity_xy(0,0);
+    _pos_control.set_desired_velocity_xy(0.0f, 0.0f);
 
     // initialise position controller speed and acceleration
     _pos_control.set_speed_xy(_wp_speed_cms);
