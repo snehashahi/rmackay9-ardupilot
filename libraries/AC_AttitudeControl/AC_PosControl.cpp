@@ -168,9 +168,9 @@ const AP_Param::GroupInfo AC_PosControl::var_info[] = {
     // @User: Advanced
     AP_SUBGROUPINFO(_pid_vel_xy, "_VELXY_", 6, AC_PosControl, AC_PID_2D),
 
-    // @Param: ANGLE_MAX
-    // @DisplayName: Maximum autopilot commanded angle (in degrees). Set to zero for Angle Max
-    // @Description: Maximum autopilot commanded angle (in degrees). Set to zero for Angle Max
+    // @Param: _ANGLE_MAX
+    // @DisplayName: Position Control Angle Max
+    // @Description: Maximum lean angle autopilot can request.  Set to zero to use ANGLE_MAX parameter value
     // @Units: deg
     // @Range: 0 45
     // @Increment: 1
