@@ -87,7 +87,7 @@ public:
     float get_accel_z() const { return _accel_z_cms; }
 
     /// calc_leash_length - calculates the vertical leash lengths from maximum speed, acceleration
-    ///     called by pos_to_rate_z if z-axis speed or accelerations are changed
+    ///     called by update_z_controller if z-axis speed or accelerations are changed
     void calc_leash_length_z();
 
     /// set_alt_target - set altitude target in cm above home
