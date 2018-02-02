@@ -479,7 +479,7 @@ void AC_PosControl::update_z_controller()
 }
 
 /// calc_leash_length - calculates the vertical leash lengths from maximum speed, acceleration
-///     called by pos_to_rate_z if z-axis speed or accelerations are changed
+///     called by update_z_controller if z-axis speed or accelerations are changed
 void AC_PosControl::calc_leash_length_z()
 {
     if (_flags.recalc_leash_z) {
