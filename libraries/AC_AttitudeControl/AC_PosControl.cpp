@@ -875,7 +875,7 @@ void AC_PosControl::update_vel_controller_xy(float ekfNavVelGainScaler)
         calc_leash_length_xy();
 
         // apply desired velocity request to position target
-        // this will need to be removed and added to the calling function.
+        // TODO: this will need to be removed and added to the calling function.
         desired_vel_to_pos(dt);
 
         // run position controller
@@ -930,7 +930,7 @@ void AC_PosControl::desired_accel_to_vel(float nav_dt)
         return;
     }
 
-    // update target position
+    // update target velocity
     if (_flags.reset_desired_vel_to_pos) {
         _flags.reset_desired_vel_to_pos = false;
     } else {
