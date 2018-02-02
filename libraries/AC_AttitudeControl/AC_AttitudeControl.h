@@ -311,15 +311,6 @@ protected:
     // tail rotor thrust in hover. Overloaded by AC_Attitude_Heli to return angle.
     virtual float get_roll_trim_rad() { return 0;}
 
-    // Return the roll axis acceleration limit in radians/s/s
-    float get_accel_roll_max_radss() { return radians(_accel_roll_max*0.01f); }
-
-    // Return the pitch axis acceleration limit in radians/s/s
-    float get_accel_pitch_max_radss() { return radians(_accel_pitch_max*0.01f); }
-
-    // Return the yaw axis acceleration limit in radians/s/s
-    float get_accel_yaw_max_radss() { return radians(_accel_yaw_max*0.01f); }
-
     // Return the yaw slew rate limit in radians/s
     float get_slew_yaw_rads() { return radians(_slew_yaw*0.01f); }
 
