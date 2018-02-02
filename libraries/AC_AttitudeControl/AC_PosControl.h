@@ -160,7 +160,7 @@ public:
     /// xy position controller
     ///
 
-    /// get_lean_angle_max_cd - returns the maximum pilot commanded angle in degrees
+    /// get_lean_angle_max_cd - returns the maximum lean angle the autopilot may request
     float get_lean_angle_max_cd() const;
 
     /// init_xy_controller - initialise the xy controller

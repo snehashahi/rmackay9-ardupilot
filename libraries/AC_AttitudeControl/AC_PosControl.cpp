@@ -753,13 +753,13 @@ bool AC_PosControl::is_active_xy() const
     return ((AP_HAL::millis() - _last_update_xy_ms) <= POSCONTROL_ACTIVE_TIMEOUT_MS);
 }
 
-/// get_lean_angle_max_cd - returns the maximum pilot commanded angle in degrees
+/// get_lean_angle_max_cd - returns the maximum lean angle the autopilot may request
 float AC_PosControl::get_lean_angle_max_cd() const
 {
     if (is_zero(_lean_angle_max)) {
         return _attitude_control.lean_angle_max();
     }
-    return _lean_angle_max*100.0f;
+    return MIN(_lean_angle_max * 100.0f, _attitude_control.lean_angle_max());
 }
 
 /// init_xy_controller - initialise the xy controller
