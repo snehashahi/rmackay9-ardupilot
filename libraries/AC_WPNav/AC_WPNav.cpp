@@ -69,7 +69,7 @@ const AP_Param::GroupInfo AC_WPNav::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("ACCEL_Z",     6, AC_WPNav, _wp_accel_z_cms, WPNAV_WP_ACCEL_Z_DEFAULT),
 
-    // @Param: LOIT_JERK
+    // @Param: BRK_JERK
     // @DisplayName: Loiter braking jerk
     // @Description: Loiter braking jerk in cm/s/s/s. Higher values will remove braking faster if the pilot moves the sticks during a braking manuver.
     // @Units: cm/s/s/s
