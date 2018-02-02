@@ -240,11 +240,11 @@ void AC_WPNav::loiter_soften_for_landing()
 /// set_pilot_desired_acceleration - sets pilot desired acceleration from roll and pitch stick input
 void AC_WPNav::set_pilot_desired_acceleration(float euler_roll_angle_cd, float euler_pitch_angle_cd)
 {
-    float nav_dt = 0.0025f;
+    const float nav_dt = 0.0025f;
 
     // Convert from centidegrees on public interface to radians
-    float euler_roll_angle = radians(euler_roll_angle_cd*0.01f);
-    float euler_pitch_angle = radians(euler_pitch_angle_cd*0.01f);
+    const float euler_roll_angle = radians(euler_roll_angle_cd*0.01f);
+    const float euler_pitch_angle = radians(euler_pitch_angle_cd*0.01f);
 
     // difference between where we think we should be and where we want to be
     Vector2f angle_error(wrap_PI(euler_roll_angle-_loiter_predicted_euler_angle.x), wrap_PI(euler_pitch_angle-_loiter_predicted_euler_angle.y));
@@ -256,14 +256,14 @@ void AC_WPNav::set_pilot_desired_acceleration(float euler_roll_angle_cd, float e
     _loiter_predicted_euler_angle += _loiter_predicted_euler_rate * nav_dt;
 
     // convert our desired attitude to an acceleration vector assuming we are hovering
-    float pilot_cos_pitch_target = cosf(euler_pitch_angle);
-    float pilot_accel_rgt_cms = GRAVITY_MSS*100.0f * tanf(euler_roll_angle)/pilot_cos_pitch_target;
-    float pilot_accel_fwd_cms = -GRAVITY_MSS*100.0f * tanf(euler_pitch_angle);
+    const float pilot_cos_pitch_target = cosf(euler_pitch_angle);
+    const float pilot_accel_rgt_cms = GRAVITY_MSS*100.0f * tanf(euler_roll_angle)/pilot_cos_pitch_target;
+    const float pilot_accel_fwd_cms = -GRAVITY_MSS*100.0f * tanf(euler_pitch_angle);
 
     // convert our predicted attitude to an acceleration vector assuming we are hovering
-    float pilot_predicted_cos_pitch_target = cosf(_loiter_predicted_euler_angle.y);
-    float pilot_predicted_accel_rgt_cms = GRAVITY_MSS*100.0f * tanf(_loiter_predicted_euler_angle.x)/pilot_predicted_cos_pitch_target;
-    float pilot_predicted_accel_fwd_cms = -GRAVITY_MSS*100.0f * tanf(_loiter_predicted_euler_angle.y);
+    const float pilot_predicted_cos_pitch_target = cosf(_loiter_predicted_euler_angle.y);
+    const float pilot_predicted_accel_rgt_cms = GRAVITY_MSS*100.0f * tanf(_loiter_predicted_euler_angle.x)/pilot_predicted_cos_pitch_target;
+    const float pilot_predicted_accel_fwd_cms = -GRAVITY_MSS*100.0f * tanf(_loiter_predicted_euler_angle.y);
 
     // rotate acceleration vectors input to lat/lon frame
     _loiter_desired_accel.x = (pilot_accel_fwd_cms*_ahrs.cos_yaw() - pilot_accel_rgt_cms*_ahrs.sin_yaw());
