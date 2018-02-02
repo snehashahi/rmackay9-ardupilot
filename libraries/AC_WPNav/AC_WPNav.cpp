@@ -428,7 +428,7 @@ void AC_WPNav::update_brake(float ekfGndSpdLimit, float ekfNavVelGainScaler)
     if (dt >= _pos_control.get_dt_xy()) {
 
         // send adjusted feed forward velocity back to position controller
-        _pos_control.set_desired_velocity_xy(0,0);
+        _pos_control.set_desired_velocity_xy(0.0f, 0.0f);
         _pos_control.update_xy_controller(ekfNavVelGainScaler);
     }
 }
