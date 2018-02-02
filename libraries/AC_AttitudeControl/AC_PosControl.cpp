@@ -1158,9 +1158,9 @@ void AC_PosControl::check_for_ekf_z_reset()
 bool AC_PosControl::limit_vector_length(float& vector_x, float& vector_y, float max_length)
 {
     float vector_length = norm(vector_x, vector_y);
-    if(vector_length > max_length && max_length > 0.0f) {
-        vector_x *= max_length/vector_length;
-        vector_y *= max_length/vector_length;
+    if ((vector_length > max_length) && is_positive(max_length)) {
+        vector_x *= (max_length / vector_length);
+        vector_y *= (max_length / vector_length);
         return true;
     }
     return false;
