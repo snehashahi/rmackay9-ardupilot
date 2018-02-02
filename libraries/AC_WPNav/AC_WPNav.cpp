@@ -113,8 +113,8 @@ const AP_Param::GroupInfo AC_WPNav::var_info[] = {
     AP_GROUPINFO("BRK_DELAY",  11, AC_WPNav, _loiter_brake_delay, WPNAV_LOITER_BRAKE_START_DELAY),
 
     // @Param: LOIT_ANGM
-    // @DisplayName: Loiter maximum pilot commanded angle (in degrees). Set to zero for 2/3 Angle Max
-    // @Description: Loiter maximum pilot commanded angle (in degrees). Set to zero for 2/3 Angle Max
+    // @DisplayName: Loiter Angle Max
+    // @Description: Loiter maximum lean angle. Set to zero for 2/3 of ANGLE_MAX
     // @Units: deg
     // @Range: 0 45
     // @Increment: 1
