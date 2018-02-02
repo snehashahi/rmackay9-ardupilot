@@ -105,7 +105,7 @@ public:
     /// get_loiter_target - returns loiter target position
     const Vector3f& get_loiter_target() const { return _pos_control.get_pos_target(); }
 
-    /// get_loiter_angle_max - returns the maximum pilot commanded angle in degrees
+    /// get_loiter_angle_max - returns the maximum lean angle in loiter mode
     float get_loiter_angle_max_cd() const;
 
     /// update_loiter - run the loiter controller - should be called at 10hz

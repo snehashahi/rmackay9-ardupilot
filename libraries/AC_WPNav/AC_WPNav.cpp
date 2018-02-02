@@ -278,10 +278,10 @@ void AC_WPNav::get_loiter_stopping_point_xy(Vector3f& stopping_point) const
     _pos_control.get_stopping_point_xy(stopping_point);
 }
 
-/// get_loiter_angle_max - returns the maximum pilot commanded angle in degrees
+/// get_loiter_angle_max - returns the maximum lean angle in loiter mode
 float AC_WPNav::get_loiter_angle_max_cd() const
 {
-    if(is_zero(_loiter_angle_max)){
+    if (is_zero(_loiter_angle_max)){
         return MIN(_attitude_control.lean_angle_max()*2.0f/3.0f, _pos_control.get_lean_angle_max_cd()*2.0f/3.0f);
     }
     return MIN(_loiter_angle_max*100.0f, _pos_control.get_lean_angle_max_cd());
