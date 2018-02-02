@@ -333,9 +333,6 @@ protected:
     //          init_takeoff
     void run_z_controller();
 
-    // rate_to_accel_z - calculates desired accel required to achieve the velocity target
-    void rate_to_accel_z();
-
     ///
     /// xy controller private methods
     ///
