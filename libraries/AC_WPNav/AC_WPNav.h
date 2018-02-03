@@ -85,8 +85,9 @@ public:
     /// calculate_loiter_leash_length - calculates the maximum distance in cm that the target position may be from the current location
     void calculate_loiter_leash_length();
 
-    /// set_pilot_desired_acceleration - sets pilot desired acceleration from roll and pitch stick input
-    void set_pilot_desired_acceleration(float control_roll, float control_pitch);
+    /// set pilot desired acceleration in centi-degrees
+    //   dt should be the time (in seconds) since the last call to this function
+    void set_pilot_desired_acceleration(float euler_roll_angle_cd, float euler_pitch_angle_cd, float dt);
     /// get_pilot_desired_acceleration - gets pilot desired
     /// acceleration, body frame, [forward,right]
     Vector2f get_pilot_desired_acceleration() const { return Vector2f(_loiter_desired_accel.x, _loiter_desired_accel.y); }

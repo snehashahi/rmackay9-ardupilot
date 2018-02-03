@@ -237,11 +237,10 @@ void AC_WPNav::loiter_soften_for_landing()
     _pos_control.set_xy_target(curr_pos.x, curr_pos.y);
 }
 
-/// set_pilot_desired_acceleration - sets pilot desired acceleration from roll and pitch stick input
-void AC_WPNav::set_pilot_desired_acceleration(float euler_roll_angle_cd, float euler_pitch_angle_cd)
+/// set pilot desired acceleration in centi-degrees
+//   dt should be the time (in seconds) since the last call to this function
+void AC_WPNav::set_pilot_desired_acceleration(float euler_roll_angle_cd, float euler_pitch_angle_cd, float dt)
 {
-    const float nav_dt = 0.0025f;
-
     // Convert from centidegrees on public interface to radians
     const float euler_roll_angle = radians(euler_roll_angle_cd*0.01f);
     const float euler_pitch_angle = radians(euler_pitch_angle_cd*0.01f);
@@ -250,10 +249,10 @@ void AC_WPNav::set_pilot_desired_acceleration(float euler_roll_angle_cd, float e
     Vector2f angle_error(wrap_PI(euler_roll_angle-_loiter_predicted_euler_angle.x), wrap_PI(euler_pitch_angle-_loiter_predicted_euler_angle.y));
 
     // calculate the angular velocity that we would expect given our desired and predicted attitude
-    _attitude_control.input_shaping_rate_predictor(angle_error, _loiter_predicted_euler_rate, nav_dt);
+    _attitude_control.input_shaping_rate_predictor(angle_error, _loiter_predicted_euler_rate, dt);
 
     // update our predicted attitude based on our predicted angular velocity
-    _loiter_predicted_euler_angle += _loiter_predicted_euler_rate * nav_dt;
+    _loiter_predicted_euler_angle += _loiter_predicted_euler_rate * dt;
 
     // convert our desired attitude to an acceleration vector assuming we are hovering
     const float pilot_cos_pitch_target = cosf(euler_pitch_angle);
