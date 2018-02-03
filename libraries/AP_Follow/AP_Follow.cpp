@@ -234,7 +234,7 @@ void AP_Follow::handle_msg(const mavlink_message_t &msg)
         }
         // initialise _sysid if zero to sender's id
         if (_sysid == 0) {
-            _sysid = msg.msgid;
+            _sysid = msg.sysid;
         }
     }
 }
@@ -250,7 +250,7 @@ bool AP_Follow::get_velocity_ned(Vector3f& vel, float dt) const
 void AP_Follow::init_offsets_if_required(const Vector3f& dist_vec_ned)
 {
     if (_offset.get().is_zero()) {
-        _offset = dist_vec_ned;
+        _offset = -dist_vec_ned;
     }
 }
 
