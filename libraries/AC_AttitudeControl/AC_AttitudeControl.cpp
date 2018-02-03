@@ -154,15 +154,6 @@ void AC_AttitudeControl::set_throttle_out_unstabilized(float throttle_in, bool r
     _angle_boost = 0.0f;
 }
 
-void AC_AttitudeControl::set_input_tc_default(float input_tc)
-{
-    // exit immediately if a value has already been saved to eeprom or is out of range
-    if (_input_tc.load() || (input_tc <= 0.0f) || (input_tc > 1.0f)) {
-        return;
-    }
-    _input_tc.set_and_save(input_tc);
-}
-
 // Ensure attitude controller have zero errors to relax rate controller output
 void AC_AttitudeControl::relax_attitude_controllers()
 {

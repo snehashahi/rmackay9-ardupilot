@@ -105,10 +105,7 @@ public:
     void save_accel_yaw_max(float accel_yaw_max) { _accel_yaw_max.set_and_save(accel_yaw_max); }
 
     // set the rate control input smoothing time constant
-    void set_input_tc(float input_tc) { _input_tc = constrain_float(input_tc, 1.0f, 100.0f); }
-
-    // set the rate control input smoothing time constants default value (used for conversion from RC_FEEL_RP
-    void set_input_tc_default(float input_tc);
+    void set_input_tc(float input_tc) { _input_tc = constrain_float(input_tc, 0.0f, 1.0f); }
 
     // Ensure attitude controller have zero errors to relax rate controller output
     void relax_attitude_controllers();
