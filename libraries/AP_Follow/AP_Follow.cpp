@@ -36,12 +36,7 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @User: Standard
     AP_GROUPINFO_FLAGS("_ENABLE", 1, AP_Follow, _enabled, 0, AP_PARAM_FLAG_ENABLE),
 
-    // @Param: _TYPE
-    // @DisplayName: Follow type
-    // @Description: Follow type
-    // @Values: 0:Keep Initial Offset, 1:Maintain Margin
-    // @User: Standard
-    AP_GROUPINFO("_TYPE", 2, AP_Follow, _type, 0),
+    // 2 is reserved for TYPE parameter
 
     // @Param: _SYSID
     // @DisplayName: Follow target's mavlink system id
@@ -50,13 +45,7 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("_SYSID", 3, AP_Follow, _sysid, 0),
 
-    // @Param: _MARGIN
-    // @DisplayName: Follow minimum distance margin
-    // @Description: Follow minimum distance margin
-    // @Units: m
-    // @Range: 1 10
-    // @User: Standard
-    AP_GROUPINFO("_MARGIN", 4, AP_Follow, _margin, 5),
+    // 4 is reserved for MARGIN parameter
 
     // @Param: _DIST_MAX
     // @DisplayName: Follow distance maximum
@@ -117,45 +106,6 @@ AP_Follow::AP_Follow(const AP_AHRS &ahrs) :
         _ahrs(ahrs)
 {
     AP_Param::setup_object_defaults(this, var_info);
-}
-
-// initialise follow subsystem
-void AP_Follow::init()
-{
-    // nothing to do
-}
-
-// update the state of the sensor
-void AP_Follow::update(void)
-{
-    // exit immediately if not enabled
-    if (!_enabled) {
-        _healthy = false;
-    }
-
-    // check for timeout and set health status
-    if (_last_location_update_ms == 0 || (AP_HAL::millis() - _last_location_update_ms > AP_FOLLOW_TIMEOUT_MS)) {
-        _healthy = false;
-    } else {
-        _healthy = true;
-    }
-}
-
-// true if we have a valid target location estimate
-bool AP_Follow::have_target() const
-{
-    // exit immediately if not enabled
-    if (!_enabled) {
-        return false;
-    }
-
-    // check for timeout
-    if ((_last_location_update_ms == 0) || (AP_HAL::millis() - _last_location_update_ms > AP_FOLLOW_TIMEOUT_MS)) {
-        return false;
-    }
-
-    // we must have a valid target estimate
-    return true;
 }
 
 // get target's estimated location
