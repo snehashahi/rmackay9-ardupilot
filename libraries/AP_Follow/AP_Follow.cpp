@@ -190,7 +190,7 @@ bool AP_Follow::get_target_location_and_velocity(Location &loc, Vector3f& vel) c
 }
 
 // get distance vector to target (in meters) and target's velocity all in NED frame
-bool AP_Follow::get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &dist_with_offs, Vector3f &vel) const
+bool AP_Follow::get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &dist_with_offs, Vector3f &vel)
 {
     // get our location
     Location current_loc;
@@ -198,24 +198,34 @@ bool AP_Follow::get_target_dist_and_vel_ned(Vector3f &dist, Vector3f &dist_with_
          return false;
      }
 
-    // get offsets
-    Vector3f offsets;
-    if (!get_offsets_ned(offsets)) {
-        return false;
-    }
-
     // get target location and velocity
     Location target_loc;
-    if (!get_target_location_and_velocity(target_loc, vel)) {
+    Vector3f veh_vel;
+    if (!get_target_location_and_velocity(target_loc, veh_vel)) {
         return false;
     }
 
     // calculate difference
     Vector3f dist_vec = location_3d_diff_NED(current_loc, target_loc);
 
+    // fail if too far
+    if (is_positive(_dist_max.get()) && (dist_vec.length() > _dist_max)) {
+        return false;
+    }
+
+    // initialise offsets from distance vector if required
+    init_offsets_if_required(dist_vec);
+
+    // get offsets
+    Vector3f offsets;
+    if (!get_offsets_ned(offsets)) {
+        return false;
+    }
+
     // return results
     dist = dist_vec;
     dist_with_offs = dist_vec + offsets;
+    vel = veh_vel;
     return true;
 }
 
@@ -284,6 +294,14 @@ bool AP_Follow::get_velocity_ned(Vector3f& vel, float dt) const
 {
     vel = _target_velocity_ned + (_target_accel_ned * dt);
     return true;
+}
+
+// initialise offsets to target if required
+void AP_Follow::init_offsets_if_required(const Vector3f& dist_vec_ned)
+{
+    if (_offset.get().is_zero()) {
+        _offset = dist_vec_ned;
+    }
 }
 
 // get offsets in NED frame
