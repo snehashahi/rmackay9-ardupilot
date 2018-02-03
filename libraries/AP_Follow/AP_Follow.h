@@ -46,6 +46,9 @@ public:
     // true if follow subsystem is healthy (i.e. we are receiving messages)
     bool healthy() const { return _healthy; }
 
+    // set which target to follow
+    void set_target_sysid(uint8_t sysid) { _sysid = sysid; }
+
     //
     // position tracking related methods
     //
@@ -89,7 +92,7 @@ private:
     // parameters
     AP_Int8     _enabled;           // 1 if this subsystem is enabled
     AP_Int8     _type;              // follow type (keep initial offset, maintain margin)
-    AP_Int16    _target_sysid;      // target's mavlink system id
+    AP_Int16    _sysid;             // target's mavlink system id (0 to use first sysid seen)
     AP_Float    _margin;            // minimum target distance to target
     AP_Float    _dist_max;          // maximum distance to target.  targets further than this will be ignored
     AP_Int8     _offset_type;       // offset frame type (0:North-East-Down, 1:RelativeToLeadVehicleHeading)

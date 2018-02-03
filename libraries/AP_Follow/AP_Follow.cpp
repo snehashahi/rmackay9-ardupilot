@@ -48,7 +48,7 @@ const AP_Param::GroupInfo AP_Follow::var_info[] = {
     // @Description: Follow target's mavlink system id
     // @Range: 0 255
     // @User: Standard
-    AP_GROUPINFO("_SYSID", 3, AP_Follow, _target_sysid, 2),
+    AP_GROUPINFO("_SYSID", 3, AP_Follow, _sysid, 0),
 
     // @Param: _MARGIN
     // @DisplayName: Follow minimum distance margin
@@ -245,8 +245,13 @@ void AP_Follow::handle_msg(const mavlink_message_t &msg)
         return;
     }
 
+    // skip our own messages
+    if (msg.sysid == mavlink_system.sysid) {
+        return;
+    }
+
     // skip message if not from our target
-    if (msg.sysid != _target_sysid) {
+    if ((_sysid != 0) && (msg.sysid != _sysid)) {
         return;
     }
 
@@ -266,6 +271,10 @@ void AP_Follow::handle_msg(const mavlink_message_t &msg)
         if (packet.hdg <= 36000) {                  // heading (UINT16_MAX if unknown)
             _target_heading = packet.hdg / 100.0f;  // convert centi-degrees to degrees
             _last_heading_update_ms = now;
+        }
+        // initialise _sysid if zero to sender's id
+        if (_sysid == 0) {
+            _sysid = msg.msgid;
         }
     }
 }
