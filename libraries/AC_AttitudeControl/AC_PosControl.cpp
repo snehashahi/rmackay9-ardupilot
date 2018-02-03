@@ -175,7 +175,7 @@ const AP_Param::GroupInfo AC_PosControl::var_info[] = {
     // @Range: 0 45
     // @Increment: 1
     // @User: Advanced
-    AP_GROUPINFO("_ANGLE_MAX",  13, AC_PosControl, _lean_angle_max, 0.0f),
+    AP_GROUPINFO("_ANGLE_MAX",  7, AC_PosControl, _lean_angle_max, 0.0f),
 
     AP_GROUPEND
 };
