@@ -291,6 +291,7 @@ protected:
     virtual bool params_ready() const { return true; }
 
     void handle_common_gps_message(mavlink_message_t *msg);
+    void handle_system_time_message(const mavlink_message_t *msg);
     void handle_common_rally_message(mavlink_message_t *msg);
     void handle_rally_fetch_point(mavlink_message_t *msg);
     void handle_rally_point(mavlink_message_t *msg);
@@ -503,7 +504,8 @@ private:
         uint32_t last_alternate_ms;
         bool active;
     } alternative;
-    
+
+    AP_RTC_Backend *_rtc_source;
 };
 
 /// @class GCS

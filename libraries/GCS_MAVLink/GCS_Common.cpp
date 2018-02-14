@@ -20,6 +20,7 @@
 #include <AP_Vehicle/AP_Vehicle.h>
 #include <AP_RangeFinder/RangeFinder_Backend.h>
 #include <AP_Airspeed/AP_Airspeed.h>
+#include <AP_RTC/AP_RTC_Backend.h>
 
 #include "GCS.h"
 
@@ -947,7 +948,7 @@ void GCS_MAVLINK::send_system_time()
 {
     mavlink_msg_system_time_send(
         chan,
-        AP::gps().time_epoch_usec(),
+        AP::rtc().get(),
         AP_HAL::millis());
 }
 
@@ -1795,6 +1796,18 @@ void GCS_MAVLINK::handle_common_gps_message(mavlink_message_t *msg)
     AP::gps().handle_msg(msg);
 }
 
+void GCS_MAVLINK::handle_system_time_message(const mavlink_message_t *msg)
+{
+    mavlink_system_time_t packet;
+    mavlink_msg_system_time_decode(msg, &packet);
+
+    if (_rtc_source == nullptr) {
+    _rtc_source = AP::rtc().register_rtc_source(AP_RTC::SOURCE_MAVLINK_SYSTEM_TIME);
+    }
+    if (_rtc_source != nullptr) {
+        _rtc_source->set(packet.time_unix_usec);
+    }
+}
 
 void GCS_MAVLINK::handle_common_camera_message(const mavlink_message_t *msg)
 {
@@ -2172,6 +2185,10 @@ void GCS_MAVLINK::handle_common_message(mavlink_message_t *msg)
 
     case MAVLINK_MSG_ID_ATT_POS_MOCAP:
         handle_att_pos_mocap(msg);
+        break;
+
+    case MAVLINK_MSG_ID_SYSTEM_TIME:
+        handle_system_time_message(msg);
         break;
     }
 
