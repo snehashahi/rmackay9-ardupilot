@@ -495,30 +495,57 @@ void AP_MotorsHeli_Dual::move_actuators(float roll_out, float pitch_out, float c
     _rotor.set_motor_load(fabsf(collective_out - _collective_mid_pct));
 
     // swashplate servos
-    float servo1_out = (_rollFactor[CH_1] * roll_out + _pitchFactor[CH_1] * pitch_out + _yawFactor[CH_1] * yaw_out)*0.45f + _collectiveFactor[CH_1] * collective_out_scaled;
-    float servo2_out = (_rollFactor[CH_2] * roll_out + _pitchFactor[CH_2] * pitch_out + _yawFactor[CH_2] * yaw_out)*0.45f + _collectiveFactor[CH_2] * collective_out_scaled;
-    float servo3_out = (_rollFactor[CH_3] * roll_out + _pitchFactor[CH_3] * pitch_out + _yawFactor[CH_3] * yaw_out)*0.45f + _collectiveFactor[CH_3] * collective_out_scaled;
-    float servo4_out = (_rollFactor[CH_4] * roll_out + _pitchFactor[CH_4] * pitch_out + _yawFactor[CH_4] * yaw_out)*0.45f + _collectiveFactor[CH_4] * collective2_out_scaled;
-    float servo5_out = (_rollFactor[CH_5] * roll_out + _pitchFactor[CH_5] * pitch_out + _yawFactor[CH_5] * yaw_out)*0.45f + _collectiveFactor[CH_5] * collective2_out_scaled;
-    float servo6_out = (_rollFactor[CH_6] * roll_out + _pitchFactor[CH_6] * pitch_out + _yawFactor[CH_6] * yaw_out)*0.45f + _collectiveFactor[CH_6] * collective2_out_scaled;
+    _servo1_out = (_rollFactor[CH_1] * roll_out + _pitchFactor[CH_1] * pitch_out + _yawFactor[CH_1] * yaw_out)*0.45f + _collectiveFactor[CH_1] * collective_out_scaled;
+    _servo2_out = (_rollFactor[CH_2] * roll_out + _pitchFactor[CH_2] * pitch_out + _yawFactor[CH_2] * yaw_out)*0.45f + _collectiveFactor[CH_2] * collective_out_scaled;
+    _servo3_out = (_rollFactor[CH_3] * roll_out + _pitchFactor[CH_3] * pitch_out + _yawFactor[CH_3] * yaw_out)*0.45f + _collectiveFactor[CH_3] * collective_out_scaled;
+    _servo4_out = (_rollFactor[CH_4] * roll_out + _pitchFactor[CH_4] * pitch_out + _yawFactor[CH_4] * yaw_out)*0.45f + _collectiveFactor[CH_4] * collective2_out_scaled;
+    _servo5_out = (_rollFactor[CH_5] * roll_out + _pitchFactor[CH_5] * pitch_out + _yawFactor[CH_5] * yaw_out)*0.45f + _collectiveFactor[CH_5] * collective2_out_scaled;
+    _servo6_out = (_rollFactor[CH_6] * roll_out + _pitchFactor[CH_6] * pitch_out + _yawFactor[CH_6] * yaw_out)*0.45f + _collectiveFactor[CH_6] * collective2_out_scaled;
 
     // rescale from -1..1, so we can use the pwm calc that includes trim
-    servo1_out = 2*servo1_out - 1;
-    servo2_out = 2*servo2_out - 1;
-    servo3_out = 2*servo3_out - 1;
-    servo4_out = 2*servo4_out - 1;
-    servo5_out = 2*servo5_out - 1;
-    servo6_out = 2*servo6_out - 1;
+    _servo1_out = 2*_servo1_out - 1;
+    _servo2_out = 2*_servo2_out - 1;
+    _servo3_out = 2*_servo3_out - 1;
+    _servo4_out = 2*_servo4_out - 1;
+    _servo5_out = 2*_servo5_out - 1;
+    _servo6_out = 2*_servo6_out - 1;
 
-    // actually move the servos
-    rc_write(AP_MOTORS_MOT_1, calc_pwm_output_1to1(servo1_out, _swash_servo_1));
-    rc_write(AP_MOTORS_MOT_2, calc_pwm_output_1to1(servo2_out, _swash_servo_2));
-    rc_write(AP_MOTORS_MOT_3, calc_pwm_output_1to1(servo3_out, _swash_servo_3));
-    rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(servo4_out, _swash_servo_4));
-    rc_write(AP_MOTORS_MOT_5, calc_pwm_output_1to1(servo5_out, _swash_servo_5));
-    rc_write(AP_MOTORS_MOT_6, calc_pwm_output_1to1(servo6_out, _swash_servo_6));
 }
 
+void AP_MotorsHeli_Dual::output_to_motors()
+{
+    if (!_flags.initialised_ok) {
+        return;
+    }
+    // actually move the servos
+    rc_write(AP_MOTORS_MOT_1, calc_pwm_output_1to1(_servo1_out, _swash_servo_1));
+    rc_write(AP_MOTORS_MOT_2, calc_pwm_output_1to1(_servo2_out, _swash_servo_2));
+    rc_write(AP_MOTORS_MOT_3, calc_pwm_output_1to1(_servo3_out, _swash_servo_3));
+    rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(_servo4_out, _swash_servo_4));
+    rc_write(AP_MOTORS_MOT_5, calc_pwm_output_1to1(_servo5_out, _swash_servo_5));
+    rc_write(AP_MOTORS_MOT_6, calc_pwm_output_1to1(_servo6_out, _swash_servo_6));
+
+    switch (_spool_mode) {
+        case SHUT_DOWN:
+            // sends minimum values out to the motors
+            update_motor_control(ROTOR_CONTROL_STOP);
+            break;
+        case SPIN_WHEN_ARMED:
+            // sends idle output to motors when armed. rotor could be static or turning (autorotation)
+            update_motor_control(ROTOR_CONTROL_IDLE);
+            break;
+        case SPOOL_UP:
+        case THROTTLE_UNLIMITED:
+            // set motor output based on thrust requests
+            update_motor_control(ROTOR_CONTROL_ACTIVE);
+            break;
+        case SPOOL_DOWN:
+            // sends idle output to motors and wait for rotor to stop
+            update_motor_control(ROTOR_CONTROL_IDLE);
+            break;
+
+    }
+}
 
 // servo_test - move servos through full range of movement
 void AP_MotorsHeli_Dual::servo_test()
