@@ -95,7 +95,7 @@ public:
     float               get_lateral() const { return _lateral_in; }
     virtual float       get_throttle_hover() const = 0;
 
-    // spool up states
+    // desired spool states
     enum spool_up_down_desired {
         DESIRED_SHUT_DOWN = 0,              // all motors stop
         DESIRED_SPIN_WHEN_ARMED = 1,        // all motors at spin when armed
