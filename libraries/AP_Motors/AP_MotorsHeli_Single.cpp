@@ -443,23 +443,22 @@ void AP_MotorsHeli_Single::move_actuators(float roll_out, float pitch_out, float
     if (_collective_direction == AP_MOTORS_HELI_SINGLE_COLLECTIVE_DIRECTION_REVERSED){
         collective_out_scaled = 1 - collective_out_scaled;
     }
-    float servo1_out = ((_rollFactor[CH_1] * roll_out) + (_pitchFactor[CH_1] * pitch_out))*0.45f + _collectiveFactor[CH_1] * collective_out_scaled;
-    float servo2_out = ((_rollFactor[CH_2] * roll_out) + (_pitchFactor[CH_2] * pitch_out))*0.45f + _collectiveFactor[CH_2] * collective_out_scaled;
+
+    // swashplate servos
+    float collective_scalar = ((float)(_collective_max-_collective_min))/1000.0f;
+    float coll_out_scaled = collective_out * collective_scalar + (_collective_min - 1000)/1000.0f;
+    _servo1_out = ((_rollFactor[CH_1] * roll_out) + (_pitchFactor[CH_1] * pitch_out))*0.45f + _collectiveFactor[CH_1] * collective_out_scaled;
+    _servo2_out = ((_rollFactor[CH_2] * roll_out) + (_pitchFactor[CH_2] * pitch_out))*0.45f + _collectiveFactor[CH_2] * collective_out_scaled;
     if (_swash_type == AP_MOTORS_HELI_SINGLE_SWASH_H1) {
-        servo1_out += 0.5f;
-        servo2_out += 0.5f;
+        _servo1_out += 0.5f;
+        _servo2_out += 0.5f;
     }
-    float servo3_out = ((_rollFactor[CH_3] * roll_out) + (_pitchFactor[CH_3] * pitch_out))*0.45f + _collectiveFactor[CH_3] * collective_out_scaled;
+    _servo3_out = ((_rollFactor[CH_3] * roll_out) + (_pitchFactor[CH_3] * pitch_out))*0.45f + _collectiveFactor[CH_3] * collective_out_scaled;
 
     // rescale from -1..1, so we can use the pwm calc that includes trim
-    servo1_out = 2*servo1_out - 1;
-    servo2_out = 2*servo2_out - 1;
-    servo3_out = 2*servo3_out - 1;
-
-    // actually move the servos
-    rc_write(AP_MOTORS_MOT_1, calc_pwm_output_1to1_swash_servo(servo1_out, _swash_servo_1));
-    rc_write(AP_MOTORS_MOT_2, calc_pwm_output_1to1_swash_servo(servo2_out, _swash_servo_2));
-    rc_write(AP_MOTORS_MOT_3, calc_pwm_output_1to1_swash_servo(servo3_out, _swash_servo_3));
+    _servo1_out = 2*_servo1_out - 1;
+    _servo2_out = 2*_servo2_out - 1;
+    _servo3_out = 2*_servo3_out - 1;
 
     // update the yaw rate using the tail rotor/servo
     move_yaw(yaw_out + yaw_offset);
@@ -478,18 +477,29 @@ void AP_MotorsHeli_Single::move_yaw(float yaw_out)
         limit.yaw = true;
     }
 
-    if (_tail_type == AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_FIXEDPITCH){
-        if (_main_rotor.get_desired_speed() > 0.0f && hal.util->get_soft_armed()) {
-            // constrain output so that motor never fully stops
-            yaw_out = constrain_float(yaw_out, -0.9f, 1.0f);
-            // output yaw servo to tail rsc
-            rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(yaw_out, _yaw_servo));
-        } else {
-            // output zero speed to tail rsc
-            rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(-1.0f, _yaw_servo));
-        }
-    } else {
-        rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(yaw_out, _yaw_servo));
+    _servo4_out = yaw_out;
+}
+
+// write_aux - converts servo_out parameter value (0 to 1 range) to pwm and outputs to aux channel (ch7)
+void AP_MotorsHeli_Single::write_aux(float servo_out)
+{
+    if (_servo_aux) {
+        rc_write(AP_MOTORS_HELI_SINGLE_AUX, calc_pwm_output_0to1(servo_out, _servo_aux));
+    }
+}
+
+void AP_MotorsHeli_Single::output_to_motors()
+{
+    if (!_flags.initialised_ok) {
+        return;
+    }
+
+    // actually move the servos
+    rc_write(AP_MOTORS_MOT_1, calc_pwm_output_1to1_swash_servo(_servo1_out, _swash_servo_1));
+    rc_write(AP_MOTORS_MOT_2, calc_pwm_output_1to1_swash_servo(_servo2_out, _swash_servo_2));
+    rc_write(AP_MOTORS_MOT_3, calc_pwm_output_1to1_swash_servo(_servo3_out, _swash_servo_3));
+    if (_tail_type != AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_FIXEDPITCH){
+        rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(_servo4_out, _yaw_servo));
     }
     if (_tail_type == AP_MOTORS_HELI_SINGLE_TAILTYPE_SERVO_EXTGYRO) {
         // output gain to exernal gyro
@@ -499,13 +509,41 @@ void AP_MotorsHeli_Single::move_yaw(float yaw_out)
             write_aux(_ext_gyro_gain_std*0.001f);
         }
     }
-}
 
-// write_aux - converts servo_out parameter value (0 to 1 range) to pwm and outputs to aux channel (ch7)
-void AP_MotorsHeli_Single::write_aux(float servo_out)
-{
-    if (_servo_aux) {
-        rc_write(AP_MOTORS_HELI_SINGLE_AUX, calc_pwm_output_0to1(servo_out, _servo_aux));
+    switch (_spool_mode) {
+        case SHUT_DOWN:
+            // sends minimum values out to the motors
+            update_motor_control(ROTOR_CONTROL_STOP);
+            if (_tail_type == AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_FIXEDPITCH){
+                rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(-1.0f, _yaw_servo));
+            }
+            break;
+        case SPIN_WHEN_ARMED:
+            // sends idle output to motors when armed. rotor could be static or turning (autorotation)
+            update_motor_control(ROTOR_CONTROL_IDLE);
+            if (_tail_type == AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_FIXEDPITCH){
+                rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(-1.0f, _yaw_servo));
+            }
+            break;
+        case SPOOL_UP:
+        case THROTTLE_UNLIMITED:
+            // set motor output based on thrust requests
+            update_motor_control(ROTOR_CONTROL_ACTIVE);
+            if (_tail_type == AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_FIXEDPITCH){
+                // constrain output so that motor never fully stops
+                 _servo4_out = constrain_float(_servo4_out, -0.9f, 1.0f);
+                // output yaw servo to tail rsc
+                rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(_servo4_out, _yaw_servo));
+            }
+            break;
+        case SPOOL_DOWN:
+            // sends idle output to motors and wait for rotor to stop
+            update_motor_control(ROTOR_CONTROL_IDLE);
+            if (_tail_type == AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_FIXEDPITCH){
+                rc_write(AP_MOTORS_MOT_4, calc_pwm_output_1to1(-1.0f, _yaw_servo));
+            }
+            break;
+
     }
 }
 
