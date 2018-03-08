@@ -103,6 +103,18 @@ public:
 
     enum spool_up_down_desired get_desired_spool_state(void) const { return _spool_desired; }
     
+    // spool states
+    enum spool_up_down_mode {
+        SHUT_DOWN = 0,                      // all motors stop
+        SPIN_WHEN_ARMED = 1,                // all motors at spin when armed
+        SPOOL_UP = 2,                       // increasing maximum throttle while stabilizing
+        THROTTLE_UNLIMITED = 3,             // throttle is no longer constrained by start up procedure
+        SPOOL_DOWN = 4,                     // decreasing maximum throttle while stabilizing
+    };
+
+    // get_spool_mode - get current spool mode 
+    enum spool_up_down_mode  get_spool_mode(void) const { return _spool_mode; }
+
     //
     // voltage, current and air pressure compensation or limiting features - multicopters only
     //
@@ -206,6 +218,7 @@ protected:
     float               _throttle_avg_max;          // last throttle input from set_throttle_avg_max
     LowPassFilterFloat  _throttle_filter;           // throttle input filter
     spool_up_down_desired _spool_desired;           // desired spool state
+    spool_up_down_mode  _spool_mode;                // current spool mode
 
     // battery voltage, current and air pressure compensation variables
     float               _batt_voltage;          // latest battery voltage reading
