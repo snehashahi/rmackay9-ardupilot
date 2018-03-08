@@ -40,6 +40,7 @@ AP_Motors::AP_Motors(uint16_t loop_rate, uint16_t speed_hz) :
     _throttle_avg_max(0.0f),
     _throttle_filter(),
     _spool_desired(DESIRED_SHUT_DOWN),
+    _spool_mode(SHUT_DOWN),
     _air_density_ratio(1.0f),
     _motor_fast_mask(0)
 {

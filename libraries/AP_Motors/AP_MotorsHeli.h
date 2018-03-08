@@ -80,15 +80,6 @@ public:
     virtual void output_test(uint8_t motor_seq, int16_t pwm) = 0;
 
 
-    // spool states
-    enum spool_up_down_mode {
-        SHUT_DOWN = 0,                      // all motors stop
-        SPIN_WHEN_ARMED = 1,                // all motors at spin when armed
-        SPOOL_UP = 2,                       // increasing maximum throttle while stabilizing
-        THROTTLE_UNLIMITED = 3,             // throttle is no longer constrained by start up procedure
-        SPOOL_DOWN = 4,                     // decreasing maximum throttle while stabilizing
-    };
-
     //
     // heli specific methods
     //
@@ -227,9 +218,6 @@ protected:
     AP_Int16        _rsc_thrcrv[5];             // throttle value sent to throttle servo at 0, 25, 50, 75 and 100 percent collective
     AP_Int16        _rsc_slewrate;              // throttle slew rate (percentage per second)
     AP_Int8         _servo_test;                // sets number of cycles to test servo movement on bootup
-
-    // spool variables
-    spool_up_down_mode  _spool_mode;                // motor's current spool mode
 
     // internal variables
     float           _collective_mid_pct = 0.0f;      // collective mid parameter value converted to 0 ~ 1 range
