@@ -72,7 +72,7 @@ void Copter::ModeSport::run()
     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
 
     // State Machine Determination
-    if (!motors->armed() || !motors->get_interlock()) {
+    if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN) {
         sport_state = Sport_MotorStopped;
     } else if (takeoff_state.running || takeoff_triggered(target_climb_rate)) {
         sport_state = Sport_Takeoff;
@@ -132,6 +132,7 @@ void Copter::ModeSport::run()
     case Sport_Landed:
         // set motors to spin-when-armed if throttle below deadzone, otherwise full range (but motors will only spin at min throttle)
         if (target_climb_rate < 0.0f) {
+//  Heli's can't have the aircraft going into spin_when_armed just because throttle is below deadzone
             motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         } else {
             motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);

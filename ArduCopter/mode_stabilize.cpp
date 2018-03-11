@@ -8,6 +8,7 @@
 bool Copter::ModeStabilize::init(bool ignore_checks)
 {
     // if landed and the mode we're switching from does not have manual throttle and the throttle stick is too high
+// should the spool mode be used here instead of motors->armed()??
     if (motors->armed() && ap.land_complete && !copter.flightmode->has_manual_throttle() &&
             (get_pilot_desired_throttle(channel_throttle->get_control_in()) > get_non_takeoff_throttle())) {
         return false;
@@ -27,6 +28,10 @@ void Copter::ModeStabilize::run()
     float pilot_throttle_scaled;
 
     // if not armed set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || ap.throttle_zero) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || ap.throttle_zero) {
     if (!motors->armed() || ap.throttle_zero || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
         return;

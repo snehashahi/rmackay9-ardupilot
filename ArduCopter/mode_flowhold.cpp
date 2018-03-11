@@ -76,12 +76,10 @@ Copter::ModeFlowHold::ModeFlowHold(void) : Mode()
 // flowhold_init - initialise flowhold controller
 bool Copter::ModeFlowHold::init(bool ignore_checks)
 {
-#if FRAME_CONFIG == HELI_FRAME
-    // do not allow helis to enter Flow Hold if the Rotor Runup is not complete
-    if (!ignore_checks && !motors->rotor_runup_complete()){
+    // do not allow aircraft to enter Flow Hold if the Rotor Runup is not complete
+    if (!ignore_checks && motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED){
         return false;
     }
-#endif
 
     if (!copter.optflow.enabled() || !copter.optflow.healthy()) {
         return false;
@@ -244,7 +242,7 @@ void Copter::ModeFlowHold::run()
     // get pilot's desired yaw rate
     float target_yaw_rate = copter.get_pilot_desired_yaw_rate(copter.channel_yaw->get_control_in());
     
-    if (!copter.motors->armed() || !copter.motors->get_interlock()) {
+    if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN) {
         flowhold_state = FlowHold_MotorStopped;
     } else if (copter.takeoff_state.running || takeoff_triggered(target_climb_rate)) {
         flowhold_state = FlowHold_Takeoff;
@@ -333,6 +331,7 @@ void Copter::ModeFlowHold::run()
 
     case FlowHold_Landed:
         // set motors to spin-when-armed if throttle below deadzone, otherwise full range (but motors will only spin at min throttle)
+//  Heli's can't have the aircraft going into spin_when_armed just because throttle is below deadzone
         if (target_climb_rate < 0.0f) {
             copter.motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         } else {
@@ -381,6 +380,7 @@ void Copter::ModeFlowHold::update_height_estimate(void)
 {
     float ins_height = copter.inertial_nav.get_altitude() * 0.01;
 
+// what is #if 1??  Should we replace the !hal.util->get_soft_armed() with motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED
 #if 1
     // assume on ground when disarmed, or if we have only just started spooling the motors up
     if (!hal.util->get_soft_armed() ||

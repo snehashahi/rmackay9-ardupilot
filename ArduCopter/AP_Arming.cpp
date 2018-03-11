@@ -28,6 +28,7 @@ bool AP_Arming_Copter::all_checks_passing(bool arming_from_gcs)
 bool AP_Arming_Copter::pre_arm_checks(bool display_failure)
 {
     // exit immediately if already armed
+// should this be motors->get_spool_mode()!=AP_Motors::SHUT_DOWN?? 
     if (copter.motors->armed()) {
         return true;
     }

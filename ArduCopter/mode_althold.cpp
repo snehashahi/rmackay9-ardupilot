@@ -50,7 +50,7 @@ void Copter::ModeAltHold::run()
     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
 
     // Alt Hold State Machine Determination
-    if (!motors->armed() || !motors->get_interlock()) {
+    if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN) {
         althold_state = AltHold_MotorStopped;
     } else if (takeoff_state.running || takeoff_triggered(target_climb_rate)) {
         althold_state = AltHold_Takeoff;
@@ -80,6 +80,10 @@ void Copter::ModeAltHold::run()
         break;
 
     case AltHold_Takeoff:
+
+//  This code is a remnant of when Rob didn't trust changes in the main code wouldn't cause an in
+//  flight disarm.  Making this code align with multi's would help across the board to remove #if statements.
+//  I think we are less likely now to suffer an inflight disarming
 #if FRAME_CONFIG == HELI_FRAME    
         if (heli_flags.init_targets_on_arming) {
             heli_flags.init_targets_on_arming=false;
@@ -114,12 +118,16 @@ void Copter::ModeAltHold::run()
 
     case AltHold_Landed:
         // set motors to spin-when-armed if throttle below deadzone, otherwise full range (but motors will only spin at min throttle)
+//  Heli's can't have the aircraft going into spin_when_armed just because throttle is below deadzone
         if (target_climb_rate < 0.0f) {
             motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         } else {
             motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
         }
 
+//  This code is a remnant of when Rob didn't trust changes in the main code wouldn't cause an in
+//  flight disarm.  Making this code align with multi's would help across the board to remove #if statements.
+//  I think we are less likely now to suffer an inflight disarming
 #if FRAME_CONFIG == HELI_FRAME    
         if (heli_flags.init_targets_on_arming) {
             attitude_control->reset_rate_controller_I_terms();

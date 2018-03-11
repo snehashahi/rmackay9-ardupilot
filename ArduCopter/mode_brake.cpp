@@ -38,6 +38,10 @@ bool Copter::ModeBrake::init(bool ignore_checks)
 void Copter::ModeBrake::run()
 {
     // if not auto armed set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed) {
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         wp_nav->init_brake_target(BRAKE_MODE_DECEL_RATE);
         zero_throttle_and_relax_ac();

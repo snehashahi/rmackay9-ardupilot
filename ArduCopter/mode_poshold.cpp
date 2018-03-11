@@ -139,6 +139,10 @@ void Copter::ModePosHold::run()
     pos_control->set_accel_z(g.pilot_accel_z);
 
     // if not auto armed or motor interlock not enabled set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed) {
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         wp_nav->init_loiter_target();
         zero_throttle_and_relax_ac();
@@ -162,12 +166,9 @@ void Copter::ModePosHold::run()
         takeoff_get_climb_rates(target_climb_rate, takeoff_climb_rate);
 
         // check for take-off
-#if FRAME_CONFIG == HELI_FRAME
-        // helicopters are held on the ground until rotor speed runup has finished
-        if (ap.land_complete && (takeoff_state.running || (target_climb_rate > 0.0f && motors->rotor_runup_complete()))) {
-#else
-        if (ap.land_complete && (takeoff_state.running || target_climb_rate > 0.0f)) {
-#endif
+        // aircraft are held on the ground until rotor speed runup has finished
+        if (ap.land_complete && (takeoff_state.running || (target_climb_rate > 0.0f && motors->get_spool_mode() == AP_Motors::THROTTLE_UNLIMITED))) {
+
             if (!takeoff_state.running) {
                 takeoff_timer_start(constrain_float(g.pilot_takeoff_alt,0.0f,1000.0f));
             }
@@ -187,6 +188,7 @@ void Copter::ModePosHold::run()
     // if landed initialise loiter targets, set throttle to zero and exit
     if (ap.land_complete) {
         // set motors to spin-when-armed if throttle below deadzone, otherwise full range (but motors will only spin at min throttle)
+//  Heli's can't have the aircraft going into spin_when_armed just because throttle is below deadzone
         if (target_climb_rate < 0.0f) {
             motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         } else {
