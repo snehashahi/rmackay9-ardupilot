@@ -41,6 +41,10 @@ void Copter::ModeCircle::run()
     pos_control->set_accel_z(g.pilot_accel_z);
     
     // if not auto armed or motor interlock not enabled set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed || ap.land_complete) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed || ap.land_complete) {
     if (!motors->armed() || !ap.auto_armed || ap.land_complete || !motors->get_interlock()) {
         // To-Do: add some initialisation of position controllers
         zero_throttle_and_relax_ac();

@@ -49,6 +49,10 @@ void Copter::ModeDrift::run()
     float pilot_throttle_scaled;
 
     // if landed and throttle at zero, set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || (ap.land_complete && ap.throttle_zero)) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || (ap.land_complete && ap.throttle_zero)) {
     if (!motors->armed() || !motors->get_interlock() || (ap.land_complete && ap.throttle_zero)) {
         zero_throttle_and_relax_ac();
         return;

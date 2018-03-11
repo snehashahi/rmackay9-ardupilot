@@ -717,6 +717,10 @@ bool Copter::ModeAuto::verify_command(const AP_Mission::Mission_Command& cmd)
 void Copter::ModeAuto::takeoff_run()
 {
     // if not auto armed or motor interlock not enabled set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed) {
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         // initialise wpnav targets
         wp_nav->shift_wp_origin_to_current_pos();
@@ -733,16 +737,17 @@ void Copter::ModeAuto::takeoff_run()
         target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
     }
 
-#if FRAME_CONFIG == HELI_FRAME
-    // helicopters stay in landed state until rotor speed runup has finished
-    if (motors->rotor_runup_complete()) {
+    // aircraft stays in landed state until rotor speed runup has finished
+// applies to both multi's and heli's removed else statement for initializing wpnav
+    if (motors->get_spool_mode() == AP_Motors::THROTTLE_UNLIMITED) {
         set_land_complete(false);
-    } else {
-        // initialise wpnav targets
+    }
+
+// Not sure why we are doing this for heli's
+#if FRAME_CONFIG == HELI_FRAME
+    if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED) {
         wp_nav->shift_wp_origin_to_current_pos();
     }
-#else
-    set_land_complete(false);
 #endif
 
     // set motors to full range
@@ -763,6 +768,10 @@ void Copter::ModeAuto::takeoff_run()
 void Copter::ModeAuto::wp_run()
 {
     // if not auto armed or motor interlock not enabled set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed) {
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         // To-Do: reset waypoint origin to current location because copter is probably on the ground so we don't want it lurching left or right on take-off
         //    (of course it would be better if people just used take-off)
@@ -806,6 +815,10 @@ void Copter::ModeAuto::wp_run()
 void Copter::ModeAuto::spline_run()
 {
     // if not auto armed or motor interlock not enabled set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed) {
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         // To-Do: reset waypoint origin to current location because copter is probably on the ground so we don't want it lurching left or right on take-off
         //    (of course it would be better if people just used take-off)

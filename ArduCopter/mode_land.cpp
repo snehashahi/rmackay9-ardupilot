@@ -55,6 +55,10 @@ void Copter::ModeLand::run()
 void Copter::ModeLand::gps_run()
 {
     // if not auto armed or landed or motor interlock not enabled set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed || ap.land_complete) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed || ap.land_complete) {
     if (!motors->armed() || !ap.auto_armed || ap.land_complete || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
         loiter_nav->init_target();
@@ -107,6 +111,10 @@ void Copter::ModeLand::nogps_run()
     }
 
     // if not auto armed or landed or motor interlock not enabled set throttle to zero and exit immediately
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed || ap.land_complete) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed || ap.land_complete) {
     if (!motors->armed() || !ap.auto_armed || ap.land_complete || !motors->get_interlock()) {
 #if FRAME_CONFIG == HELI_FRAME  // Helicopters always stabilize roll/pitch/yaw
         // call attitude controller

@@ -176,6 +176,10 @@ bool Copter::ModeAutoTune::start(bool ignore_checks)
     }
 
     // ensure we are flying
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed || ap.land_complete) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed || ap.land_complete) {
     if (!motors->armed() || !ap.auto_armed || ap.land_complete) {
         return false;
     }
@@ -324,6 +328,10 @@ void Copter::ModeAutoTune::run()
 
     // if not auto armed or motor interlock not enabled set throttle to zero and exit immediately
     // this should not actually be possible because of the init() checks
+// replace with 
+//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed) {
+// or should this be 
+//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed) {
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
         pos_control->relax_alt_hold_controllers(0.0f);

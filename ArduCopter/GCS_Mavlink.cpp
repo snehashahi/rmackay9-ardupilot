@@ -67,6 +67,7 @@ MAV_MODE GCS_MAVLINK_Copter::base_mode() const
 #endif
 
     // we are armed if we are not initialising
+// should this use spool mode instead of motors->armed???
     if (copter.motors != nullptr && copter.motors->armed()) {
         _base_mode |= MAV_MODE_FLAG_SAFETY_ARMED;
     }
@@ -300,6 +301,7 @@ bool GCS_MAVLINK_Copter::try_send_message(enum ap_message id)
     // the check for nullptr here doesn't just save a nullptr
     // dereference; it means that we send messages out even if we're
     // failing to detect a PX4 board type (see delay(3000) in px_drivers).
+// should this use spool mode instead of motors->armed???
     if (copter.motors != nullptr && copter.scheduler.time_available_usec() < 250 && copter.motors->armed()) {
         gcs().set_out_of_time(true);
         return false;
@@ -578,6 +580,7 @@ GCS_MAVLINK_Copter::data_stream_send(void)
         return;
     }
 
+// should this use spool mode instead of motors->armed???
     gcs().set_out_of_time(false);
 
     send_queued_parameters();
@@ -1089,6 +1092,7 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 
 #if MODE_AUTO_ENABLED == ENABLED
         case MAV_CMD_MISSION_START:
+// should this use spool mode instead of motors->armed???
             if (copter.motors->armed() && copter.set_mode(AUTO, MODE_REASON_GCS_COMMAND)) {
                 copter.set_auto_armed(true);
                 if (copter.mission.state() != AP_Mission::MISSION_RUNNING) {
@@ -1261,6 +1265,7 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
                 break;
             }
 
+// should this use spool mode instead of motors->armed???
             if (!copter.motors->armed()) {
                 // if disarmed, arm motors
                 copter.init_arm_motors(true);
@@ -1284,6 +1289,7 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
                 break;
             }
 
+// should this use spool mode instead of motors->armed???
             if (copter.motors->armed()) {
                 if (copter.ap.land_complete) {
                     // if landed, disarm motors

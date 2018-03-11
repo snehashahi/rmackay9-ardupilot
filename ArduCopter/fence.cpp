@@ -9,6 +9,7 @@
 void Copter::fence_check()
 {
     // ignore any fence activity when not armed
+//should this use spool mode instead of motors->armed??
     if(!motors->armed()) {
         return;
     }
