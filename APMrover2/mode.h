@@ -139,6 +139,9 @@ protected:
     // relies on these internal members being updated: lateral_acceleration, _yaw_error_cd, _distance_to_destination
     float calc_reduced_speed_for_turn_or_distance(float desired_speed);
 
+    // calculate vehicle stopping location using current location, velocity and maximum acceleration
+    void calc_stopping_location(Location& stopping_loc);
+
     // references to avoid code churn:
     class AP_AHRS &ahrs;
     class Parameters &g;
