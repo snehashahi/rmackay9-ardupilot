@@ -123,7 +123,7 @@ void Copter::ModeLand::nogps_run()
 #else
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         // multicopters do not stabilize roll/pitch/yaw when disarmed
-        attitude_control->set_throttle_out_unstabilized(0,true,g.throttle_filt);
+        attitude_control->set_throttle_out(0, false, g.throttle_filt);
 #endif
 
         // disarm when the landing detector says we've landed
