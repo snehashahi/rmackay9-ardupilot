@@ -327,7 +327,7 @@ bool Copter::Mode::takeoff_triggered(const float target_climb_rate) const
         // can't takeoff unless we want to go up...
         return false;
     }
-//  This now applies to multi's and Heli's
+
     if (motors->get_spool_mode() == AP_Motors::THROTTLE_UNLIMITED) {
         // hold aircraft on the ground until rotor speed runup has finished
         return false;
@@ -343,7 +343,7 @@ void Copter::Mode::zero_throttle_and_relax_ac()
     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, 0.0f, get_smoothing_gain());
     attitude_control->set_throttle_out(0.0f, false, copter.g.throttle_filt);
 #else
-    motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+    //motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
     // multicopters do not stabilize roll/pitch/yaw when disarmed
     attitude_control->set_throttle_out_unstabilized(0.0f, true, copter.g.throttle_filt);
 #endif

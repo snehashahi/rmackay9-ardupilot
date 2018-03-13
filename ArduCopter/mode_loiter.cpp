@@ -102,7 +102,7 @@ void Copter::ModeLoiter::run()
     }
 
     // Loiter State Machine Determination
-    if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN) {
+    if (!motors->armed()) {
         loiter_state = Loiter_MotorStopped;
     } else if (takeoff_state.running || takeoff_triggered(target_climb_rate)) {
         loiter_state = Loiter_Takeoff;
@@ -118,15 +118,15 @@ void Copter::ModeLoiter::run()
     case Loiter_MotorStopped:
 
         motors->set_desired_spool_state(AP_Motors::DESIRED_SHUT_DOWN);
+        attitude_control->reset_rate_controller_I_terms();
+        attitude_control->set_yaw_target_to_current_heading();
 #if FRAME_CONFIG == HELI_FRAME
         // force descent rate and call position controller
         pos_control->set_alt_target_from_climb_rate(-abs(g.land_speed), G_Dt, false);
 #else
-        wp_nav->init_loiter_target();
-        attitude_control->reset_rate_controller_I_terms();
-        attitude_control->set_yaw_target_to_current_heading();
         pos_control->relax_alt_hold_controllers(0.0f);   // forces throttle output to go to zero
 #endif
+        wp_nav->init_loiter_target();
         wp_nav->update_loiter(ekfGndSpdLimit, ekfNavVelGainScaler);
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), target_yaw_rate, get_smoothing_gain());
         pos_control->update_z_controller();
@@ -165,8 +165,11 @@ void Copter::ModeLoiter::run()
 
     case Loiter_Landed:
         // set motors to spin-when-armed if throttle below deadzone, otherwise full range (but motors will only spin at min throttle)
-//  Heli's can't have the aircraft going into spin_when_armed just because throttle is below deadzone
+#if FRAME_CONFIG == HELI_FRAME
+        if ((target_climb_rate < 0.0f) && !motors->get_interlock()) {
+#else
         if (target_climb_rate < 0.0f) {
+#endif
             motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         } else {
             motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
@@ -174,7 +177,7 @@ void Copter::ModeLoiter::run()
         wp_nav->init_loiter_target();
         attitude_control->reset_rate_controller_I_terms();
         attitude_control->set_yaw_target_to_current_heading();
-        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0, 0, 0, get_smoothing_gain());
+        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, 0.0f, get_smoothing_gain());
         pos_control->relax_alt_hold_controllers(0.0f);   // forces throttle output to go to zero
         pos_control->update_z_controller();
         break;
