@@ -97,8 +97,13 @@ void Mode::get_pilot_desired_steering_and_throttle(float &steering_out, float &t
 // set desired location
 void Mode::set_desired_location(const struct Location& destination, float next_leg_bearing_cd)
 {
-    // record targets
-    calc_stopping_location(_origin);
+    // set origin to last destination if waypoint controller active
+    if ((AP_HAL::millis() - last_steer_to_wp_ms < 100) && _reached_destination) {
+        _origin = _destination;
+    } else {
+        // otherwise use reasonable stopping point
+        calc_stopping_location(_origin);
+    }
     _destination = destination;
 
     // initialise distance
@@ -302,6 +307,9 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
 // this function updates the _yaw_error_cd value
 void Mode::calc_steering_to_waypoint(const struct Location &origin, const struct Location &destination, bool reversed)
 {
+    // record system time of call
+    last_steer_to_wp_ms = AP_HAL::millis();
+
     // Calculate the required turn of the wheels
     // negative error = left turn
     // positive error = right turn

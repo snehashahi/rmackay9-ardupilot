@@ -162,6 +162,7 @@ protected:
     float _desired_speed;       // desired speed in m/s
     float _desired_speed_final; // desired speed in m/s when we reach the destination
     float _speed_error;         // ground speed error in m/s
+    uint32_t last_steer_to_wp_ms;   // system time of last call to calc_steering_to_waypoint
 };
 
 
