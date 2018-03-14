@@ -94,6 +94,33 @@ void Mode::get_pilot_desired_steering_and_throttle(float &steering_out, float &t
     }
 }
 
+// decode pilot desired heading and throttle using a single stick input
+// heading is in degrees, throttle is in the range 0 to 100 (negative throttle is not possible)
+// returns false on zero throttle or RC failsafe
+bool Mode::get_pilot_desired_heading_and_throttle(float &heading, float &throttle)
+{
+    // return false if no RC input
+    if (rover.failsafe.bits & FAILSAFE_EVENT_THROTTLE) {
+        return false;
+    }
+
+    // get rc inputs from pilot
+    const float horiz_paddle = rover.channel_steer->norm_input();
+    const float vert_paddle = rover.channel_throttle->norm_input();
+
+    // length of inputs because throttle
+    throttle = safe_sqrt(sq(horiz_paddle) + sq(vert_paddle)) * 100.0f;
+
+    // zero throttle means we cannot determine a direction
+    if (is_zero(throttle)) {
+        return false;
+    }
+
+    // convert vector direction to target yaw
+    heading = degrees(atan2f(horiz_paddle, vert_paddle));
+    return true;
+}
+
 // set desired location
 void Mode::set_desired_location(const struct Location& destination, float next_leg_bearing_cd)
 {

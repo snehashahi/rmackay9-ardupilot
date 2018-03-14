@@ -105,6 +105,11 @@ protected:
     // steering_out is in the range -4500 ~ +4500, throttle_out is in the range -100 ~ +100
     void get_pilot_desired_steering_and_throttle(float &steering_out, float &throttle_out);
 
+    // decode pilot desired heading and throttle using a single stick input
+    // heading is in degrees, throttle is in the range 0 to 100 (negative throttle is not possible)
+    // returns false on zero throttle or RC failsafe
+    bool get_pilot_desired_heading_and_throttle(float &heading, float &throttle);
+
     // calculate steering output to drive along line from origin to destination waypoint
     void calc_steering_to_waypoint(const struct Location &origin, const struct Location &destination, bool reversed = false);
 
@@ -347,6 +352,26 @@ protected:
 
     bool _enter() override;
 };
+
+
+class ModeSimple : public Mode
+{
+public:
+
+    uint32_t mode_number() const override { return SIMPLE; }
+    const char *name4() const override { return "SIMP"; }
+
+    // methods that affect movement of the vehicle in this mode
+    void update() override;
+
+    // attributes for mavlink system status reporting
+    bool has_manual_input() const override { return true; }
+
+    // simple mode requires a velocity estimate
+    bool requires_position() const override { return false; }
+    bool requires_velocity() const override { return true; }
+};
+
 
 class ModeSmartRTL : public Mode
 {

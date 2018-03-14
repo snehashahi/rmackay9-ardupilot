@@ -115,6 +115,7 @@ public:
     friend class ModeSteering;
     friend class ModeManual;
     friend class ModeRTL;
+    friend class ModeSimple;
     friend class ModeSmartRTL;
 
     Rover(void);
@@ -375,6 +376,7 @@ private:
     ModeAuto mode_auto;
     ModeSteering mode_steering;
     ModeRTL mode_rtl;
+    ModeSimple mode_simple;
     ModeSmartRTL mode_smartrtl;
 
     // cruise throttle and speed learning
