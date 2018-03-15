@@ -726,7 +726,7 @@ bool Copter::ModeAuto::verify_land()
 
         case LandStateType_Descending:
             // rely on THROTTLE_LAND mode to correctly update landing status
-            retval = ap.land_complete;
+            retval = ap.land_complete && (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED);
             break;
 
         default:
