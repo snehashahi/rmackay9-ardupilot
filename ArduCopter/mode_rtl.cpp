@@ -365,17 +365,13 @@ bool Copter::ModeRTL::landing_gear_should_be_deployed() const
 void Copter::ModeRTL::land_run(bool disarm_on_land)
 {
     // if not auto armed or landing completed or motor interlock not enabled set throttle to zero and exit immediately
-// replace with 
-//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed || ap.land_complete) {
-// or should this be 
-//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed || ap.land_complete) {
     if (!motors->armed() || !ap.auto_armed || ap.land_complete || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
         // set target to current position
         loiter_nav->init_target();
-
-        // disarm when the landing detector says we've landed
-        if (ap.land_complete && disarm_on_land) {
+        motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        // disarm when the landing detector says we've landed and motors have spooled down
+        if (ap.land_complete && (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED) && disarm_on_land) {
             copter.init_disarm_motors();
         }
 
