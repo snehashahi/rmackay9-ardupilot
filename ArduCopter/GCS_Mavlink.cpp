@@ -722,39 +722,39 @@ GCS_MAVLINK_Copter::data_stream_send(void)
     }
 
     if (stream_trigger(STREAM_RAW_SENSORS)) {
-        send_message(MSG_RAW_IMU1);  // RAW_IMU, SCALED_IMU2, SCALED_IMU3
-        send_message(MSG_RAW_IMU2);  // SCALED_PRESSURE, SCALED_PRESSURE2, SCALED_PRESSURE3
-        send_message(MSG_RAW_IMU3);  // SENSOR_OFFSETS
+        //send_message(MSG_RAW_IMU1);  // RAW_IMU, SCALED_IMU2, SCALED_IMU3
+        //send_message(MSG_RAW_IMU2);  // SCALED_PRESSURE, SCALED_PRESSURE2, SCALED_PRESSURE3
+        //send_message(MSG_RAW_IMU3);  // SENSOR_OFFSETS
     }
 
     if (copter.gcs_out_of_time) return;
 
     if (stream_trigger(STREAM_EXTENDED_STATUS)) {
         send_message(MSG_EXTENDED_STATUS1); // SYS_STATUS, POWER_STATUS
-        send_message(MSG_EXTENDED_STATUS2); // MEMINFO
-        send_message(MSG_CURRENT_WAYPOINT);
+        //send_message(MSG_EXTENDED_STATUS2); // MEMINFO
+        //send_message(MSG_CURRENT_WAYPOINT);
         send_message(MSG_GPS_RAW);
         send_message(MSG_NAV_CONTROLLER_OUTPUT);
-        send_message(MSG_FENCE_STATUS);
+        //send_message(MSG_FENCE_STATUS);
     }
 
     if (copter.gcs_out_of_time) return;
 
     if (stream_trigger(STREAM_POSITION)) {
         send_message(MSG_LOCATION);
-        send_message(MSG_LOCAL_POSITION);
+        //send_message(MSG_LOCAL_POSITION);
     }
 
     if (copter.gcs_out_of_time) return;
 
     if (stream_trigger(STREAM_RAW_CONTROLLER)) {
-        send_message(MSG_SERVO_OUT);
+        //send_message(MSG_SERVO_OUT);
     }
 
     if (copter.gcs_out_of_time) return;
 
     if (stream_trigger(STREAM_RC_CHANNELS)) {
-        send_message(MSG_SERVO_OUTPUT_RAW);
+        //send_message(MSG_SERVO_OUTPUT_RAW);
         send_message(MSG_RADIO_IN);
     }
 
@@ -762,8 +762,8 @@ GCS_MAVLINK_Copter::data_stream_send(void)
 
     if (stream_trigger(STREAM_EXTRA1)) {
         send_message(MSG_ATTITUDE);
-        send_message(MSG_SIMSTATE); // SIMSTATE, AHRS2
-        send_message(MSG_PID_TUNING);
+        //send_message(MSG_SIMSTATE); // SIMSTATE, AHRS2
+        //send_message(MSG_PID_TUNING);
     }
 
     if (copter.gcs_out_of_time) return;
@@ -775,29 +775,29 @@ GCS_MAVLINK_Copter::data_stream_send(void)
     if (copter.gcs_out_of_time) return;
 
     if (stream_trigger(STREAM_EXTRA3)) {
-        send_message(MSG_AHRS);
-        send_message(MSG_HWSTATUS);
-        send_message(MSG_SYSTEM_TIME);
+        //send_message(MSG_AHRS);
+        //send_message(MSG_HWSTATUS);
+        //send_message(MSG_SYSTEM_TIME);
         send_message(MSG_RANGEFINDER);
 #if AP_TERRAIN_AVAILABLE && AC_TERRAIN
         send_message(MSG_TERRAIN);
 #endif
-        send_message(MSG_BATTERY2);
-        send_message(MSG_BATTERY_STATUS);
-        send_message(MSG_MOUNT_STATUS);
-        send_message(MSG_OPTICAL_FLOW);
-        send_message(MSG_GIMBAL_REPORT);
+        //send_message(MSG_BATTERY2);
+        //send_message(MSG_BATTERY_STATUS);
+        //send_message(MSG_MOUNT_STATUS);
+        //send_message(MSG_OPTICAL_FLOW);
+        //send_message(MSG_GIMBAL_REPORT);
         send_message(MSG_MAG_CAL_REPORT);
         send_message(MSG_MAG_CAL_PROGRESS);
         send_message(MSG_EKF_STATUS_REPORT);
-        send_message(MSG_VIBRATION);
-        send_message(MSG_RPM);
+        //send_message(MSG_VIBRATION);
+        //send_message(MSG_RPM);
     }
 
     if (copter.gcs_out_of_time) return;
 
     if (stream_trigger(STREAM_ADSB)) {
-        send_message(MSG_ADSB_VEHICLE);
+        //send_message(MSG_ADSB_VEHICLE);
     }
 }
 
