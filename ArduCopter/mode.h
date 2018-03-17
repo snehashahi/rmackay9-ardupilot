@@ -159,6 +159,8 @@ protected:
     uint16_t get_pilot_speed_dn(void);
 
     // end pass-through functions
+
+    void zero_throttle_and_hold_attitude();
 };
 
 

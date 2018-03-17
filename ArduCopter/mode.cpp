@@ -387,6 +387,12 @@ void Copter::Mode::zero_throttle_and_relax_ac()
 #endif
 }
 
+void Copter::Mode::zero_throttle_and_hold_attitude()
+{
+    // run attitude controller
+    attitude_control->input_rate_bf_roll_pitch_yaw(0.0f, 0.0f, 0.0f);
+    attitude_control->set_throttle_out(0.0f, false, copter.g.throttle_filt);
+}
 /*
   get a height above ground estimate for landing
  */

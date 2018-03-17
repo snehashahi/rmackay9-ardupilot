@@ -63,6 +63,7 @@ void Copter::ModeLand::gps_run()
         zero_throttle_and_relax_ac();
         loiter_nav->init_target();
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        zero_throttle_and_hold_attitude();
         // disarm when the landing detector says we've landed and motors have spooled down
         if (ap.land_complete && (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED)) {
             copter.init_disarm_motors();
@@ -121,7 +122,7 @@ void Copter::ModeLand::nogps_run()
         attitude_control->set_throttle_out(0, false, g.throttle_filt);
 #endif
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
-
+        zero_throttle_and_hold_attitude();
         // disarm when the landing detector says we've landed and motors have spooled down
         if (ap.land_complete && (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED)) {
             copter.init_disarm_motors();
