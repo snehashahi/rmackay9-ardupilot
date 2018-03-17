@@ -5,14 +5,11 @@
 bool Copter::ModeThrow::init(bool ignore_checks)
 {
 #if FRAME_CONFIG == HELI_FRAME
-
     // do not allow helis to use throw to start
     return false;
 #endif
 
     // do not enter the mode when already armed or when flying
-// replace with 
-//  if (motors->get_spool_mode() != AP_Motors::SHUT_DOWN) {
     if (motors->armed()) {
         return false;
     }
