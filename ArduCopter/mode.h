@@ -350,8 +350,6 @@ protected:
 
 private:
 
-    bool start(bool ignore_checks);
-
     void autotune_attitude_control();
     void backup_gains_and_initialise();
     void load_orig_gains();

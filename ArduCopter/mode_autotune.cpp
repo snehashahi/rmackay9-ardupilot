@@ -95,7 +95,21 @@
 // autotune_init - should be called when autotune mode is selected
 bool Copter::ModeAutoTune::init(bool ignore_checks)
 {
-    bool success = true;
+    // only allow AutoTune from Stabilize, AltHold, PosHold or Loiter modes
+    if (copter.control_mode != STABILIZE && copter.control_mode != ALT_HOLD &&
+        copter.control_mode != LOITER && copter.control_mode != POSHOLD) {
+        return false;
+    }
+
+    // ensure throttle is above zero
+    if (ap.throttle_zero) {
+        return false;
+    }
+
+    // ensure we are flying
+    if (!motors->armed() || !ap.auto_armed || ap.land_complete) {
+        return false;
+    }
 
     switch (mode) {
         case FAILED:
@@ -105,28 +119,21 @@ bool Copter::ModeAutoTune::init(bool ignore_checks)
             FALLTHROUGH;
 
         case UNINITIALISED:
-            // autotune has never been run
-            success = start(false);
-            if (success) {
-                // so store current gains as original gains
-                backup_gains_and_initialise();
-                // advance mode to tuning
-                mode = TUNING;
-                // send message to ground station that we've started tuning
-                update_gcs(AUTOTUNE_MESSAGE_STARTED);
-            }
+            // autotune has never been run so store current gains as original gains
+            backup_gains_and_initialise();
+            // advance mode to tuning
+            mode = TUNING;
+            // send message to ground station that we've started tuning
+            update_gcs(AUTOTUNE_MESSAGE_STARTED);
             break;
 
         case TUNING:
             // we are restarting tuning after the user must have switched ch7/ch8 off so we restart tuning where we left off
-            success = start(false);
-            if (success) {
-                // reset gains to tuning-start gains (i.e. low I term)
-                load_intra_test_gains();
-                // write dataflash log even and send message to ground station
-                Log_Write_Event(DATA_AUTOTUNE_RESTART);
-                update_gcs(AUTOTUNE_MESSAGE_STARTED);
-            }
+            // reset gains to tuning-start gains (i.e. low I term)
+            load_intra_test_gains();
+            // write dataflash log even and send message to ground station
+            Log_Write_Event(DATA_AUTOTUNE_RESTART);
+            update_gcs(AUTOTUNE_MESSAGE_STARTED);
             break;
 
         case SUCCESS:
@@ -141,7 +148,13 @@ bool Copter::ModeAutoTune::init(bool ignore_checks)
     use_poshold = (copter.control_mode == LOITER || copter.control_mode == POSHOLD);
     have_position = false;
 
-    return success;
+    // initialise position and desired velocity
+    if (!pos_control->is_active_z()) {
+        pos_control->set_alt_target_to_current_alt();
+        pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
+    }
+
+    return true;
 }
 
 // stop - should be called when the ch7/ch8 switch is switched OFF
@@ -159,42 +172,6 @@ void Copter::ModeAutoTune::stop()
 
     // Note: we leave the mode as it was so that we know how the autotune ended
     // we expect the caller will change the flight mode back to the flight mode indicated by the flight mode switch
-}
-
-// start - Initialize autotune flight mode
-bool Copter::ModeAutoTune::start(bool ignore_checks)
-{
-    // only allow flip from Stabilize, AltHold,  PosHold or Loiter modes
-    if (copter.control_mode != STABILIZE && copter.control_mode != ALT_HOLD &&
-        copter.control_mode != LOITER && copter.control_mode != POSHOLD) {
-        return false;
-    }
-
-    // ensure throttle is above zero
-    if (ap.throttle_zero) {
-        return false;
-    }
-
-    // ensure we are flying
-// replace with 
-//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed || ap.land_complete) {
-// or should this be 
-//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed || ap.land_complete) {
-    if (!motors->armed() || !ap.auto_armed || ap.land_complete) {
-        return false;
-    }
-
-    // initialize vertical speeds and leash lengths
-    pos_control->set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-    pos_control->set_accel_z(g.pilot_accel_z);
-
-    // initialise position and desired velocity
-    if (!pos_control->is_active_z()) {
-        pos_control->set_alt_target_to_current_alt();
-        pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
-    }
-
-    return true;
 }
 
 const char *Copter::ModeAutoTune::level_issue_string() const
@@ -318,10 +295,6 @@ void Copter::ModeAutoTune::do_gcs_announcements()
 // should be called at 100hz or more
 void Copter::ModeAutoTune::run()
 {
-    float target_roll, target_pitch;
-    float target_yaw_rate;
-    int16_t target_climb_rate;
-
     // tell the user what's going on
     do_gcs_announcements();
 
@@ -331,10 +304,6 @@ void Copter::ModeAutoTune::run()
 
     // if not auto armed or motor interlock not enabled set throttle to zero and exit immediately
     // this should not actually be possible because of the init() checks
-// replace with 
-//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed) {
-// or should this be 
-//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed) {
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
         pos_control->relax_alt_hold_controllers(0.0f);
@@ -345,19 +314,20 @@ void Copter::ModeAutoTune::run()
     update_simple_mode();
 
     // get pilot desired lean angles
+    float target_roll, target_pitch;
     get_pilot_desired_lean_angles(channel_roll->get_control_in(), channel_pitch->get_control_in(), target_roll, target_pitch, copter.aparm.angle_max);
 
     // get pilot's desired yaw rate
-    target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
 
     // get pilot desired climb rate
-    target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
+    float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
 
     // get avoidance adjusted climb rate
     target_climb_rate = get_avoidance_adjusted_climbrate(target_climb_rate);
 
     // check for pilot requested take-off - this should not actually be possible because of init() checks
-    if (ap.land_complete && target_climb_rate > 0) {
+    if (takeoff_triggered(target_climb_rate)) {
         // indicate we are taking off
         set_land_complete(false);
         // clear i term when we're taking off
@@ -367,7 +337,11 @@ void Copter::ModeAutoTune::run()
     // reset target lean angles and heading while landed
     if (ap.land_complete) {
         // set motors to spin-when-armed if throttle below deadzone, otherwise full range (but motors will only spin at min throttle)
+#if FRAME_CONFIG == HELI_FRAME
+        if ((target_climb_rate < 0.0f) && !motors->get_interlock()) {
+#else
         if (target_climb_rate < 0.0f) {
+#endif
             motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         } else {
             motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
@@ -376,8 +350,7 @@ void Copter::ModeAutoTune::run()
         attitude_control->set_yaw_target_to_current_heading();
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
         pos_control->relax_alt_hold_controllers(0.0f);
-        pos_control->update_z_controller();
-    }else{
+    } else {
         // check if pilot is overriding the controls
         bool zero_rp_input = is_zero(target_roll) && is_zero(target_pitch);
         if (!zero_rp_input || !is_zero(target_yaw_rate) || target_climb_rate != 0) {
@@ -393,7 +366,7 @@ void Copter::ModeAutoTune::run()
                 // only reset position on roll or pitch input
                 have_position = false;
             }
-        }else if (pilot_override) {
+        } else if (pilot_override) {
             // check if we should resume tuning after pilot's override
             if (millis() - override_time > AUTOTUNE_PILOT_OVERRIDE_TIMEOUT_MS) {
                 pilot_override = false;             // turn off pilot override
@@ -415,15 +388,17 @@ void Copter::ModeAutoTune::run()
         // if pilot override call attitude controller
         if (pilot_override || mode != TUNING) {
             attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
-        }else{
+        } else {
             // somehow get attitude requests from autotuning
             autotune_attitude_control();
         }
 
         // call position controller
         pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
-        pos_control->update_z_controller();
     }
+
+    // call z-axis position controller
+    pos_control->update_z_controller();
 }
 
 bool Copter::ModeAutoTune::check_level(const LEVEL_ISSUE issue, const float current, const float maximum)
