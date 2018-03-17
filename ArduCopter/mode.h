@@ -99,6 +99,8 @@ protected:
     // end pass-through functions
 
     void zero_throttle_and_relax_ac();
+
+    void zero_throttle_and_hold_attitude();
 };
 
 

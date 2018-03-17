@@ -365,6 +365,7 @@ void Copter::ModeRTL::land_run(bool disarm_on_land)
         // set target to current position
         wp_nav->init_loiter_target();
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        zero_throttle_and_hold_attitude();
         // disarm when the landing detector says we've landed and motors have spooled down
         if (ap.land_complete && (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED) && disarm_on_land) {
             copter.init_disarm_motors();
