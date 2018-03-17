@@ -28,7 +28,7 @@ bool Copter::ModeBrake::init(bool ignore_checks)
         _timeout_ms = 0;
 
         return true;
-    }else{
+    } else {
         return false;
     }
 }
@@ -38,10 +38,6 @@ bool Copter::ModeBrake::init(bool ignore_checks)
 void Copter::ModeBrake::run()
 {
     // if not auto armed set throttle to zero and exit immediately
-// replace with 
-//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed) {
-// or should this be 
-//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed) {
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         wp_nav->init_brake_target(BRAKE_MODE_DECEL_RATE);
         zero_throttle_and_relax_ac();
@@ -54,13 +50,17 @@ void Copter::ModeBrake::run()
         wp_nav->loiter_soften_for_landing();
     }
 
-    // if landed immediately disarm
+    // if landed, spool down motors and disarm
     if (ap.land_complete) {
-        copter.init_disarm_motors();
+        motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        zero_throttle_and_hold_attitude();
+        if (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED) {
+            copter.init_disarm_motors();
+        }
+    } else {
+        // set motors to full range
+        motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
     }
-
-    // set motors to full range
-    motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
 
     // run brake controller
     wp_nav->update_brake(ekfGndSpdLimit, ekfNavVelGainScaler);
