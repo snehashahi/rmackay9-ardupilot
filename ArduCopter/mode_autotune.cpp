@@ -350,7 +350,11 @@ void Copter::ModeAutoTune::run()
         attitude_control->set_yaw_target_to_current_heading();
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
         pos_control->relax_alt_hold_controllers(0.0f);
+
     } else {
+        // set motors to full range
+        motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
+
         // check if pilot is overriding the controls
         bool zero_rp_input = is_zero(target_roll) && is_zero(target_pitch);
         if (!zero_rp_input || !is_zero(target_yaw_rate) || target_climb_rate != 0) {
@@ -381,9 +385,6 @@ void Copter::ModeAutoTune::run()
             // pilot input on throttle and yaw will still use position hold if enabled
             get_poshold_attitude(target_roll, target_pitch, desired_yaw);
         }
-
-        // set motors to full range
-        motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
 
         // if pilot override call attitude controller
         if (pilot_override || mode != TUNING) {
