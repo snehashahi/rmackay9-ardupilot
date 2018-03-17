@@ -77,18 +77,9 @@ Copter::ModeFlowHold::ModeFlowHold(void) : Mode()
 // flowhold_init - initialise flowhold controller
 bool Copter::ModeFlowHold::init(bool ignore_checks)
 {
-    // do not allow aircraft to enter Flow Hold if the Rotor Runup is not complete
-    if (!ignore_checks && motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED){
-        return false;
-    }
-
     if (!copter.optflow.enabled() || !copter.optflow.healthy()) {
         return false;
     }
-
-    // initialize vertical speeds and leash lengths
-    copter.pos_control->set_speed_z(-copter.g2.pilot_speed_dn, copter.g.pilot_speed_up);
-    copter.pos_control->set_accel_z(copter.g.pilot_accel_z);
 
     // initialise position and desired velocity
     if (!copter.pos_control->is_active_z()) {
@@ -107,7 +98,7 @@ bool Copter::ModeFlowHold::init(bool ignore_checks)
     // start with INS height
     last_ins_height = copter.inertial_nav.get_altitude() * 0.01;
     height_offset = 0;
-    
+
     return true;
 }
 
@@ -220,13 +211,13 @@ void Copter::ModeFlowHold::run()
     float takeoff_climb_rate = 0.0f;
 
     update_height_estimate();
-    
+
     // initialize vertical speeds and acceleration
     copter.pos_control->set_speed_z(-copter.g2.pilot_speed_dn, copter.g.pilot_speed_up);
     copter.pos_control->set_accel_z(copter.g.pilot_accel_z);
 
     // apply SIMPLE mode transform to pilot inputs
-    copter.update_simple_mode();
+    update_simple_mode();
 
     // check for filter change
     if (!is_equal(flow_filter.get_cutoff_freq(), flow_filter_hz.get())) {
@@ -239,12 +230,13 @@ void Copter::ModeFlowHold::run()
 
     // get pilot's desired yaw rate
     float target_yaw_rate = copter.get_pilot_desired_yaw_rate(copter.channel_yaw->get_control_in());
-    
-    if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN) {
+
+    // state machine determination
+    if (!motors->armed()) {
         flowhold_state = FlowHold_MotorStopped;
-    } else if (copter.takeoff_state.running || takeoff_triggered(target_climb_rate)) {
+    } else if (takeoff_state.running || takeoff_triggered(target_climb_rate)) {
         flowhold_state = FlowHold_Takeoff;
-    } else if (!copter.ap.auto_armed || copter.ap.land_complete) {
+    } else if (!ap.auto_armed || ap.land_complete) {
         flowhold_state = FlowHold_Landed;
     } else {
         flowhold_state = FlowHold_Flying;
@@ -257,44 +249,21 @@ void Copter::ModeFlowHold::run()
         quality_filtered = 0;
     }
     
-    Vector2f bf_angles;
-
-    // calculate alt-hold angles
-    int16_t roll_in = copter.channel_roll->get_control_in();
-    int16_t pitch_in = copter.channel_pitch->get_control_in();
-    float angle_max = copter.attitude_control->get_althold_lean_angle_max();
-    get_pilot_desired_lean_angles(bf_angles.x, bf_angles.y,angle_max, attitude_control->get_althold_lean_angle_max());
-    
-    if (quality_filtered >= flow_min_quality &&
-        AP_HAL::millis() - copter.arm_time_ms > 3000) {
-        // don't use for first 3s when we are just taking off
-        Vector2f flow_angles;
-
-        flowhold_flow_to_angle(flow_angles, (roll_in != 0) || (pitch_in != 0));
-        flow_angles.x = constrain_float(flow_angles.x, -angle_max/2, angle_max/2);
-        flow_angles.y = constrain_float(flow_angles.y, -angle_max/2, angle_max/2);
-        bf_angles += flow_angles;
-    }
-    bf_angles.x = constrain_float(bf_angles.x, -angle_max, angle_max);
-    bf_angles.y = constrain_float(bf_angles.y, -angle_max, angle_max);
-            
     // Flow Hold State Machine
     switch (flowhold_state) {
 
     case FlowHold_MotorStopped:
 
         copter.motors->set_desired_spool_state(AP_Motors::DESIRED_SHUT_DOWN);
-        copter.attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(bf_angles.x, bf_angles.y, target_yaw_rate);
+        copter.attitude_control->reset_rate_controller_I_terms();
+        copter.attitude_control->set_yaw_target_to_current_heading();
 #if FRAME_CONFIG == HELI_FRAME    
         // force descent rate and call position controller
         copter.pos_control->set_alt_target_from_climb_rate(-abs(copter.g.land_speed), copter.G_Dt, false);
 #else
-        copter.attitude_control->reset_rate_controller_I_terms();
-        copter.attitude_control->set_yaw_target_to_current_heading();
         copter.pos_control->relax_alt_hold_controllers(0.0f);   // forces throttle output to go to zero
 #endif
         flow_pi_xy.reset_I();
-        copter.pos_control->update_z_controller();
         break;
 
     case FlowHold_Takeoff:
@@ -303,7 +272,7 @@ void Copter::ModeFlowHold::run()
 
         // initiate take-off
         if (!copter.takeoff_state.running) {
-            copter.takeoff_timer_start(constrain_float(copter.g.pilot_takeoff_alt,0.0f,1000.0f));
+            copter.takeoff_timer_start(constrain_float(g.pilot_takeoff_alt,0.0f,1000.0f));
             // indicate we are taking off
             copter.set_land_complete(false);
             // clear i terms
@@ -316,19 +285,18 @@ void Copter::ModeFlowHold::run()
         // get avoidance adjusted climb rate
         target_climb_rate = copter.get_avoidance_adjusted_climbrate(target_climb_rate);
 
-        // call attitude controller
-        copter.attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(bf_angles.x, bf_angles.y, target_yaw_rate);
-
         // call position controller
         copter.pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, copter.G_Dt, false);
         copter.pos_control->add_takeoff_climb_rate(takeoff_climb_rate, copter.G_Dt);
-        copter.pos_control->update_z_controller();
         break;
 
     case FlowHold_Landed:
         // set motors to spin-when-armed if throttle below deadzone, otherwise full range (but motors will only spin at min throttle)
-//  Heli's can't have the aircraft going into spin_when_armed just because throttle is below deadzone
+#if FRAME_CONFIG == HELI_FRAME
+        if ((target_climb_rate < 0.0f) && !motors->get_interlock()) {
+#else
         if (target_climb_rate < 0.0f) {
+#endif
             copter.motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         } else {
             copter.motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
@@ -336,9 +304,7 @@ void Copter::ModeFlowHold::run()
 
         copter.attitude_control->reset_rate_controller_I_terms();
         copter.attitude_control->set_yaw_target_to_current_heading();
-        copter.attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(bf_angles.x, bf_angles.y, target_yaw_rate);
         copter.pos_control->relax_alt_hold_controllers(0.0f);   // forces throttle output to go to zero
-        copter.pos_control->update_z_controller();
         break;
 
     case FlowHold_Flying:
@@ -348,9 +314,6 @@ void Copter::ModeFlowHold::run()
         // apply avoidance
         copter.avoid.adjust_roll_pitch(bf_angles.x, bf_angles.y, copter.aparm.angle_max);
 #endif
-
-        // call attitude controller
-        copter.attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(bf_angles.x, bf_angles.y, target_yaw_rate);
 
         // adjust climb rate using rangefinder
         if (copter.rangefinder_alt_ok()) {
@@ -363,9 +326,37 @@ void Copter::ModeFlowHold::run()
 
         // call position controller
         copter.pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, copter.G_Dt, false);
-        copter.pos_control->update_z_controller();
         break;
     }
+
+    // flowhold attitude target calculations
+    Vector2f bf_angles;
+
+    // calculate alt-hold angles
+    int16_t roll_in = copter.channel_roll->get_control_in();
+    int16_t pitch_in = copter.channel_pitch->get_control_in();
+    float angle_max = copter.attitude_control->get_althold_lean_angle_max();
+    copter.get_pilot_desired_lean_angles(bf_angles.x, bf_angles.y,
+                                         angle_max);
+
+    if (quality_filtered >= flow_min_quality &&
+        AP_HAL::millis() - copter.arm_time_ms > 3000) {
+        // don't use for first 3s when we are just taking off
+        Vector2f flow_angles;
+
+        flowhold_flow_to_angle(flow_angles, (roll_in != 0) || (pitch_in != 0));
+        flow_angles.x = constrain_float(flow_angles.x, -angle_max/2, angle_max/2);
+        flow_angles.y = constrain_float(flow_angles.y, -angle_max/2, angle_max/2);
+        bf_angles += flow_angles;
+    }
+    bf_angles.x = constrain_float(bf_angles.x, -angle_max, angle_max);
+    bf_angles.y = constrain_float(bf_angles.y, -angle_max, angle_max);
+
+    // call attitude controller
+    copter.attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(bf_angles.x, bf_angles.y, target_yaw_rate);
+
+    // call z-axis position controller
+    pos_control->update_z_controller();
 }
 
 
