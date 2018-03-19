@@ -941,8 +941,17 @@ void Copter::ModeAuto::payload_place_run()
 {
     if (!payload_place_run_should_run()) {
         zero_throttle_and_relax_ac();
-        // set target to current position
         loiter_nav->init_target();
+        pos_control->relax_alt_hold_controllers(0.0f);
+        motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        return;
+    }
+
+    // if landed, spool down motors (disarm is handled in verify_land)
+    if (ap.land_complete) {
+        zero_throttle_and_hold_attitude();
+        wp_nav->init_loiter_target();
+        pos_control->relax_alt_hold_controllers(0.0f);
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         return;
     }
