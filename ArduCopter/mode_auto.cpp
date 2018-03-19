@@ -381,10 +381,19 @@ void Copter::ModeAuto::land_start(const Vector3f& destination)
 void Copter::ModeAuto::land_run()
 {
     // if not auto armed or landed or motor interlock not enabled set throttle to zero and exit immediately
-    if (!motors->armed() || !ap.auto_armed || ap.land_complete || !motors->get_interlock()) {
+    if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
-        // set target to current position
         wp_nav->init_loiter_target();
+        pos_control->relax_alt_hold_controllers(0.0f);
+        motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        return;
+    }
+
+    // if landed, spool down motors (disarm is handled in verify_land)
+    if (ap.land_complete) {
+        zero_throttle_and_hold_attitude();
+        wp_nav->init_loiter_target();
+        pos_control->relax_alt_hold_controllers(0.0f);
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         return;
     }
