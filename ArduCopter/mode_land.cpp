@@ -55,22 +55,25 @@ void Copter::ModeLand::run()
 void Copter::ModeLand::gps_run()
 {
     // if not auto armed or landed or motor interlock not enabled set throttle to zero and exit immediately
-// replace with 
-//  if (motors->get_spool_mode() == AP_Motors::SHUT_DOWN || !ap.auto_armed || ap.land_complete) {
-// or should this be 
-//  if (motors->get_spool_mode() != AP_Motors::THROTTLE_UNLIMITED || !ap.auto_armed || ap.land_complete) {
-    if (!motors->armed() || !ap.auto_armed || ap.land_complete || !motors->get_interlock()) {
+    if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
         wp_nav->init_loiter_target();
+        pos_control->relax_alt_hold_controllers(0.0f);
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        return;
+    }
+
+    // if landed, spool down motors and disarm
+    if (ap.land_complete) {
         zero_throttle_and_hold_attitude();
-        // disarm when the landing detector says we've landed and motors have spooled down
-        if (ap.land_complete && (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED)) {
+        wp_nav->init_loiter_target();
+        motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        if (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED) {
             copter.init_disarm_motors();
         }
         return;
     }
-    
+
     // set motors to full range
     motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
     
@@ -113,14 +116,9 @@ void Copter::ModeLand::nogps_run()
 
     // if not auto armed or landed or motor interlock not enabled set throttle to zero and exit immediately
     if (!motors->armed() || !ap.auto_armed || ap.land_complete || !motors->get_interlock()) {
-#if FRAME_CONFIG == HELI_FRAME  // Helicopters always stabilize roll/pitch/yaw
         // call attitude controller
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
         attitude_control->set_throttle_out(0,false,g.throttle_filt);
-#else
-        // multicopters do not stabilize roll/pitch/yaw when disarmed
-        attitude_control->set_throttle_out(0, false, g.throttle_filt);
-#endif
         motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
         zero_throttle_and_hold_attitude();
         // disarm when the landing detector says we've landed and motors have spooled down
