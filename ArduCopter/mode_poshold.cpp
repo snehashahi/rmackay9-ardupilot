@@ -171,15 +171,6 @@ void Copter::ModePosHold::run()
         poshold_state = PosHold_Flying;
     }
 
-    // if not auto armed or motor interlock not enabled set throttle to zero and exit immediately
-    /*if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
-        loiter_nav->init_target();
-        zero_throttle_and_relax_ac();
-        pos_control->relax_alt_hold_controllers(0.0f);
-        return;
-    }
-    */
-
     // state machine
     switch (poshold_state) {
 
