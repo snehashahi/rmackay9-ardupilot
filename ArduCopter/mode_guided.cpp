@@ -631,24 +631,21 @@ void Copter::ModeGuided::angle_control_run()
     }
 
     // if not auto armed or motors not enabled set throttle to zero and exit immediately
-    if (!motors->armed() || !ap.auto_armed || !motors->get_interlock() || (ap.land_complete && guided_angle_state.climb_rate_cms <= 0.0f)) {
-#if FRAME_CONFIG == HELI_FRAME
-        attitude_control->set_yaw_target_to_current_heading();
-#endif
-        zero_throttle_and_relax_ac();
-        pos_control->relax_alt_hold_controllers(0.0f);
-        return;
-    }
-//------------------
-    // if not auto armed or motors not enabled set throttle to zero and exit immediately
     if (!motors->armed() || !ap.auto_armed || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
         return;
     }
 
-    if (ap.land_complete &&
-        ((motors->get_spool_mode() == AP_Motors::SHUT_DOWN) ||
-        (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED))) {
+    // landed with negative climb rate, spool down motors
+    if (ap.land_complete && (guided_angle_state.climb_rate_cms <= 0.0f)) {
+        zero_throttle_and_relax_ac();
+        pos_control->relax_alt_hold_controllers(0.0f);
+        motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+        return;
+    }
+
+    // landed with positive desired climb rate, takeoff
+    if (ap.land_complete && (guided_angle_state.climb_rate_cms > 0.0f)) {
         zero_throttle_and_relax_ac();
         motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
         if (motors->get_spool_mode() == AP_Motors::THROTTLE_UNLIMITED) {
@@ -658,17 +655,6 @@ void Copter::ModeGuided::angle_control_run()
         return;
     }
 
-    // if landed, spool down motors and disarm
-    if (ap.land_complete) {
-        zero_throttle_and_hold_attitude();
-        pos_control->relax_alt_hold_controllers(0.0f);
-        motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
-        if (motors->get_spool_mode() == AP_Motors::SPIN_WHEN_ARMED) {
-            copter.init_disarm_motors();
-        }
-        return;
-    }
-//-------------------
     // set motors to full range
     motors->set_desired_spool_state(AP_Motors::DESIRED_THROTTLE_UNLIMITED);
 
