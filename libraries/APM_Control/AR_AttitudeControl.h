@@ -120,6 +120,7 @@ private:
     uint32_t _steer_turn_last_ms;   // system time of last call to steering rate controller
     float    _desired_lat_accel;    // desired lateral acceleration (in m/s/s) from latest call to get_steering_out_lat_accel (for reporting purposes)
     float    _desired_turn_rate;    // desired turn rate (in radians/sec) either from external caller or from lateral acceleration controller
+    float    _desired_heading_rad;  // desired heading in radians
 
     // throttle control
     uint32_t _speed_last_ms;        // system time of last call to get_throttle_out_speed

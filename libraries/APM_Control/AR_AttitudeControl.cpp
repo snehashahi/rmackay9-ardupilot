@@ -238,6 +238,8 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
         _steer_rate_pid.reset_filter();
         // reset desired turn rate to actual turn rate for accel limiting
         _desired_turn_rate = _ahrs.get_yaw_rate_earth();
+        // reset desired heading to current heading in radians
+        _desired_heading_rad = _ahrs.yaw;
     } else {
         _steer_rate_pid.set_dt(dt);
     }
@@ -255,6 +257,9 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
         _desired_turn_rate = constrain_float(_desired_turn_rate, -_steer_rate_max, _steer_rate_max);
     }
 
+    // integrate desired turn rate into desired heading
+    _desired_heading_rad = wrap_2PI(_desired_heading_rad + _desired_turn_rate);
+
     // only use positive speed. Use reverse flag instead of negative speeds.
     speed = fabsf(speed);
 
@@ -271,6 +276,10 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
         scaler = 1.0f / fabsf(speed);
     }
 
+    // convert heading error into desired yaw rate (in radians)
+    const float yaw_error = wrap_PI(_desired_heading_rad - _ahrs.yaw);
+    const float desired_rate_from_heading = _steer_angle_p.get_p(yaw_error) * (reversed ? -1.0f : 1.0f);
+
     // Calculate the steering rate error (rad/sec) and apply gain scaler
     // We do this in earth frame to allow for rover leaning over in hard corners
     float yaw_rate_earth = _ahrs.get_yaw_rate_earth();
@@ -278,7 +287,7 @@ float AR_AttitudeControl::get_steering_out_rate(float desired_rate, bool skid_st
     if (reversed) {
         yaw_rate_earth *= -1.0f;
     }
-    const float rate_error = (desired_rate - yaw_rate_earth) * scaler;
+    const float rate_error = (desired_rate_from_heading + (desired_rate - yaw_rate_earth)) * scaler;
 
     // record desired rate for logging purposes only
     _steer_rate_pid.set_desired_rate(desired_rate);
