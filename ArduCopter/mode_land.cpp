@@ -14,8 +14,8 @@ bool Copter::ModeLand::init(bool ignore_checks)
     if (land_with_gps) {
         // set target to stopping point
         Vector3f stopping_point;
-        wp_nav->get_loiter_stopping_point_xy(stopping_point);
-        wp_nav->init_loiter_target(stopping_point);
+        loiter_nav->get_stopping_point_xy(stopping_point);
+        loiter_nav->init_target(stopping_point);
     }
 
     // initialize vertical speeds and leash lengths
@@ -57,7 +57,7 @@ void Copter::ModeLand::gps_run()
     // if not auto armed or landed or motor interlock not enabled set throttle to zero and exit immediately
     if (!motors->armed() || !ap.auto_armed || ap.land_complete || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
-        wp_nav->init_loiter_target();
+        loiter_nav->init_target();
 
         // disarm when the landing detector says we've landed
         if (ap.land_complete) {
@@ -208,7 +208,7 @@ void Copter::land_run_horizontal_control()
     
     // relax loiter target if we might be landed
     if (ap.land_complete_maybe) {
-        wp_nav->loiter_soften_for_landing();
+        loiter_nav->soften_for_landing();
     }
     
     // process pilot inputs
@@ -226,7 +226,7 @@ void Copter::land_run_horizontal_control()
             update_simple_mode();
 
             // convert pilot input to lean angles
-            flightmode->get_pilot_desired_lean_angles(target_roll, target_pitch, wp_nav->get_loiter_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
+            flightmode->get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
 
             // record if pilot has overriden roll or pitch
             if (!is_zero(target_roll) || !is_zero(target_pitch)) {
@@ -257,13 +257,13 @@ void Copter::land_run_horizontal_control()
 #endif
 
     // process roll, pitch inputs
-    wp_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
+    loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
 
     // run loiter controller
-    wp_nav->update_loiter(ekfGndSpdLimit, ekfNavVelGainScaler);
+    loiter_nav->update(ekfGndSpdLimit, ekfNavVelGainScaler);
 
-    int32_t nav_roll  = wp_nav->get_roll();
-    int32_t nav_pitch = wp_nav->get_pitch();
+    int32_t nav_roll  = loiter_nav->get_roll();
+    int32_t nav_pitch = loiter_nav->get_pitch();
 
     if (g2.wp_navalt_min > 0) {
         // user has requested an altitude below which navigation

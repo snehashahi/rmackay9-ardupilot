@@ -12,6 +12,7 @@ Copter::Mode::Mode(void) :
     g(copter.g),
     g2(copter.g2),
     wp_nav(copter.wp_nav),
+    loiter_nav(copter.loiter_nav),
     pos_control(copter.pos_control),
     inertial_nav(copter.inertial_nav),
     ahrs(copter.ahrs),
