@@ -742,7 +742,7 @@ GCS_MAVLINK_Copter::data_stream_send(void)
 
     if (stream_trigger(STREAM_POSITION)) {
         send_message(MSG_LOCATION);
-        //send_message(MSG_LOCAL_POSITION);
+        send_message(MSG_LOCAL_POSITION);
     }
 
     if (copter.gcs_out_of_time) return;
