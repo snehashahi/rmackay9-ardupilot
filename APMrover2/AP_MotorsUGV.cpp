@@ -79,6 +79,14 @@ const AP_Param::GroupInfo AP_MotorsUGV::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("THST_EXPO", 9, AP_MotorsUGV, _thrust_curve_expo, 0.0f),
 
+    // @Param: THST_ANG_MAX
+    // @DisplayName: Thrust angle max
+    // @Description: Thrust angle max from center based on steering input.  Zero if thrust is unrelated to steering angle.
+    // @Units: deg
+    // @Range: 0 60
+    // @User: Advanced
+    AP_GROUPINFO("THST_ANG_MAX", 10, AP_MotorsUGV, _thrust_angle_max, 0.0f),
+
     AP_GROUPEND
 };
 
@@ -98,6 +106,9 @@ void AP_MotorsUGV::init()
 
     // set safety output
     setup_safety_output();
+
+    // sanity check parameters
+    _thrust_angle_max = constrain_float(_thrust_angle_max, 0.0f, 60.0f);
 }
 
 // setup output in case of main CPU failure
@@ -357,7 +368,24 @@ void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle)
 
     // output to throttle channels
     if (armed) {
-        // handle armed case
+        // scaled thrust if using vectored thrust
+        if (have_vectored_thrust() && !is_zero(throttle)) {
+            // scale steering so its can be be used geometrically with throttle
+            const float steering_scaled = steering * tanf(radians(MIN(_thrust_angle_max, 60.0f)));
+            const float throttle_pct = throttle / 100.0f;
+            // scale throttle up as steering angle increases
+            throttle = safe_sqrt(sq(steering_scaled) + sq(throttle_pct)) * (throttle_pct >= 0 ? 100.0f : -100.0f);
+
+            // recheck throttle limits
+            if (throttle >= _throttle_max) {
+                throttle = _throttle_max;
+                limit.throttle_upper = true;
+            }
+            if (throttle <= -_throttle_max) {
+                throttle = -_throttle_max;
+                limit.throttle_lower = true;
+            }
+        }
         output_throttle(SRV_Channel::k_throttle, throttle);
     } else {
         // handle disarmed case
