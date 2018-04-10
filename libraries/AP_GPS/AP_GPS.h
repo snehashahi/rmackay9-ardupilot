@@ -22,6 +22,7 @@
 #include <AP_Vehicle/AP_Vehicle.h>
 #include "GPS_detect_state.h"
 #include <AP_SerialManager/AP_SerialManager.h>
+#include <AP_RTC/AP_RTC.h>
 
 /**
    maximum number of GPS instances available on this platform. If more
@@ -161,6 +162,8 @@ public:
         int32_t  rtk_baseline_z_mm;        ///< Current baseline in ECEF z or NED down component in mm
         uint32_t rtk_accuracy;             ///< Current estimate of 3D baseline accuracy (receiver dependent, typical 0 to 9999)
         int32_t  rtk_iar_num_hypotheses;   ///< Current number of integer ambiguity hypotheses
+
+        AP_RTC_Backend *rtc_source;
     };
 
     /// Startup initialisation.
@@ -558,7 +561,6 @@ private:
         GPS_AUTO_CONFIG_DISABLE = 0,
         GPS_AUTO_CONFIG_ENABLE  = 1
     };
-
 };
 
 namespace AP {

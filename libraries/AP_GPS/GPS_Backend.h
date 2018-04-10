@@ -20,6 +20,7 @@
 
 #include <GCS_MAVLink/GCS_MAVLink.h>
 #include "AP_GPS.h"
+#include <AP_RTC/AP_RTC_Backend.h>
 
 class AP_GPS_Backend
 {
@@ -28,7 +29,10 @@ public:
 
     // we declare a virtual destructor so that GPS drivers can
     // override with a custom destructor if need be.
-    virtual ~AP_GPS_Backend(void) {}
+    virtual ~AP_GPS_Backend(void) {
+        delete state.rtc_source;
+        state.rtc_source = nullptr;
+    }
 
     // The read() method is the only one needed in each driver. It
     // should return true when the backend has successfully received a
