@@ -3,6 +3,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Common/AP_Common.h>
 #include <AP_Param/AP_Param.h>
+#include <AP_RTC/AP_RTC.h>
 
 #if defined(HAL_NEEDS_PARAM_HELPER)
 #include <AP_Param_Helper/AP_Param_Helper.h>
@@ -216,4 +217,9 @@ private:
     // HAL specific parameters
     AP_Param_Helper param_helper{false};
 #endif
+
+    // real-time-clock; private because access is via the singleton
+    AP_RTC rtc;
+    AP_RTC_Backend *_rtc_source;
+
 };
