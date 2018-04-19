@@ -60,6 +60,7 @@ void Mode::get_pilot_desired_steering_and_throttle(float &steering_out, float &t
         default: {
             // by default regular and skid-steering vehicles reverse their rotation direction when backing up
             // (this is the same as PILOT_STEER_TYPE_DIR_REVERSED_WHEN_REVERSING below)
+
             throttle_out = rover.channel_throttle->get_control_in();
             steering_out = rover.channel_steer->get_control_in();
             break;
@@ -83,6 +84,7 @@ void Mode::get_pilot_desired_steering_and_throttle(float &steering_out, float &t
         case PILOT_STEER_TYPE_DIR_REVERSED_WHEN_REVERSING:
             throttle_out = rover.channel_throttle->get_control_in();
             steering_out = rover.channel_steer->get_control_in();
+
             break;
 
         case PILOT_STEER_TYPE_DIR_UNCHANGED_WHEN_REVERSING: {
@@ -360,7 +362,7 @@ void Mode::calc_steering_from_lateral_acceleration(float lat_accel, bool reverse
                                                                            g2.motors.limit.steer_left,
                                                                            g2.motors.limit.steer_right,
                                                                            reversed);
-    g2.motors.set_steering(steering_out * 4500.0f);
+    g2.motors.set_steering(steering_out);
 }
 
 // calculate steering output to drive towards desired heading
@@ -373,7 +375,7 @@ void Mode::calc_steering_to_heading(float desired_heading_cd, bool reversed)
                                                                          g2.motors.limit.steer_left,
                                                                          g2.motors.limit.steer_right,
                                                                          reversed);
-    g2.motors.set_steering(steering_out * 4500.0f);
+    g2.motors.set_steering(steering_out);
 }
 
 // calculate vehicle stopping point using current location, velocity and maximum acceleration
