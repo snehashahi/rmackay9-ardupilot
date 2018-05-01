@@ -318,6 +318,9 @@ void Copter::update_batt_compass(void)
 // should be run at 400hz
 void Copter::fourhundred_hz_logging()
 {
+    if (should_log(MASK_LOG_RCOUT)) {
+        DataFlash.Log_Write_RCOUT();
+    }
     if (should_log(MASK_LOG_ATTITUDE_FAST)) {
         Log_Write_Attitude();
     }
@@ -341,9 +344,9 @@ void Copter::ten_hz_logging_loop()
             DataFlash.Log_Write_RSSI(rssi);
         }
     }
-    if (should_log(MASK_LOG_RCOUT)) {
-        DataFlash.Log_Write_RCOUT();
-    }
+    //if (should_log(MASK_LOG_RCOUT)) {
+    //    DataFlash.Log_Write_RCOUT();
+    //}
     if (should_log(MASK_LOG_NTUN) && (flightmode->requires_GPS() || landing_with_GPS())) {
         pos_control->write_log();
     }
