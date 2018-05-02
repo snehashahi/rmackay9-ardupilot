@@ -17,11 +17,7 @@ bool ModeLoiter::_enter()
     }
 
     // initialise heading to current heading
-    if (is_negative(_desired_speed)) {
-        _desired_yaw_cd = wrap_180_cd(ahrs.yaw_sensor + 18000);
-    } else {
-        _desired_yaw_cd = ahrs.yaw_sensor;
-    }
+    _desired_yaw_cd = ahrs.yaw_sensor;
     _yaw_error_cd = 0.0f;
 
     // set reversed based on speed
@@ -64,7 +60,7 @@ void ModeLoiter::update()
     }
 
     // run steering and throttle controllers
-    calc_steering_to_heading(_desired_yaw_cd, is_negative(_desired_speed));
+    calc_steering_to_heading(_desired_yaw_cd, _desired_speed < 0);
     calc_throttle(_desired_speed, false, true);
 
     // mark us as in_reverse when using a negative throttle
