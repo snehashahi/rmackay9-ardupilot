@@ -4,9 +4,9 @@
 bool ModeLoiter::_enter()
 {
     // only available for boats
-    if (!rover.is_boat()) {
-        return false;
-    }
+    //if (!rover.is_boat()) {
+    //    return false;
+    //}
 
     // set _destination to reasonable stopping point
     calc_stopping_location(_destination);
