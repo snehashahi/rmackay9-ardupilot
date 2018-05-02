@@ -682,7 +682,13 @@ void AP_GPS::update_instance(uint8_t instance)
 
     if (state[instance].status >= GPS_OK_FIX_3D) {
         if (state[instance].rtc_source != nullptr) {
-            state[instance].rtc_source->set(time_epoch_usec(instance));
+            if (state[instance].rtc_source_told != state[instance].time_week_ms) {
+                const uint64_t now = time_epoch_usec(instance);
+                // gcs().send_text(MAV_SEVERITY_INFO, "Setting time %llu",
+                //                 now);
+                state[instance].rtc_source->set(now);
+                state[instance].rtc_source_told = state[instance].time_week_ms;
+            }
         }
     }
 }

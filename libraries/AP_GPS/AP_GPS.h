@@ -164,6 +164,7 @@ public:
         int32_t  rtk_iar_num_hypotheses;   ///< Current number of integer ambiguity hypotheses
 
         AP_RTC_Backend *rtc_source;
+        uint32_t rtc_source_told;
     };
 
     /// Startup initialisation.
