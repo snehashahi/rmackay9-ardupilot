@@ -1094,6 +1094,11 @@ AP_GPS_UBLOX::_parse_gps(void)
     // this ensures we don't use stale data
     if (_new_position && _new_speed && _last_vel_time == _last_pos_time) {
         _new_speed = _new_position = false;
+        DataFlash_Class::instance()->Log_Write("UBXT",
+                                               "TimeUS,WeekMS",
+                                               "QI",
+                                               AP_HAL::micros64(),
+                                               state.time_week_ms);
         return true;
     }
     return false;
