@@ -151,9 +151,12 @@ void AP_MotorsUGV::setup_servo_output()
 }
 
 // set steering as a value from -4500 to +4500
-void AP_MotorsUGV::set_steering(float steering)
+//   apply_scaling should be set to false for manual modes where
+//   no scaling by speed or angle should e performed
+void AP_MotorsUGV::set_steering(float steering, bool apply_scaling)
 {
     _steering = constrain_float(steering, -4500.0f, 4500.0f);
+    _scale_steering = apply_scaling;
 }
 
 // set throttle as a value from -100 to 100
@@ -180,8 +183,11 @@ bool AP_MotorsUGV::have_skid_steering() const
     return false;
 }
 
-void AP_MotorsUGV::output(bool armed, float dt)
+void AP_MotorsUGV::output(bool armed, float ground_speed, float dt)
 {
+    // store ground speed
+    _ground_speed = ground_speed;
+
     // soft-armed overrides passed in armed status
     if (!hal.util->get_soft_armed()) {
         armed = false;
@@ -376,11 +382,28 @@ void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle)
 {
     // output to throttle channels
     if (armed) {
-        // vectored thrust handling
-        if (have_vectored_thrust() && (fabsf(throttle) > _vector_throttle_base)) {
-            // scale steering down linearly as throttle increases above _vector_throttle_base
-            const float steering_scalar = constrain_float(_vector_throttle_base / fabsf(throttle), 0.0f, 1.0f);
-            steering *= steering_scalar;
+        if (_scale_steering) {
+            // vectored thrust handling
+            if (have_vectored_thrust()) {
+                if (fabsf(throttle) > _vector_throttle_base) {
+                    // scale steering down linearly as throttle increases above _vector_throttle_base
+                    steering *= constrain_float(_vector_throttle_base / fabsf(throttle), 0.0f, 1.0f);
+                }
+            } else {
+                // scale steering down as speed increase above 1m/s
+                if (fabsf(_ground_speed) > 1.0f) {
+                    steering *= (1.0f / fabsf(_ground_speed));
+                } else {
+                    // regular steering rover at low speed so set limits to stop I-term build-up in controllers
+                    // ToDo: only set these if vehicle also does not have skid-steering
+                    limit.steer_left = true;
+                    limit.steer_right = true;
+                }
+                // reverse steering if backing up
+                if (is_negative(_ground_speed)) {
+                    steering *= -1.0f;
+                }
+            }
         }
         output_throttle(SRV_Channel::k_throttle, throttle);
     } else {
@@ -430,12 +453,9 @@ void AP_MotorsUGV::output_skid_steering(bool armed, float steering, float thrott
         throttle_scaled = throttle_scaled / saturation_value;
     }
 
-    // reverse steering direction if throttle is negative to mimic regular rovers
-    const float steering_dir = is_negative(throttle_scaled) ? -1.0f : 1.0f;
-
     // add in throttle and steering
-    const float motor_left = throttle_scaled + (steering_dir * steering_scaled);
-    const float motor_right = throttle_scaled - (steering_dir * steering_scaled);
+    const float motor_left = throttle_scaled + steering_scaled;
+    const float motor_right = throttle_scaled - steering_scaled;
 
     // send pwm value to each motor
     output_throttle(SRV_Channel::k_throttleLeft, 100.0f * motor_left);
