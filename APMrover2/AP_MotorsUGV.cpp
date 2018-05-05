@@ -12,6 +12,7 @@
  */
 
 #include <AP_HAL/AP_HAL.h>
+#include <AP_Math/AP_Math.h>
 #include "SRV_Channel/SRV_Channel.h"
 #include "AP_MotorsUGV.h"
 #include "Rover.h"
@@ -171,6 +172,19 @@ void AP_MotorsUGV::set_throttle(float throttle)
     _throttle = constrain_float(throttle, -_throttle_max, _throttle_max);
 }
 
+// get slew limited throttle
+// used by manual mode to avoid bad steering behaviour during transitions from forward to reverse
+// same as private slew_limit_throttle method (see below) but does not update throttle state
+float AP_MotorsUGV::get_slew_limited_throttle(float throttle, float dt) const
+{
+    if (_slew_rate <= 0) {
+        return throttle;
+    }
+
+    const float throttle_change_max = MAX(1.0f, (float)_slew_rate * dt);
+    return constrain_float(throttle, _throttle_prev - throttle_change_max, _throttle_prev + throttle_change_max);
+}
+
 /*
   work out if skid steering is available
  */
@@ -200,11 +214,14 @@ void AP_MotorsUGV::output(bool armed, float ground_speed, float dt)
     // clear and set limits based on input (limit flags may be set again by output_regular or output_skid_steering methods)
     set_limits_from_input(armed, _steering, _throttle);
 
+    // record throttle input before slew limiting
+    const float throttle_in = _throttle;
+
     // slew limit throttle
     slew_limit_throttle(dt);
 
     // output for regular steering/throttle style frames
-    output_regular(armed, _steering, _throttle);
+    output_regular(armed, _steering, throttle_in, _throttle);
 
     // output for skid steering style frames
     output_skid_steering(armed, _steering, _throttle);
@@ -378,7 +395,7 @@ void AP_MotorsUGV::setup_pwm_type()
 }
 
 // output to regular steering and throttle channels
-void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle)
+void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle_in, float throttle)
 {
     // output to throttle channels
     if (armed) {
@@ -399,11 +416,20 @@ void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle)
                     limit.steer_left = true;
                     limit.steer_right = true;
                 }
-                // reverse steering if backing up
+                // reverse steering output if backing up
                 if (is_negative(_ground_speed)) {
                     steering *= -1.0f;
                 }
             }
+        } else {
+            // manual steering
+            // use throttle input to decide steering direction
+            if (is_negative(throttle_in)) {
+                steering *= -1.0f;
+            }
+
+            // check if throttle_in is different from throttle_limited
+            //
         }
         output_throttle(SRV_Channel::k_throttle, throttle);
     } else {
@@ -517,16 +543,12 @@ void AP_MotorsUGV::output_throttle(SRV_Channel::Aux_servo_function_t function, f
 // slew limit throttle for one iteration
 void AP_MotorsUGV::slew_limit_throttle(float dt)
 {
-    if (_slew_rate > 0) {
-        // slew throttle
-        const float throttle_change_max = MAX(1.0f, (float)_slew_rate * dt);
-        if (_throttle > _throttle_prev + throttle_change_max) {
-            _throttle = _throttle_prev + throttle_change_max;
-            limit.throttle_upper = true;
-        } else if (_throttle < _throttle_prev - throttle_change_max) {
-            _throttle = _throttle_prev - throttle_change_max;
-            limit.throttle_lower = true;
-        }
+    const float throttle_orig = _throttle;
+    _throttle = get_slew_limited_throttle(_throttle_prev, dt);
+    if (_throttle < throttle_orig) {
+        limit.throttle_upper = true;
+    } else if (_throttle > throttle_orig) {
+        limit.throttle_lower = true;
     }
     _throttle_prev = _throttle;
 }
