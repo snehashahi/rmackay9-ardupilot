@@ -544,7 +544,7 @@ void AP_MotorsUGV::output_throttle(SRV_Channel::Aux_servo_function_t function, f
 void AP_MotorsUGV::slew_limit_throttle(float dt)
 {
     const float throttle_orig = _throttle;
-    _throttle = get_slew_limited_throttle(_throttle_prev, dt);
+    _throttle = get_slew_limited_throttle(_throttle, dt);
     if (_throttle < throttle_orig) {
         limit.throttle_upper = true;
     } else if (_throttle > throttle_orig) {
