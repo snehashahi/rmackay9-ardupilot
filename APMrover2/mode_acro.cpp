@@ -16,7 +16,7 @@ void ModeAcro::update()
     } else {
         float desired_speed;
         // convert pilot stick input into desired steering and speed
-        get_pilot_desired_steering_and_throttle(desired_steering, desired_speed);
+        get_pilot_desired_steering_and_speed(desired_steering, desired_speed);
         calc_throttle(desired_speed, false, true);
         // set reverse flag if negative desired speed
         rover.set_reverse(is_negative(desired_speed));
