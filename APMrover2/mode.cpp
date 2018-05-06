@@ -105,7 +105,9 @@ void Mode::get_pilot_desired_steering_and_throttle(float &steering_out, float &t
          (g.pilot_steer_type == PILOT_STEER_TYPE_DEFAULT))) {
         steering_out *= -1;
     }
+    throttle_out = throttle_out_limited;
 }
+
 // decode pilot steering and return steering_out and speed_out (in m/s)
 void Mode::get_pilot_desired_steering_and_speed(float &steering_out, float &speed_out)
 {
@@ -119,6 +121,7 @@ void Mode::get_pilot_desired_steering_and_speed(float &steering_out, float &spee
          (g.pilot_steer_type == PILOT_STEER_TYPE_DEFAULT))) {
         steering_out *= -1;
     }
+    speed_out = speed_out_limited;
 }
 
 // set desired location
