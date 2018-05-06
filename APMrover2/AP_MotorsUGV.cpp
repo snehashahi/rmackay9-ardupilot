@@ -424,9 +424,9 @@ void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle_in,
         } else {
             // manual steering
             // use throttle input to decide steering direction
-            if (is_negative(throttle_in)) {
-                steering *= -1.0f;
-            }
+            //if (is_negative(throttle_in)) {
+            //    steering *= -1.0f;
+            //}
 
             // check if throttle_in is different from throttle_limited
             //
