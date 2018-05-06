@@ -412,9 +412,10 @@ void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle_in,
                     steering *= (1.0f / fabsf(_ground_speed));
                 } else {
                     // regular steering rover at low speed so set limits to stop I-term build-up in controllers
-                    // ToDo: only set these if vehicle also does not have skid-steering
-                    limit.steer_left = true;
-                    limit.steer_right = true;
+                    if (!have_skid_steering()) {
+                        limit.steer_left = true;
+                        limit.steer_right = true;
+                    }
                 }
                 // reverse steering output if backing up
                 if (is_negative(_ground_speed)) {
