@@ -90,10 +90,7 @@ protected:
     void setup_pwm_type();
 
     // output to regular steering and throttle channels
-    // throttle_in is the throttle requested by the driver
-    // throttle is the slew limited throttle
-    // both throttle types are required to handle steering when transitioning between forward and reverse
-    void output_regular(bool armed, float steering, float throttle_in, float throttle);
+    void output_regular(bool armed, float steering, float throttle);
 
     // output to skid steering channels
     void output_skid_steering(bool armed, float steering, float throttle);

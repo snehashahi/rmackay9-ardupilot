@@ -214,14 +214,11 @@ void AP_MotorsUGV::output(bool armed, float ground_speed, float dt)
     // clear and set limits based on input (limit flags may be set again by output_regular or output_skid_steering methods)
     set_limits_from_input(armed, _steering, _throttle);
 
-    // record throttle input before slew limiting
-    const float throttle_in = _throttle;
-
     // slew limit throttle
     slew_limit_throttle(dt);
 
     // output for regular steering/throttle style frames
-    output_regular(armed, _steering, throttle_in, _throttle);
+    output_regular(armed, _steering, _throttle);
 
     // output for skid steering style frames
     output_skid_steering(armed, _steering, _throttle);
@@ -395,7 +392,7 @@ void AP_MotorsUGV::setup_pwm_type()
 }
 
 // output to regular steering and throttle channels
-void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle_in, float throttle)
+void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle)
 {
     // output to throttle channels
     if (armed) {
@@ -423,14 +420,10 @@ void AP_MotorsUGV::output_regular(bool armed, float steering, float throttle_in,
                 }
             }
         } else {
-            // manual steering
-            // use throttle input to decide steering direction
+            // reverse steering direction when backing up
             if (is_negative(throttle)) {
                 steering *= -1.0f;
             }
-
-            // check if throttle_in is different from throttle_limited
-            //
         }
         output_throttle(SRV_Channel::k_throttle, throttle);
     } else {
