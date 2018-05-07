@@ -419,13 +419,13 @@ void AP_MotorsUGV::output_omni(bool armed, float steering, float throttle)
         throttle = (_throttle - (100)) * (2000 - 1000) / (-100 - (100)) + 1000;
         steering = (_steering - (-4500)) * (2000 - 1000) / (4500 - (-4500)) + 1000;
 
-        int motor_1, motor_2, motor_3;
-        double Vx, Vy, magnitude, theta, scaled_throttle, scaled_steering;
+        int16_t motor_1, motor_2, motor_3;
+        float Vx, Vy, magnitude, theta, scaled_throttle, scaled_steering;
 
         magnitude = safe_sqrt((throttle*throttle)+(1500*1500));
-        theta = atan2(throttle,1500);
-        Vx = -(cos(theta)*magnitude);
-        Vy = -(sin(theta)*magnitude);
+        theta = atan2f(throttle,1500);
+        Vx = -(cosf(theta)*magnitude);
+        Vy = -(sinf(theta)*magnitude);
 
         motor_1 = (((-Vx) + steering) - (2500)) * (2000 - (1000)) / (3500 - (2500)) + (1000);
         motor_2 = ((((0.5*Vx)-((safe_sqrt(3)/2)*Vy)) + steering) - (1121)) * (2000 - (1000)) / (2973 - (1121)) + (1000);
