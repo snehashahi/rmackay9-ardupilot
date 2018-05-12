@@ -1966,15 +1966,28 @@ void GCS_MAVLINK::handle_common_vision_position_estimate_data(const uint64_t use
     attitude.from_euler(roll, pitch, yaw); // from_vector312?
     const float posErr = 0; // parameter required?
     const float angErr = 0; // parameter required?
-    const uint32_t timestamp_ms = usec * 0.001;
     const uint32_t reset_timestamp_ms = 0; // no data available
+
+    // convert time in message to local system time
+    uint64_t timestamp_usec;
+    if (!AP::rtc().convert_to_system_time(AP_RTC::SOURCE_MAVLINK_SYSTEM_TIME, usec, timestamp_usec)) {
+        uint64_t now_usec = AP_HAL::micros64();
+        uint64_t diff_usec = (now_usec > usec) ? (now_usec - usec) : (usec - now_usec);
+        if (diff_usec < 10000000ULL) {
+            // external message time is within 10 sec of local system time so use it
+            timestamp_usec = usec;
+        } else {
+            // use local system time. this will lead to worse performance
+            timestamp_usec = now_usec;
+        }
+    }
 
     AP::ahrs().writeExtNavData(sensor_offset,
                                pos,
                                attitude,
                                posErr,
                                angErr,
-                               timestamp_ms,
+                               timestamp_usec * 0.001,
                                reset_timestamp_ms);
 
     log_vision_position_estimate_data(usec, x, y, z, roll, pitch, yaw);
