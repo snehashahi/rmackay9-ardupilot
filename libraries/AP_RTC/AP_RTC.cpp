@@ -215,6 +215,45 @@ uint32_t AP_RTC::get_time_utc(int32_t hour, int32_t min, int32_t sec, int32_t ms
     return static_cast<uint32_t>(total_delay_ms);
 }
 
+/*
+  convert a source time to our flight controller system time
+ */
+bool AP_RTC::convert_to_system_time(source_type type, uint64_t source_time_usec, uint64_t &system_time_usec)
+{
+    // get time in order to update state
+    get();
+
+    // loop through backends looking for mavlink source
+    for (uint8_t i=0; i<_max_backends; i++) {
+        const AP_RTC_Backend *backend = _backends[i];
+        if (backend == nullptr) {
+            continue;
+        }
+        if (backend->type == type) {
+            // get this backend's shift
+            int64_t shift;
+            if (!backend->get_rtc_shift(shift)) {
+                continue;
+            }
+            // sanity check, source
+            const int64_t reasonable_rtc_shift = 1500000000000000;
+            if (rtc_shift < reasonable_rtc_shift) {
+                // e.g. GPS with no satellites
+                continue;
+            }
+            if ((AP_HAL::millis() - backend->last_reading_ms) > rtc_source_timeout_us) {
+                // no reading in too long.  Something is wrong...
+                continue;
+            }
+            // convert time to system time by removing shift
+            system_time_usec = source_time_usec - shift;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 AP_RTC_Backend *AP_RTC::register_rtc_source(AP_RTC::source_type type)
 {
     uint8_t i;

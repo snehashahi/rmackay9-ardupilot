@@ -39,6 +39,11 @@ public:
 
     uint32_t get_time_utc(int32_t hour, int32_t min, int32_t sec, int32_t ms);
 
+    /*
+      convert a source time to our flight controller system time
+     */
+    bool convert_to_system_time(source_type type, uint64_t source_time_usec, uint64_t &system_time_usec);
+
     // get singleton instance
     static AP_RTC *get_singleton() {
         return _singleton;
