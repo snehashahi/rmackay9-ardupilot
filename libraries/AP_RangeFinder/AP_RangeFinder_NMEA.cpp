@@ -31,7 +31,8 @@ extern const AP_HAL::HAL& hal;
 AP_RangeFinder_NMEA::AP_RangeFinder_NMEA(RangeFinder::RangeFinder_State &_state,
                                          AP_SerialManager &serial_manager,
                                          uint8_t serial_instance) :
-    AP_RangeFinder_Backend(_state)
+    AP_RangeFinder_Backend(_state),
+    _distance_m(-1.0f)
 {
     uart = serial_manager.find_serial(AP_SerialManager::SerialProtocol_Rangefinder, serial_instance);
     if (uart != nullptr) {
@@ -73,6 +74,7 @@ bool AP_RangeFinder_NMEA::get_reading(uint16_t &reading_cm)
         //char c = uart->read();
         char c = fake_uart_read();
         if (decode(c)) {
+            sum += _distance_m;
             count++;
         }
     }
@@ -84,6 +86,8 @@ bool AP_RangeFinder_NMEA::get_reading(uint16_t &reading_cm)
 
     // return average of all measurements
     reading_cm = 100.0f * sum / count;
+    // debug
+    ::printf("dist:%u\n",(unsigned)reading_cm);
     return true;
 }
 
@@ -91,8 +95,6 @@ bool AP_RangeFinder_NMEA::get_reading(uint16_t &reading_cm)
 // returns true if a complete sentence was successfully decoded
 bool AP_RangeFinder_NMEA::decode(char c)
 {
-    bool valid_sentence = false;
-
     switch (c) {
     case ',':
         // end of a term, add to checksum
@@ -101,6 +103,8 @@ bool AP_RangeFinder_NMEA::decode(char c)
     case '\r':
     case '\n':
     case '*':
+    {
+        bool valid_sentence = false;
         if (_term_offset < sizeof(_term)) {
             _term[_term_offset] = 0;
             valid_sentence = decode_latest_term();
@@ -109,15 +113,16 @@ bool AP_RangeFinder_NMEA::decode(char c)
         _term_offset = 0;
         _term_is_checksum = (c == '*');
         return valid_sentence;
+    }
 
     case '$': // sentence begin
-        _sentence_ok = false;
         _sentence_type = SONAR_UNKNOWN;
         _term_number = 0;
         _term_offset = 0;
         _checksum = 0;
         _term_is_checksum = false;
-        return valid_sentence;
+        _distance_m = -1.0f;
+        return false;
     }
 
     // ordinary characters are added to term
@@ -126,7 +131,7 @@ bool AP_RangeFinder_NMEA::decode(char c)
     if (!_term_is_checksum)
         _checksum ^= c;
 
-    return valid_sentence;
+    return false;
 }
 
 // decode the most recently consumed term
@@ -136,32 +141,15 @@ bool AP_RangeFinder_NMEA::decode_latest_term()
     // handle the last term in a message
     if (_term_is_checksum) {
         uint8_t checksum = 16 * char_to_hex(_term[0]) + char_to_hex(_term[1]);
-        if (checksum == _checksum) {
-            if (_sentence_ok) {
-                uint32_t now = AP_HAL::millis();
-                switch (_sentence_type) {
-                case SONAR_DBT:
-                    _last_DBT_ms = now;
-                    break;
-                case SONAR_DPT:
-                    _last_DPT_ms = now;
-                    break;
-                }
-            }
-            // see if we got a good message
-            return have_new_message();
-        }
-        // we got a bad message, ignore it
-        return false;
+        return ((checksum == _checksum) &&
+                !is_negative(_distance_m) &&
+                (_sentence_type == SONAR_DBT || _sentence_type == SONAR_DPT));
     }
 
     // the first term determines the sentence type
     if (_term_number == 0) {
-        /*
-          The first two letters of the NMEA term are the talker
-          ID. The most common is 'GP' but there are a bunch of others
-          that are valid. We accept any two characters here.
-         */
+        // the first two letters of the NMEA term are the talker ID.
+        // we accept any two characters here.
         if (_term[0] < 'A' || _term[0] > 'Z' ||
             _term[1] < 'A' || _term[1] > 'Z') {
             _sentence_type = SONAR_UNKNOWN;
@@ -181,35 +169,18 @@ bool AP_RangeFinder_NMEA::decode_latest_term()
     // parse DBT messages
     if (_sentence_type == SONAR_DBT) {
         if (_term_number == 3) {
-            _depth = atof(_term);
+            _distance_m = atof(_term);
         }
     }
 
     // parse DPT messages
     if (_sentence_type == SONAR_DPT) {
         if (_term_number == 2) {
-            _depth = atof(_term);
+            _distance_m = atof(_term);
         }
     }
 
     return false;
-}
-
-// return true if we have a new set of NMEA message
-bool AP_RangeFinder_NMEA::have_new_message()
-{
-    if (_last_DBT_ms == 0 ||
-        _last_DPT_ms == 0) {
-        return false;
-    }
-    uint32_t now = AP_HAL::millis();
-    if (now - _last_DBT_ms > 150 ||
-        now - _last_DPT_ms > 150) {
-        return false;
-    }
-    _last_DBT_ms = 1;
-    _last_DPT_ms = 1;
-    return true;
 }
 
 // return the numeric value of an ascii hex character

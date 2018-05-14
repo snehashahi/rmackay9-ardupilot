@@ -53,14 +53,12 @@ private:
 
     // add a single character to the buffer and attempt to decode
     // returns true if a complete sentence was successfully decoded
+    // distance should be pulled directly from _distance_m member
     bool decode(char c);
 
     // decode the just-completed term
     // returns true if new sentence has just passed checksum test and is validated
     bool decode_latest_term();
-
-    // return true if we have a new set of NMEA message
-    bool have_new_message();
 
     // return the numeric value of an ascii hex character
     static int16_t char_to_hex(char a);
@@ -74,10 +72,9 @@ private:
     char _term[15];                         // buffer for the current term within the current sentence
     uint8_t _term_offset;                   // offset within the _term buffer where the next character should be placed
     uint8_t _term_number;                   // term index within the current sentence
-    int32_t _depth;                         // depth in meters parsed from a term
+    float _distance_m;                      // distance in meters parsed from a term, -1 if no distance
     uint8_t _checksum;                      // checksum accumulator
     bool _term_is_checksum;                 // current term is the checksum
-    bool _sentence_ok;                      // true when the sentence indicates data is good
     uint8_t _sentence_type;                 // the sentence type currently being processed
 
     // debug
