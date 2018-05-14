@@ -229,4 +229,5 @@ char AP_RangeFinder_NMEA::fake_uart_read()
     if (fake_uart_index >= sizeof(fake_msg)) {
         fake_uart_index = 0;
     }
+    return c;
 }
