@@ -79,4 +79,9 @@ private:
     bool _term_is_checksum;                 // current term is the checksum
     bool _sentence_ok;                      // true when the sentence indicates data is good
     uint8_t _sentence_type;                 // the sentence type currently being processed
+
+    // debug
+    char fake_uart_read();
+    uint8_t fake_uart_index;
+    char fake_msg[] = {"$SDDPT,0.5,*7C\r\n$SDDBT,1.8,f,0.5,M,0.3,F*09\r\n"};
 };

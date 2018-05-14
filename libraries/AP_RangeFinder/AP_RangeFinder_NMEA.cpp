@@ -67,9 +67,11 @@ bool AP_RangeFinder_NMEA::get_reading(uint16_t &reading_cm)
     // read any available lines from the lidar
     float sum = 0;
     uint16_t count = 0;
-    int16_t nbytes = uart->available();
+    //int16_t nbytes = uart->available();
+    int16_t nbytes = 1;
     while (nbytes-- > 0) {
-        char c = uart->read();
+        //char c = uart->read();
+        char c = fake_uart_read();
         if (decode(c)) {
             count++;
         }
@@ -140,11 +142,9 @@ bool AP_RangeFinder_NMEA::decode_latest_term()
                 switch (_sentence_type) {
                 case SONAR_DBT:
                     _last_DBT_ms = now;
-                    _depth = 0.0f;
                     break;
                 case SONAR_DPT:
                     _last_DPT_ms = now;
-                    _depth = 0.0f;
                     break;
                 }
             }
@@ -221,4 +221,12 @@ int16_t AP_RangeFinder_NMEA::char_to_hex(char a)
         return a - 'a' + 10;
     else
         return a - '0';
+}
+
+char AP_RangeFinder_NMEA::fake_uart_read()
+{
+    char c = fake_msg[fake_uart_index++];
+    if (fake_uart_index >= sizeof(fake_msg)) {
+        fake_uart_index = 0;
+    }
 }
