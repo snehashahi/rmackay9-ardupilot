@@ -83,6 +83,6 @@ private:
     // debug
     char fake_uart_read();
     uint8_t fake_uart_index;
-    char fake_msg[] = {'$','S','D','D','P','T',',','0','.','5',',','*','7','C','\r','\n'};
+    char fake_msg[16] = {'$','S','D','D','P','T',',','0','.','5',',','*','7','C','\r','\n'};
     //char fake_msg[] = "$SDDPT,0.5,*7C\r\n$SDDBT,1.8,f,0.5,M,0.3,F*09\r\n";
 };
