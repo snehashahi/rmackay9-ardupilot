@@ -175,7 +175,7 @@ bool AP_RangeFinder_NMEA::decode_latest_term()
 
     // parse DPT messages
     if (_sentence_type == SONAR_DPT) {
-        if (_term_number == 2) {
+        if (_term_number == 1) {
             _distance_m = atof(_term);
         }
     }
