@@ -31,12 +31,12 @@ public:
     static bool detect(AP_SerialManager &serial_manager, uint8_t serial_instance);
 
     // update state
-    void update(void);
+    void update(void) override;
 
 protected:
 
     virtual MAV_DISTANCE_SENSOR _get_mav_distance_sensor_type() const override {
-        return MAV_DISTANCE_SENSOR_LASER;
+        return MAV_DISTANCE_SENSOR_ULTRASOUND;
     }
 
 private:

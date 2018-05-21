@@ -18,6 +18,7 @@
 #include <AP_SerialManager/AP_SerialManager.h>
 #include <ctype.h>
 #include "AP_RangeFinder_NMEA.h"
+#include <GCS_MAVLink/GCS.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -37,6 +38,9 @@ AP_RangeFinder_NMEA::AP_RangeFinder_NMEA(RangeFinder::RangeFinder_State &_state,
     uart = serial_manager.find_serial(AP_SerialManager::SerialProtocol_Rangefinder, serial_instance);
     if (uart != nullptr) {
         uart->begin(serial_manager.find_baudrate(AP_SerialManager::SerialProtocol_Rangefinder, serial_instance));
+        gcs().send_text(MAV_SEVERITY_INFO, "lid found");
+    } else {
+        gcs().send_text(MAV_SEVERITY_INFO, "lid not found");
     }
 }
 
@@ -53,7 +57,7 @@ void AP_RangeFinder_NMEA::update(void)
         // update range_valid state based on distance measured
         _last_reading_ms = AP_HAL::millis();
         update_status();
-    } else if (AP_HAL::millis() - _last_reading_ms > 200) {
+    } else if (AP_HAL::millis() - _last_reading_ms > 3000) {
         set_status(RangeFinder::RangeFinder_NoData);
     }
 }
@@ -65,6 +69,10 @@ bool AP_RangeFinder_NMEA::get_reading(uint16_t &reading_cm)
         return false;
     }
 
+    // debug
+    //char temp_buf[100];
+    //uint8_t temp_buf_count = 0;
+
     // read any available lines from the lidar
     float sum = 0;
     uint16_t count = 0;
@@ -75,7 +83,17 @@ bool AP_RangeFinder_NMEA::get_reading(uint16_t &reading_cm)
             sum += _distance_m;
             count++;
         }
+        // debug
+        //temp_buf[temp_buf_count++] = c;
     }
+
+    // debug
+    //if (temp_buf_count > 0) {
+    //    temp_buf[temp_buf_count++] = 0;
+        //gcs().send_text(MAV_SEVERITY_INFO, "l:%s", temp_buf);
+    //    gcs().send_text(MAV_SEVERITY_INFO, "lid:%d", (int)count);
+    //}
+    gcs().send_text(MAV_SEVERITY_INFO, "l:%d", (int)count);
 
     // return false on failure
     if (count == 0) {
