@@ -311,7 +311,10 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
     // this method makes use the following internal variables
     const float yaw_error_cd = _yaw_error_cd;
     const float target_lateral_accel_G = attitude_control.get_desired_lat_accel();
-    const float distance_to_waypoint = _distance_to_destination;
+
+    // calculate distance remaining along path
+    const float path_proportion = location_path_proportion(rover.current_loc, _origin, _destination);
+    const float distance_remaining = get_distance(_origin, _destination) * MAX(1.0f - path_proportion, 0.0f);
 
     // calculate the yaw_error_ratio which is the error (capped at 90degrees) expressed as a ratio (from 0 ~ 1)
     float yaw_error_ratio = constrain_float(fabsf(yaw_error_cd / 9000.0f), 0.0f, 1.0f);
@@ -335,8 +338,8 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
     float speed_scaled = desired_speed * MIN(lateral_accel_speed_scaling, pivot_speed_scaling);
 
     // limit speed based on distance to waypoint and max acceleration/deceleration
-    if (is_positive(distance_to_waypoint) && is_positive(attitude_control.get_decel_max())) {
-        const float speed_max = safe_sqrt(2.0f * distance_to_waypoint * attitude_control.get_decel_max() + sq(_desired_speed_final));
+    if (is_positive(distance_remaining) && is_positive(attitude_control.get_decel_max())) {
+        const float speed_max = safe_sqrt(2.0f * distance_remaining * attitude_control.get_decel_max() + sq(_desired_speed_final));
         speed_scaled = constrain_float(speed_scaled, -speed_max, speed_max);
     }
 
