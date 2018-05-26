@@ -65,14 +65,6 @@ bool AP_RangeFinder_Benewake::get_reading(uint16_t &reading_cm, bool &signal_ok)
     int16_t nbytes = uart->available();
     while (nbytes-- > 0) {
         char c = uart->read();
-        // if buffer is empty and this byte is 0x59, add to buffer, continue
-        // if buffer has 1 element and this byte is 0x5, add it to buffer, if not continue (this leaves identical 0x59 at head of buffer)
-        // add byte to buffer
-        // if buffer now has 9 items try to decode it
-        //     loop through and calculate checksum
-        //     compare checksum
-        //     extract distance and strength
-
         // if buffer is empty and this byte is 0x59, add to buffer
         if (linebuf_len == 0) {
             if (c == BENEWAKE_FRAME_HEADER) {
@@ -98,40 +90,12 @@ bool AP_RangeFinder_Benewake::get_reading(uint16_t &reading_cm, bool &signal_ok)
                 }
                 // if checksum matches extract contents
                 if (checksum == linebuf[BENEWAKE_FRAME_LENGTH-1]) {
-                    // distance
-                    be16_t dist_val = ((uint16_t)linebuf[2] << 8) | linebuf[3];
-                    uint16_t dist_cm = be16toh(dist_val);
-                    // strength
-                    be16_t strength_val = ((uint16_t)linebuf[4] << 8) | linebuf[5];
-                    uint16_t strength = be16toh(strength_val);
-                    // signal reliability
-                    uint8_t sig = linebuf[6];
-                    uint8_t time_val = linebuf[7];
                     // add distance to sum
-                    sum_cm += dist_cm;
+                    be16_t dist_val = ((uint16_t)linebuf[2] << 8) | linebuf[3];
+                    sum_cm += be16toh(dist_val);
                     count++;
                     // a single reading of good strength results in confidence in the average distance
-                    sig_ok = (sig >= 7);
-                    // debug
-                    ::printf("d:%u s:%u s:%u t:%d buf:%d %d %d %d %d %d %d %d %d\n",
-                             (unsigned)dist_cm,
-                             (unsigned)strength,
-                             (unsigned)sig,
-                             (unsigned)time_val,
-                             (unsigned)linebuf[0],
-                             (unsigned)linebuf[1],
-                             (unsigned)linebuf[2],
-                             (unsigned)linebuf[3],
-                             (unsigned)linebuf[4],
-                             (unsigned)linebuf[5],
-                             (unsigned)linebuf[6],
-                             (unsigned)linebuf[7],
-                             (unsigned)linebuf[8],
-                             (unsigned)linebuf[9]
-                             );
-                } else {
-                    // debug
-                    ::printf("CS exp:%u got:%u\n", (unsigned)checksum,(unsigned)linebuf[BENEWAKE_FRAME_LENGTH-1]);
+                    sig_ok = (linebuf[6] >= 7);
                 }
                 // clear buffer
                 linebuf_len = 0;
