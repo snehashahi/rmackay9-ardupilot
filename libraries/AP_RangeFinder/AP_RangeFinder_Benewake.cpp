@@ -24,6 +24,20 @@ extern const AP_HAL::HAL& hal;
 #define BENEWAKE_FRAME_HEADER 0x59
 #define BENEWAKE_FRAME_LENGTH 9
 
+// format of serial packets received from benewake lidar
+//
+// Data Bit     Definition      Description
+// -----------------------------------------
+// byte 0       Frame header    0x59
+// byte 1       Frame header    0x59
+// byte 2       DIST_L          Distance (in cm) low 8 bits
+// byte 3       DIST_H          Distance (in cm) high 8 bits
+// byte 4       STRENGTH_L      Strength low 8 bits
+// byte 5       STRENGTH_H      Strength high 8 bits
+// byte 6       SIG             Reliability in 8 levels, 7 & 8 means reliable
+// byte 7       TIME            Exposure time in two levels 0x03 and 0x06
+// byte 8       Check           Checksum parity bit, sum of byte 0 to byte 7
+
 /* 
    The constructor also initialises the rangefinder. Note that this
    constructor is not called until detect() returns true, so we
