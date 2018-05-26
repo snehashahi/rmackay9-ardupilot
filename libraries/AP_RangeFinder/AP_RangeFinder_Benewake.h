@@ -7,10 +7,17 @@ class AP_RangeFinder_Benewake : public AP_RangeFinder_Backend
 {
 
 public:
+
+    enum benewake_model_type {
+        BENEWAKE_TF02 = 0,
+        BENEWAKE_TFmini = 1
+    };
+
     // constructor
     AP_RangeFinder_Benewake(RangeFinder::RangeFinder_State &_state,
                             AP_SerialManager &serial_manager,
-                            uint8_t serial_instance);
+                            uint8_t serial_instance,
+                            benewake_model_type model);
 
     // static detection function
     static bool detect(AP_SerialManager &serial_manager, uint8_t serial_instance);
@@ -31,7 +38,8 @@ private:
     bool get_reading(uint16_t &reading_cm, bool &signal_ok);
 
     AP_HAL::UARTDriver *uart = nullptr;
-    uint32_t last_reading_ms = 0;
+    benewake_model_type model_type;
+    uint32_t last_reading_ms;
     char linebuf[10];
-    uint8_t linebuf_len = 0;
+    uint8_t linebuf_len;
 };

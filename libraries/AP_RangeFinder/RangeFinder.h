@@ -59,7 +59,8 @@ public:
         RangeFinder_TYPE_PLI2CV3= 15,
         RangeFinder_TYPE_VL53L0X = 16,
         RangeFinder_TYPE_NMEA = 17,
-        RangeFinder_TYPE_Benewake = 18
+        RangeFinder_TYPE_BenewakeTF02 = 18,
+        RangeFinder_TYPE_BenewakeTFmini = 19
     };
 
     enum RangeFinder_Function {

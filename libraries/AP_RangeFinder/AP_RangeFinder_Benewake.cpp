@@ -26,17 +26,18 @@ extern const AP_HAL::HAL& hal;
 
 // format of serial packets received from benewake lidar
 //
-// Data Bit     Definition      Description
-// -----------------------------------------
-// byte 0       Frame header    0x59
-// byte 1       Frame header    0x59
-// byte 2       DIST_L          Distance (in cm) low 8 bits
-// byte 3       DIST_H          Distance (in cm) high 8 bits
-// byte 4       STRENGTH_L      Strength low 8 bits
-// byte 5       STRENGTH_H      Strength high 8 bits
-// byte 6       SIG             Reliability in 8 levels, 7 & 8 means reliable
-// byte 7       TIME            Exposure time in two levels 0x03 and 0x06
-// byte 8       Check           Checksum parity bit, sum of byte 0 to byte 7
+// Data Bit             Definition      Description
+// ------------------------------------------------
+// byte 0               Frame header    0x59
+// byte 1               Frame header    0x59
+// byte 2               DIST_L          Distance (in cm) low 8 bits
+// byte 3               DIST_H          Distance (in cm) high 8 bits
+// byte 4               STRENGTH_L      Strength low 8 bits
+// byte 5               STRENGTH_H      Strength high 8 bits
+// byte 6 (TF02)        SIG             Reliability in 8 levels, 7 & 8 means reliable
+// byte 6 (TFmini)      Distance Mode   0x02 for short distance (mm), 0x07 for long distance (cm)
+// byte 7 (TF02 only)   TIME            Exposure time in two levels 0x03 and 0x06
+// byte 8               Check           Checksum parity bit, sum of byte 0 to byte 7
 
 /* 
    The constructor also initialises the rangefinder. Note that this
@@ -45,8 +46,10 @@ extern const AP_HAL::HAL& hal;
 */
 AP_RangeFinder_Benewake::AP_RangeFinder_Benewake(RangeFinder::RangeFinder_State &_state,
                                                              AP_SerialManager &serial_manager,
-                                                             uint8_t serial_instance) :
-    AP_RangeFinder_Backend(_state)
+                                                             uint8_t serial_instance,
+                                                             benewake_model_type model) :
+    AP_RangeFinder_Backend(_state),
+    model_type(model)
 {
     uart = serial_manager.find_serial(AP_SerialManager::SerialProtocol_Rangefinder, serial_instance);
     if (uart != nullptr) {
@@ -104,12 +107,22 @@ bool AP_RangeFinder_Benewake::get_reading(uint16_t &reading_cm, bool &signal_ok)
                 }
                 // if checksum matches extract contents
                 if (checksum == linebuf[BENEWAKE_FRAME_LENGTH-1]) {
-                    // add distance to sum
-                    be16_t dist_val = ((uint16_t)linebuf[2] << 8) | linebuf[3];
-                    sum_cm += be16toh(dist_val);
+                    // calculate distance and add to sum
+                    uint16_t dist = be16toh(((uint16_t)linebuf[2] << 8) | linebuf[3]);
+                    // TFmini has short distance mode (mm)
+                    if ((model_type == BENEWAKE_TFmini)) {
+                        if (linebuf[6] == 0x02) {
+                            dist *= 10;
+                        }
+                        // no signal byte from TFmini
+                        sig_ok = true;
+                    } else {
+                        // TF02 provides signal strength (good = 7 or 8)
+                        // we interpret a single good strength as confidence in the average distance
+                        sig_ok = (linebuf[6] >= 7);
+                    }
+                    sum_cm += dist;
                     count++;
-                    // a single reading of good strength results in confidence in the average distance
-                    sig_ok = (linebuf[6] >= 7);
                 }
                 // clear buffer
                 linebuf_len = 0;
