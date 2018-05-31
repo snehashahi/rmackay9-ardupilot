@@ -283,6 +283,7 @@ void Copter::do_aux_switch_function(int8_t ch_function, uint8_t ch_flag)
             if (ch_flag == AUX_SWITCH_HIGH) {
 
                 // do not allow saving new waypoints while we're in auto or disarmed
+//should this be spool mode instead of motors->armed??
                 if (control_mode == AUTO || !motors->armed()) {
                     return;
                 }
@@ -424,6 +425,7 @@ void Copter::do_aux_switch_function(int8_t ch_function, uint8_t ch_flag)
 #if SPRAYER == ENABLED
             sprayer.run(ch_flag == AUX_SWITCH_HIGH);
             // if we are disarmed the pilot must want to test the pump
+// should this be spool mode instead of motors->armed??
             sprayer.test_pump((ch_flag == AUX_SWITCH_HIGH) && !motors->armed());
 #endif
             break;
