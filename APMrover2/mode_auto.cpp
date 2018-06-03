@@ -47,7 +47,7 @@ void ModeAuto::debug()
     float wp_yaw_diff = wrap_180_cd(rover.nav_controller->target_bearing_cd() - ahrs.yaw_sensor);
     float nav_yaw_diff = wrap_180_cd(rover.nav_controller->nav_bearing_cd() - ahrs.yaw_sensor);
     bool heading_away = is_positive(wp_yaw_diff) != is_negative(nav_yaw_diff);
-    float dist_from_line = rover.nav_controller->crosstrack_error();
+    float dist_from_line = fabsf(rover.nav_controller->crosstrack_error());
     float lata = fabsf(rover.nav_controller->lateral_acceleration());  // using fabsf assumes desired lat acceleration turns in correct direction
     float wp_overshoot_adj = heading_away ? -dist_from_line: dist_from_line;
     float turn_angle_rad = fabsf(radians(wp_yaw_diff * 0.01f));
