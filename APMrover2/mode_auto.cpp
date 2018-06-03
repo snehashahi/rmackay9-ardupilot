@@ -50,8 +50,11 @@ void ModeAuto::debug()
     float dist_from_line = rover.nav_controller->crosstrack_error();
     float lata = rover.nav_controller->lateral_acceleration();
     float wp_overshoot_adj = heading_away ? -dist_from_line: dist_from_line;
-    float turn_angle_rad = fabsf(radians(wp_yaw_diff));
-    float radius_m = (rover.g.waypoint_overshoot + wp_overshoot_adj) / (cosf(turn_angle_rad) - 1.0f);
+    float turn_angle_rad = fabsf(radians(wp_yaw_diff * 0.01f));
+    float radius_m = 999.0f;
+    if (!is_zero(turn_angle_rad)) {
+        radius_m = (rover.g.waypoint_overshoot + wp_overshoot_adj) / (cosf(turn_angle_rad) - 1.0f);
+    }
     float des_speed = safe_sqrt(lata * radius_m);
 
     // debug
