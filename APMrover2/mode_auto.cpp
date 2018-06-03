@@ -45,19 +45,20 @@ void ModeAuto::debug()
 
     //// new method debug ////
     float wp_yaw_diff = wrap_180_cd(rover.nav_controller->target_bearing_cd() - ahrs.yaw_sensor);
-    float nav_yaw_diff = wrap_180_cd(rover.nav_controller->nav_bearing_cd() - ahrs.yaw_sensor);
+    //float nav_yaw_diff = wrap_180_cd(rover.nav_controller->nav_bearing_cd() - ahrs.yaw_sensor);
     float line_yaw = get_bearing_cd(_origin, _destination);
     float line_yaw_diff = wrap_180_cd(line_yaw - ahrs.yaw_sensor);
-    bool heading_away = is_positive(wp_yaw_diff) != is_negative(nav_yaw_diff);
-    float dist_from_line = fabsf(rover.nav_controller->crosstrack_error());
+    float crosstrack_error = rover.nav_controller->crosstrack_error();
+    float dist_from_line = fabsf(crosstrack_error);
+    bool heading_away = is_positive(line_yaw_diff) == is_positive(crosstrack_error);
     float lata = fabsf(rover.nav_controller->lateral_acceleration());  // using fabsf assumes desired lat acceleration turns in correct direction
     float wp_overshoot_adj = heading_away ? -dist_from_line: dist_from_line;
     float turn_angle_rad = fabsf(radians(wp_yaw_diff * 0.01f));
     float radius_m = 999.0f;
     if (!is_zero(turn_angle_rad)) {
-        radius_m = (rover.g.waypoint_overshoot + wp_overshoot_adj) / (cosf(turn_angle_rad) - 1.0f);
+        radius_m = MAX(0.0f, rover.g.waypoint_overshoot + wp_overshoot_adj) / fabsf(1.0f - cosf(turn_angle_rad));
     }
-    float des_speed = safe_sqrt(lata * MAX(0, radius_m));
+    float des_speed = safe_sqrt(lata * MAX(g2.turn_radius, radius_m));
 
     // debug
     ::printf("wp:%4.2f nav:%4.2f lin:%4.2f aw:%d di:%4.2f lat:%4.2f wpo:%4.2f tur:%4.2f radm:%4.2f spd:%4.2f\n",
