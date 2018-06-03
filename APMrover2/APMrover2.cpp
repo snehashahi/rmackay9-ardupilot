@@ -300,7 +300,7 @@ void Rover::one_second_loop(void)
     update_sensor_status_flags();
 
     // debug
-    mode_auto.debug();
+    //mode_auto.debug();
 }
 
 void Rover::update_GPS(void)
