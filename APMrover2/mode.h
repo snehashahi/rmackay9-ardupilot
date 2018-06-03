@@ -234,6 +234,9 @@ public:
     // execute the mission in reverse (i.e. backing up)
     void set_reversed(bool value);
 
+    // debug
+    void debug();
+
 protected:
 
     bool _enter() override;

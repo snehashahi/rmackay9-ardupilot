@@ -298,6 +298,9 @@ void Rover::one_second_loop(void)
     // indicates that the sensor or subsystem is present but not
     // functioning correctly
     update_sensor_status_flags();
+
+    // debug
+    mode_auto->debug();
 }
 
 void Rover::update_GPS(void)
