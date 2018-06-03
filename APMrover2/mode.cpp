@@ -354,6 +354,25 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
         speed_scaled = constrain_float(speed_scaled, -speed_max, speed_max);
     }
 
+    //// new method debug ////
+    float wp_yaw_diff = wrap_180(rover.nav_controller->target_bearing_cd() - ahrs.yaw_sensor);
+    float nav_yaw_diff = wrap_180(rover.nav_controller->nav_bearing_cd() - ahrs.yaw_sensor);
+    bool heading_away = is_positive(wp_yaw_diff) != is_negative(nav_yaw_diff);
+    float dist_from_line = rover.nav_controller->crosstrack_error();
+    float lata = rover.nav_controller->lateral_acceleration();
+
+    // debug
+    static uint8_t counter = 0;
+    counter++;
+    if (counter > 10) {
+        counter = 0;
+        ::printf("aw:%d di:%4.2f lat:%4.2f\n",
+                (int)heading_away,
+                (double)dist_from_line,
+                (double)lata
+                );
+    }
+
     // return minimum speed
     return speed_scaled;
 }
