@@ -348,11 +348,6 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
     // scaled speed
     float speed_scaled = desired_speed * MIN(lateral_accel_speed_scaling, pivot_speed_scaling);
 
-    // limit speed based on distance to waypoint and max acceleration/deceleration
-    if (is_positive(distance_to_waypoint) && is_positive(attitude_control.get_decel_max())) {
-        const float speed_max = safe_sqrt(2.0f * distance_to_waypoint * attitude_control.get_decel_max() + sq(_desired_speed_final));
-        speed_scaled = constrain_float(speed_scaled, -speed_max, speed_max);
-    }
 
     //// new method debug ////
     float wp_yaw_diff = wrap_180_cd(rover.nav_controller->target_bearing_cd() - ahrs.yaw_sensor);
@@ -364,10 +359,12 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
     float wp_overshoot_adj = heading_away ? -dist_from_line : dist_from_line;
     float turn_angle_rad = fabsf(radians(wp_yaw_diff * 0.01f));
     float radius_m = 999.0f;
-    if (!is_zero(turn_angle_rad)) {
-        radius_m = MAX(0.0f, rover.g.waypoint_overshoot + wp_overshoot_adj) / fabsf(1.0f - cosf(turn_angle_rad));
+    float radius_calc_denom = fabsf(1.0f - cosf(turn_angle_rad));
+    if (!is_zero(radius_calc_denom)) {
+        radius_m = MAX(0.0f, rover.g.waypoint_overshoot + wp_overshoot_adj) / radius_calc_denom;
     }
-    float des_speed = safe_sqrt(lata * MAX(g2.turn_radius, radius_m));
+    //float des_speed = safe_sqrt(lata * MAX(g2.turn_radius, radius_m));
+    float des_speed = safe_sqrt(g.turn_max_g * GRAVITY_MSS * MAX(g2.turn_radius, radius_m));
 
     // debug
     static uint8_t counter = 0;
@@ -384,6 +381,14 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
                 (double)des_speed,
                 (double)speed_scaled
                 );
+    }
+
+    speed_scaled = MIN(desired_speed, des_speed);
+
+    // limit speed based on distance to waypoint and max acceleration/deceleration
+    if (is_positive(distance_to_waypoint) && is_positive(attitude_control.get_decel_max())) {
+        const float speed_max = safe_sqrt(2.0f * distance_to_waypoint * attitude_control.get_decel_max() + sq(_desired_speed_final));
+        speed_scaled = constrain_float(speed_scaled, -speed_max, speed_max);
     }
 
     // return minimum speed
