@@ -262,6 +262,11 @@ uint32_t GCS_MAVLINK_Copter::telem_delay() const
     return (uint32_t)(copter.g.telem_delay);
 }
 
+uint32_t GCS_MAVLINK_Copter::vision_lag_ms() const
+{
+    return (uint32_t)(copter.g2.vision_lag_ms);
+}
+
 // try to send a message, return false if it wasn't sent
 bool GCS_MAVLINK_Copter::try_send_message(enum ap_message id)
 {

@@ -980,6 +980,15 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     AP_SUBGROUPINFO(follow, "FOLL", 27, ParametersG2, AP_Follow),
 #endif
 
+    // @Param: VISION_LAG
+    // @DisplayName: Vision system lag
+    // @Description: Vision system lag
+    // @Units: ms
+    // @Range: 0 2000
+    // @Increment: 1
+    // @User: Advanced
+    AP_GROUPINFO("VISION_LAG", 28, ParametersG2, vision_lag_ms, 0),
+
     AP_GROUPEND
 };
 

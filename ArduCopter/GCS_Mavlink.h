@@ -54,4 +54,5 @@ private:
 
     int16_t vfr_hud_throttle() const override;
 
+    uint32_t vision_lag_ms() const override;
 };

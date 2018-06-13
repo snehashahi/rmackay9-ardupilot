@@ -585,6 +585,9 @@ public:
     // follow
     AP_Follow follow;
 #endif
+
+    // vision system lag
+    AP_Int16 vision_lag_ms;
 };
 
 extern const AP_Param::Info        var_info[];
