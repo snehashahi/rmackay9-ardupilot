@@ -509,6 +509,8 @@ private:
                                            const float roll,
                                            const float pitch,
                                            const float yaw);
+    virtual uint32_t vision_lag_ms() const { return 0; }
+
     void push_deferred_messages();
 
     void lock_channel(mavlink_channel_t chan, bool lock);

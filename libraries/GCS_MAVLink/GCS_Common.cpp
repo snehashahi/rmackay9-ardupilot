@@ -2109,7 +2109,7 @@ void GCS_MAVLINK::handle_common_vision_position_estimate_data(const uint64_t use
                                                               const uint16_t payload_size)
 {
     // correct offboard timestamp to be in local ms since boot
-    uint32_t timestamp_ms = correct_offboard_timestamp_usec_to_ms(usec, payload_size);
+    uint32_t timestamp_ms = correct_offboard_timestamp_usec_to_ms(usec, payload_size) - vision_lag_ms();
     
     // sensor assumed to be at 0,0,0 body-frame; need parameters for this?
     // or a new message 
@@ -2144,8 +2144,8 @@ void GCS_MAVLINK::log_vision_position_estimate_data(const uint64_t usec,
                                                     const float pitch,
                                                     const float yaw)
 {
-    DataFlash_Class::instance()->Log_Write("VISP", "TimeUS,RemTimeUS,PX,PY,PZ,Roll,Pitch,Yaw",
-                                           "ssmmmrrr", "FF000000", "QQffffff",
+    DataFlash_Class::instance()->Log_Write("VISP", "TimeUS,RemTimeUS,PX,PY,PZ,Roll,Pitch,Yaw,Lag",
+                                           "ssmmmrrrs", "FF000000C", "QQffffffI",
                                            (uint64_t)AP_HAL::micros64(),
                                            (uint64_t)usec,
                                            (double)x,
@@ -2153,7 +2153,9 @@ void GCS_MAVLINK::log_vision_position_estimate_data(const uint64_t usec,
                                            (double)z,
                                            (double)roll,
                                            (double)pitch,
-                                           (double)yaw);
+                                           (double)yaw,
+                                           (uint32_t)vision_lag_ms()
+                                           );
 }
 
 void GCS_MAVLINK::handle_att_pos_mocap(mavlink_message_t *msg)
@@ -2172,7 +2174,7 @@ void GCS_MAVLINK::handle_att_pos_mocap(mavlink_message_t *msg)
     const float posErr = 0; // parameter required?
     const float angErr = 0; // parameter required?
     // correct offboard timestamp to be in local ms since boot
-    uint32_t timestamp_ms = correct_offboard_timestamp_usec_to_ms(m.time_usec, PAYLOAD_SIZE(chan, ATT_POS_MOCAP));
+    uint32_t timestamp_ms = correct_offboard_timestamp_usec_to_ms(m.time_usec, PAYLOAD_SIZE(chan, ATT_POS_MOCAP)) - vision_lag_ms();
     const uint32_t reset_timestamp_ms = 0; // no data available
 
     AP::ahrs().writeExtNavData(sensor_offset,
