@@ -167,8 +167,6 @@ private:
     RangeFinder rangefinder{serial_manager, ROTATION_NONE};
     AP_Button button;
 
-    AP_OccupancyGrid occupancy_grid;
-
     // flight modes convenience array
     AP_Int8 *modes;
 

@@ -547,6 +547,10 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("PIVOT_TURN_RATE", 20, ParametersG2, pivot_turn_rate, 90),
 
+    // @Group: GRID_
+    // @Path: ../libraries/AP_Proximity/AP_OccupancyGrid.cpp
+    AP_SUBGROUPINFO(occupancy_grid, "GRID_", 21, ParametersG2, AP_OccupancyGrid),
+
     AP_GROUPEND
 };
 

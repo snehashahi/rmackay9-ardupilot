@@ -341,6 +341,9 @@ public:
 
     // pivot turn rate
     AP_Int16 pivot_turn_rate;
+
+    // occupancy grid
+    AP_OccupancyGrid occupancy_grid;
 };
 
 extern const AP_Param::Info var_info[];
