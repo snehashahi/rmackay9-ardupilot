@@ -262,3 +262,4 @@ template bool Vector2<long>::operator ==(const Vector2<long> &v) const;
 
 // define for int
 template bool Vector2<int>::operator ==(const Vector2<int> &v) const;
+template Vector2<int16_t> &Vector2<int16_t>::operator +=(const Vector2<int16_t> &v);
