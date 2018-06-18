@@ -298,6 +298,11 @@ void Rover::one_second_loop(void)
     // indicates that the sensor or subsystem is present but not
     // functioning correctly
     update_sensor_status_flags();
+
+    // debug
+    g2.occupancy_grid.set_horizontal_distance(45, 5);
+    g2.occupancy_grid.print();
+
 }
 
 void Rover::update_GPS(void)
