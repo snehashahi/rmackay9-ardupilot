@@ -424,7 +424,6 @@ private:
     void update_home_from_EKF();
     bool set_home_to_current_location(bool lock);
     bool set_home(const Location& loc, bool lock);
-    void update_home();
 
     // compat.cpp
     void delay(uint32_t ms);

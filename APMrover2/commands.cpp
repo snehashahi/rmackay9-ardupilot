@@ -85,23 +85,3 @@ bool Rover::set_home(const Location& loc, bool lock)
     // return success
     return true;
 }
-
-/*
-  update home location from GPS
-  this is called as long as we have 3D lock and the arming switch is
-  not pushed
-*/
-void Rover::update_home()
-{
-    if (!ahrs.home_is_locked()) {
-        Location loc;
-        if (ahrs.get_position(loc)) {
-            if (get_distance(loc, ahrs.get_home()) > DISTANCE_HOME_MAX) {
-                ahrs.set_home(loc);
-                ahrs.Log_Write_Home_And_Origin();
-                gcs().send_home();
-            }
-        }
-    }
-    barometer.update_calibration();
-}

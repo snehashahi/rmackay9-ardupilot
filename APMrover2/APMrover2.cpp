@@ -286,13 +286,6 @@ void Rover::one_second_loop(void)
         counter = 0;
     }
 
-    // update home position if not soft armed and gps position has
-    // changed. Update every 1s at most
-    if (!hal.util->get_soft_armed() &&
-        gps.status() >= AP_GPS::GPS_OK_FIX_3D) {
-        update_home();
-    }
-
     // update error mask of sensors and subsystems. The mask uses the
     // MAV_SYS_STATUS_* values from mavlink. If a bit is set then it
     // indicates that the sensor or subsystem is present but not
