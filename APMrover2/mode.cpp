@@ -358,7 +358,7 @@ float Mode::calc_reduced_speed_for_turn_or_distance(float desired_speed)
     }
 
     // calculate and limit speed to allow vehicle to stay on circle
-    float overshoot_speed_max = safe_sqrt(g.turn_max_g * GRAVITY_MSS * MAX(g2.turn_radius, radius_m));
+    float overshoot_speed_max = safe_sqrt((MAX(1.0f, g.wp_turn_speed_gain) / 100.0f) * g.turn_max_g * GRAVITY_MSS * MAX(g2.turn_radius, radius_m));
     float speed_max = constrain_float(desired_speed, -overshoot_speed_max, overshoot_speed_max);
 
     // limit speed based on distance to waypoint and max acceleration/deceleration

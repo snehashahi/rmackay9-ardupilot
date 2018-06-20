@@ -100,6 +100,15 @@ const AP_Param::Info Rover::var_info[] = {
     // @User: Standard
     GSCALAR(speed_cruise,        "CRUISE_SPEED",    CRUISE_SPEED),
 
+    // @Param: WP_TURN_SPD_GAIN
+    // @DisplayName: Waypoint turning speed reduction gain
+    // @Description: The percentage of max lateral acceleration used to calculate vehicle speed while turning.  Lower values cause lower speeds in turns.
+    // @Units: %
+    // @Range: 0 100
+    // @Increment: 1
+    // @User: Standard
+    GSCALAR(wp_turn_speed_gain,    "WP_TURN_SPD_GAIN",  50),
+
     // @Param: PIVOT_TURN_ANGLE
     // @DisplayName: Pivot turn angle
     // @Description: Navigation angle threshold in degrees to switch to pivot steering when SKID_STEER_OUT is 1. This allows you to setup a skid steering rover to turn on the spot in auto mode when the angle it needs to turn it greater than this angle. An angle of zero means to disable pivot turning. Note that you will probably also want to set a low value for WP_RADIUS to get neat turns.
