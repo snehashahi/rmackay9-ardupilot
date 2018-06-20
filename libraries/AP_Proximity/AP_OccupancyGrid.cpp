@@ -103,11 +103,10 @@ void AP_OccupancyGrid::set_horizontal_distance(float angle_deg, float distance_m
     //
     // this part attempts to update every cell between vehicle and final point
     //
-    Vector2f dist_vec_rem;
     Vector2i next_ofs = _veh_offset;
     Vector2f next_rem = _veh_pos_rem / _accuracy;
     uint16_t counter = 0;
-    while (get_next_cell_edge(dist_vec_rem, next_ofs, next_rem) && (++counter < _grid_size)) {
+    while (get_next_cell_edge(dist_vec, next_ofs, next_rem) && (++counter < _grid_size)) {
         // reduce hit count of intermediate cell
         update_cell(next_ofs, false);
     }
@@ -250,6 +249,7 @@ bool AP_OccupancyGrid::get_next_cell_edge(Vector2f& dist_vec, Vector2i& ofs, Vec
     // pass offsets and remainder to caller
     ofs = next_ofs;
     rem = next_rem;
+    // To-Do: shorten dist_vec
     return true;
 }
 
