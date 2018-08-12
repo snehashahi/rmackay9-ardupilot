@@ -29,6 +29,8 @@ public:
     // return 0 motor mask
     uint16_t get_motor_mask() override { return 0; }
 
+    virtual uint16_t get_lost_motor() {return 0;}
+
 protected:
     // calculate motor outputs
     void output_armed_stabilizing();
