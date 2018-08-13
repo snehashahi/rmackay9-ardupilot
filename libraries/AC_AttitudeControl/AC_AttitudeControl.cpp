@@ -829,7 +829,7 @@ float AC_AttitudeControl::rate_target_to_motor_roll(float rate_actual_rads, floa
     float output = get_rate_roll_pid().get_p() + integrator + get_rate_roll_pid().get_d() + get_rate_roll_pid().get_ff(rate_target_rads);
 
     // Constrain output
-    return constrain_float(output, -1.0f, 1.0f);
+    return output;
 }
 
 // Run the pitch angular velocity PID controller and return the output
@@ -852,7 +852,7 @@ float AC_AttitudeControl::rate_target_to_motor_pitch(float rate_actual_rads, flo
     float output = get_rate_pitch_pid().get_p() + integrator + get_rate_pitch_pid().get_d() + get_rate_pitch_pid().get_ff(rate_target_rads);
 
     // Constrain output
-    return constrain_float(output, -1.0f, 1.0f);
+    return output;
 }
 
 // Run the yaw angular velocity PID controller and return the output
@@ -875,7 +875,7 @@ float AC_AttitudeControl::rate_target_to_motor_yaw(float rate_actual_rads, float
     float output = get_rate_yaw_pid().get_p() + integrator + get_rate_yaw_pid().get_d() + get_rate_yaw_pid().get_ff(rate_target_rads);
 
     // Constrain output
-    return constrain_float(output, -1.0f, 1.0f);
+    return output;
 }
 
 // Enable or disable body-frame feed forward
