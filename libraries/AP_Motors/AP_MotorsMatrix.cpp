@@ -20,6 +20,7 @@
  */
 #include <AP_HAL/AP_HAL.h>
 #include "AP_MotorsMatrix.h"
+#include <AP_Math/Matrix4f.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -129,6 +130,14 @@ uint16_t AP_MotorsMatrix::get_motor_mask()
         }
     }
     return rc_map_mask(mask);
+}
+
+// debug to test matrix4
+void AP_MotorsMatrix::matrix4_test()
+{
+    MatrixN<float,4> m;
+    m[2][0] = 0.1f;
+    m.invert();
 }
 
 // output_armed - sends commands to the motors

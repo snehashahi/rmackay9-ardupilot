@@ -48,6 +48,9 @@ public:
     //  this can be used to ensure other pwm outputs (i.e. for servos) do not conflict
     uint16_t            get_motor_mask();
 
+    // debug to test matrix4
+    void                matrix4_test();
+
 protected:
     // output - sends commands to the motors
     void                output_armed_stabilizing();
