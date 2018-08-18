@@ -42,6 +42,27 @@ MatrixN<T,N> &MatrixN<T,N>::operator +=(const MatrixN<T,N> &B)
     return *this;
 }
 
+// allow a MatrixN to be used as an array of vectors, 0 indexed
+template <typename T, uint8_t N>
+VectorN<T,N> &MatrixN<T,N>::operator[](uint8_t i)
+{
+    VectorN<T,N> *_v = &v;
+#if MATH_CHECK_INDEXES
+    assert(i >= 0 && i < 3);
+#endif
+    return _v[i];
+}
+
+template <typename T, uint8_t N>
+const VectorN<T,N> &MatrixN<T,N>::operator[](uint8_t i) const
+{
+    const VectorN<T,N> *_v = &v;
+#if MATH_CHECK_INDEXES
+    assert(i >= 0 && i < 3);
+#endif
+    return _v[i];
+}
+
 // Matrix symmetry routine
 template <typename T, uint8_t N>
 void MatrixN<T,N>::force_symmetry(void)

@@ -40,6 +40,10 @@ public:
     // add B to the matrix
     MatrixN<T,N> &operator +=(const MatrixN<T,N> &B);
 
+    // allow a MatrixN to be used as an array of vectors, 0 indexed
+    VectorN<T,N> & operator[](uint8_t i);
+    const VectorN<T,N> & operator[](uint8_t i) const;
+
     // Matrix symmetry routine
     void force_symmetry(void);
 
