@@ -44,9 +44,20 @@ public:
     VectorN<T,N> & operator[](uint8_t i);
     const VectorN<T,N> & operator[](uint8_t i) const;
 
+    // calculate the inverse of this matrix
+    // results stored in inv
+    // returns true if this matrix is invertible, false otherwise and inv is unmodified
+    //bool inverse(MatrixN<T,N>& inv) const;// { return false; }
+
+    // invert this matrix if it is invertible.
+    // returns true on success
+    bool invert();
+
     // Matrix symmetry routine
     void force_symmetry(void);
 
 private:
     T v[N][N];
 };
+
+typedef MatrixN<float,4> Matrix4f;
