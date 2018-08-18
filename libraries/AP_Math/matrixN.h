@@ -14,7 +14,7 @@ class VectorN;
 
 template <typename T, uint8_t N>
 class MatrixN {
-  
+
     friend class VectorN<T,N>;
 
 public:
@@ -39,7 +39,7 @@ public:
 
     // add B to the matrix
     MatrixN<T,N> &operator +=(const MatrixN<T,N> &B);
-    
+
     // Matrix symmetry routine
     void force_symmetry(void);
 
