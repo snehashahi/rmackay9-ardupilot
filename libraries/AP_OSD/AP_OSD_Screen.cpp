@@ -902,7 +902,7 @@ void AP_OSD_Screen::draw_climbeff(uint8_t x, uint8_t y)
     AP_BattMonitor &battery = AP_BattMonitor::battery();
     float amps = battery.current_amps();
     if (amps > 0.0) {
-        backend->write(x, y, false,"%c%c%3.1f%c",SYM_PTCHUP,SYM_EFF,(3.6 * u_scale(VSPEED,vspd)/amps), (double)unit_icon);
+        backend->write(x, y, false,"%c%c%3.1f%c",SYM_PTCHUP,SYM_EFF,(double)(3.6f * u_scale(VSPEED,vspd)/amps), unit_icon);
     } else {
         backend->write(x, y, false,"%c%c---%c",SYM_PTCHUP,SYM_EFF,unit_icon);
     } 
