@@ -148,7 +148,7 @@ public:
     //  this can be used to ensure other pwm outputs (i.e. for servos) do not conflict
     virtual uint16_t    get_motor_mask() = 0;
 
-    virtual uint16_t    get_lost_motor() = 0;
+    virtual uint8_t     get_lost_motor() const { return 0; }
 
     // pilot input in the -1 ~ +1 range for roll, pitch and yaw. 0~1 range for throttle
     void                set_radio_passthrough(float roll_input, float pitch_input, float throttle_input, float yaw_input);

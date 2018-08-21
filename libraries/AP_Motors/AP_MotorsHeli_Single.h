@@ -88,8 +88,6 @@ public:
     //  this can be used to ensure other pwm outputs (i.e. for servos) do not conflict
     uint16_t get_motor_mask() override;
 
-    virtual uint16_t get_lost_motor() {return 0;}
-
     // ext_gyro_gain - set external gyro gain in range 0 ~ 1
     void ext_gyro_gain(float gain)  override { _ext_gyro_gain_std = gain * 1000.0f; }
 

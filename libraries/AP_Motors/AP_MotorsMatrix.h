@@ -48,7 +48,7 @@ public:
     //  this can be used to ensure other pwm outputs (i.e. for servos) do not conflict
     uint16_t            get_motor_mask() override;
 
-    uint16_t            get_lost_motor() {return _motor_lost_pnt;}
+    uint8_t             get_lost_motor() const { return _motor_lost_pnt; }
 
 protected:
     // output - sends commands to the motors

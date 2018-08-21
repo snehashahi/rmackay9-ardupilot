@@ -116,8 +116,6 @@ public:
     //  this can be used to ensure other pwm outputs (i.e. for servos) do not conflict
     virtual uint16_t get_motor_mask() = 0;
 
-    virtual uint16_t get_lost_motor() {return 0;}
-
     virtual void set_acro_tail(bool set) {}
 
     // ext_gyro_gain - set external gyro gain in range 0 ~ 1
