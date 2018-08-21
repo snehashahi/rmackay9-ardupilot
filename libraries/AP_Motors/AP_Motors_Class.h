@@ -82,7 +82,6 @@ public:
     void                set_throttle(float throttle_in) { _throttle_in = throttle_in; };   // range 0 ~ 1
     void                set_throttle_avg_max(float throttle_avg_max) { _throttle_avg_max = constrain_float(throttle_avg_max,0.0f,1.0f); };   // range 0 ~ 1
     void                set_throttle_filter_cutoff(float filt_hz) { _throttle_filter.set_cutoff_frequency(filt_hz); }
-    void                enable_thrust_boost() { limit.thrust_boost = true; }
     void                set_forward(float forward_in) { _forward_in = forward_in; }; // range -1 ~ +1
     void                set_lateral(float lateral_in) { _lateral_in = lateral_in; };     // range -1 ~ +1
 
@@ -95,6 +94,10 @@ public:
     float               get_forward() const { return _forward_in; }
     float               get_lateral() const { return _lateral_in; }
     virtual float       get_throttle_hover() const = 0;
+
+    // motor failure handling
+    void                set_thrust_boost(bool enable) { _thrust_boost = enable; }
+    bool                get_thrust_boost() const { return _thrust_boost; }
 
     // spool up states
     enum spool_up_down_desired {
@@ -116,8 +119,6 @@ public:
         uint8_t yaw             : 1; // we have reached yaw limit
         uint8_t throttle_lower  : 1; // we have reached throttle's lower limit
         uint8_t throttle_upper  : 1; // we have reached throttle's upper limit
-        uint8_t thrust_boost    : 1; // we have using thrust boost
-        uint8_t thrust_balance  : 1; // output thrust is well balanced
     } limit;
 
     //
@@ -200,7 +201,6 @@ protected:
     float               _forward_in;                // last forward input from set_forward caller
     float               _lateral_in;                // last lateral input from set_lateral caller
     float               _throttle_avg_max;          // last throttle input from set_throttle_avg_max
-    float               _thrust_boost_ratio;           // choice between highest and second highest motor output for output mixing (0 ~ 1). Zero is normal operation
     LowPassFilterFloat  _throttle_filter;           // throttle input filter
     spool_up_down_desired _spool_desired;           // desired spool state
 
@@ -217,6 +217,11 @@ protected:
     float _yaw_radio_passthrough;      // yaw input from pilot in -1 ~ +1 range.  used for setup and providing servo feedback while landed
 
     AP_Int8             _pwm_type;            // PWM output type
+
+    // motor failure handling
+    bool                _thrust_boost;          // true if thrust boost is enabled to handle motor failure
+    bool                _thrust_balanced;       // true when output thrust is well balanced
+    float               _thrust_boost_ratio;    // choice between highest and second highest motor output for output mixing (0 ~ 1). Zero is normal operation
 
 private:
     static AP_Motors *_instance;

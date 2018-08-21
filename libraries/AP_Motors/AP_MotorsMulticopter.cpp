@@ -446,7 +446,6 @@ void AP_MotorsMulticopter::output_logic()
             limit.yaw = true;
             limit.throttle_lower = true;
             limit.throttle_upper = true;
-            limit.thrust_boost = false;
 
             // make sure the motors are spooling in the correct direction
             if (_spool_desired != DESIRED_SHUT_DOWN) {
@@ -457,6 +456,9 @@ void AP_MotorsMulticopter::output_logic()
             // set and increment ramp variables
             _spin_up_ratio = 0.0f;
             _throttle_thrust_max = 0.0f;
+
+            // initialise motor failure variables
+            _thrust_boost = false;
             _thrust_boost_ratio = 0.0f;
             break;
 
@@ -469,7 +471,6 @@ void AP_MotorsMulticopter::output_logic()
             limit.yaw = true;
             limit.throttle_lower = true;
             limit.throttle_upper = true;
-            limit.thrust_boost = false;
 
             // set and increment ramp variables
             float spool_step = 1.0f/(_spool_up_time*_loop_rate);
@@ -495,6 +496,9 @@ void AP_MotorsMulticopter::output_logic()
                 _spin_up_ratio += constrain_float(spin_up_armed_ratio-_spin_up_ratio, -spool_step, spool_step);
             }
             _throttle_thrust_max = 0.0f;
+
+            // initialise motor failure variables
+            _thrust_boost = false;
             _thrust_boost_ratio = 0.0f;
             break;
         }
@@ -507,7 +511,6 @@ void AP_MotorsMulticopter::output_logic()
             limit.yaw = false;
             limit.throttle_lower = false;
             limit.throttle_upper = false;
-            limit.thrust_boost = false;
 
             // make sure the motors are spooling in the correct direction
             if (_spool_desired != DESIRED_THROTTLE_UNLIMITED ){
@@ -526,6 +529,9 @@ void AP_MotorsMulticopter::output_logic()
             } else if (_throttle_thrust_max < 0.0f) {
                 _throttle_thrust_max = 0.0f;
             }
+
+            // initialise motor failure variables
+            _thrust_boost = false;
             _thrust_boost_ratio = 0.0f;
             break;
 
@@ -549,7 +555,7 @@ void AP_MotorsMulticopter::output_logic()
             _spin_up_ratio = 1.0f;
             _throttle_thrust_max = get_current_limit_max_throttle();
 
-            if (limit.thrust_boost == true && limit.thrust_balance == false) {
+            if (_thrust_boost && !_thrust_balanced) {
                 _thrust_boost_ratio = MIN(1.0, _thrust_boost_ratio+1.0f/(_spool_up_time*_loop_rate));
             } else {
                 _thrust_boost_ratio = MAX(0.0, _thrust_boost_ratio-1.0f/(_spool_up_time*_loop_rate));

@@ -211,13 +211,13 @@ void AP_MotorsMatrix::output_armed_stabilizing()
                 rp_low = _thrust_rpyt_out[i];
             }
             // record highest roll+pitch command
-            if (_thrust_rpyt_out[i] > rp_high && (limit.thrust_boost == false || i!=_motor_lost_pnt)) {
+            if (_thrust_rpyt_out[i] > rp_high && (!_thrust_boost || i != _motor_lost_pnt)) {
                 rp_high = _thrust_rpyt_out[i];
             }
         }
     }
     // include the lost motor scaled by _thrust_boost_ratio
-    if (limit.thrust_boost == true && motor_enabled[_motor_lost_pnt]){
+    if (_thrust_boost && motor_enabled[_motor_lost_pnt]){
         // record highest roll+pitch command
         if (_thrust_rpyt_out[_motor_lost_pnt] > rp_high) {
             rp_high = _thrust_boost_ratio*rp_high + (1.0f-_thrust_boost_ratio)*_thrust_rpyt_out[_motor_lost_pnt];
@@ -257,13 +257,13 @@ void AP_MotorsMatrix::output_armed_stabilizing()
                 rpy_low = _thrust_rpyt_out[i];
             }
             // record highest roll+pitch+yaw command
-            if (_thrust_rpyt_out[i] > rpy_high && (limit.thrust_boost == false || i!=_motor_lost_pnt)) {
+            if (_thrust_rpyt_out[i] > rpy_high && (!_thrust_boost || i != _motor_lost_pnt)) {
                 rpy_high = _thrust_rpyt_out[i];
             }
         }
     }
     // include the lost motor scaled by _thrust_boost_ratio
-    if (limit.thrust_boost == true ){
+    if (_thrust_boost ){
         // record highest roll+pitch+yaw command
         if (_thrust_rpyt_out[_motor_lost_pnt] > rpy_high && motor_enabled[_motor_lost_pnt]) {
             rpy_high = _thrust_boost_ratio*rpy_high + (1.0f-_thrust_boost_ratio)*_thrust_rpyt_out[_motor_lost_pnt];
@@ -329,7 +329,7 @@ void AP_MotorsMatrix::output_armed_stabilizing()
             if (_thrust_rpyt_out_filt[i] > rpyt_high) {
                 rpyt_high = _thrust_rpyt_out_filt[i];
                 // hold motor lost pointer constant while thrust balance is true
-                if(limit.thrust_balance == true) {
+                if (_thrust_balanced) {
                     _motor_lost_pnt = i;
                 }
             }
@@ -341,16 +341,16 @@ void AP_MotorsMatrix::output_armed_stabilizing()
         thrust_balance = rpyt_high*number_motors/rpyt_sum;
     }
     // ensure thrust balance does not activate for multirotors with less than 6 motors
-    if (number_motors >= 6 && thrust_balance >= 1.5f && limit.thrust_balance == true) {
-        limit.thrust_balance = false;
+    if (number_motors >= 6 && thrust_balance >= 1.5f && _thrust_balanced) {
+        _thrust_balanced = false;
     }
-    if (thrust_balance <= 1.25f && limit.thrust_balance == false) {
-        limit.thrust_balance = true;
+    if (thrust_balance <= 1.25f && !_thrust_balanced) {
+        _thrust_balanced = true;
     }
 
     // check to see if thrust boost is using more throttle than _throttle_thrust_max
-    if (_throttle_thrust_max > throttle_thrust_best_rpy + thr_adj && rpyt_high < 0.9f && limit.thrust_balance==true) {
-        limit.thrust_boost = false;
+    if (_throttle_thrust_max > throttle_thrust_best_rpy + thr_adj && rpyt_high < 0.9f && _thrust_balanced) {
+        _thrust_boost = false;
     }
 }
 
