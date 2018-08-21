@@ -196,12 +196,10 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     // Octo-Quad (x8) + : MOT_YAW_HEADROOM = 300, ATC_RAT_RLL_IMAX = 0.5,   ATC_RAT_PIT_IMAX = 0.5,   ATC_RAT_YAW_IMAX = 0.25
     // Quads cannot make use of motor loss handling because it doesn't have enough degrees of freedom.
 
-
     // calculate amount of yaw we can fit into the throttle range
     // this is always equal to or less than the requested yaw from the pilot or rate controller
-
-    float   rp_low = 1.0f;    // lowest thrust value
-    float   rp_high = -1.0f;  // highest thrust value
+    float rp_low = 1.0f;    // lowest thrust value
+    float rp_high = -1.0f;  // highest thrust value
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             // calculate the thrust outputs for roll and pitch
@@ -216,6 +214,7 @@ void AP_MotorsMatrix::output_armed_stabilizing()
             }
         }
     }
+
     // include the lost motor scaled by _thrust_boost_ratio
     if (_thrust_boost && motor_enabled[_motor_lost_pnt]){
         // record highest roll+pitch command
@@ -246,8 +245,8 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     }
 
     // add yaw control to thrust outputs
-    float   rpy_low = 1.0f;    // lowest thrust value
-    float   rpy_high = -1.0f;  // highest thrust value
+    float rpy_low = 1.0f;   // lowest thrust value
+    float rpy_high = -1.0f; // highest thrust value
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             _thrust_rpyt_out[i] = _thrust_rpyt_out[i] + yaw_thrust * _yaw_factor[i];
