@@ -65,7 +65,8 @@ void Copter::thrust_loss_check()
 {
     static uint16_t thrust_loss_counter;  // number of iterations vehicle may have been crashed
 
-    if (motors->limit.thrust_boost) {
+    // exit immediately if motor failure handling already engaged
+    if (motors->get_thrust_boost()) {
         return;
     }
 
@@ -112,7 +113,7 @@ void Copter::thrust_loss_check()
         //gcs().send_text(MAV_SEVERITY_EMERGENCY,"Potential Thrust Loss");
         gcs().send_text(MAV_SEVERITY_EMERGENCY, "Potential Thrust Loss (%d)", (int)motors->get_lost_motor());
         // enable thrust loss handling
-        motors->enable_thrust_boost();
+        motors->set_thrust_boost(true);
     }
 }
 
