@@ -57,6 +57,7 @@ bool AP_Proximity_MAV::get_upward_distance(float &distance) const
 // handle mavlink DISTANCE_SENSOR messages
 void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
 {
+    if (msg->msgid == MAVLINK_MSG_ID_DISTANCE_SENSOR){
     mavlink_distance_sensor_t packet;
     mavlink_msg_distance_sensor_decode(msg, &packet);
 
@@ -76,5 +77,40 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
     if (packet.orientation == MAV_SENSOR_ROTATION_PITCH_90) {
         _distance_upward = packet.current_distance / 100.0f;
         _last_upward_update_ms = AP_HAL::millis();
+    }
+    }else if (msg->msgid == MAVLINK_MSG_ID_OBSTACLE_DISTANCE){
+              mavlink_obstacle_distance_t packet;
+              mavlink_msg_obstacle_distance_decode(msg, &packet);
+              uint8_t total_distances = 360.0f / packet.increment;
+              const float increment_half = packet.increment / 2.0f;
+              _distance_min = packet.min_distance;
+              _distance_max = packet.max_distance;
+              for (uint8_t i = 0; i < _num_sectors; i++) {
+                  float upper_edge_distance = _sector_middle_deg[i] + (_sector_width_deg[i] / 2.0f);
+                  float lower_edge_distance = _sector_middle_deg[i] - (_sector_width_deg[i] / 2.0f);
+                  float MAX_DISTANCE = 9999.0f;
+                  _distance[i] = MAX_DISTANCE;
+                  bool updated = false;
+                  for (uint8_t j = 0; j < total_distances; j++) {
+                      const float mid_angle = packet.increment * (0.5f + j) - increment_half;
+                      float upper_edge = mid_angle + increment_half;
+                      float lower_edge = mid_angle - increment_half;
+                      if (lower_edge  < 0.0f) {
+                          lower_edge += 360.0f;
+                      }
+                      if (lower_edge_distance <0.0f) {
+                          lower_edge_distance += 360.0f;
+                      }
+                      if (upper_edge < upper_edge_distance && lower_edge > lower_edge_distance && (packet.distances[j] /100.0f) < _distance[i]) {
+                          _distance[i] = packet.distances[j] /100.0f;
+                          _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
+                      }
+                      updated = true;
+                  }
+                  _last_update_ms = AP_HAL::millis();
+                  if (updated) {
+                      update_boundary_for_sector(i);
+                  }
+              }
     }
 }
