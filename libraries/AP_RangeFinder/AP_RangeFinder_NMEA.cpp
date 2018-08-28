@@ -169,9 +169,9 @@ bool AP_RangeFinder_NMEA::decode_latest_term()
     }
 
     if (_sentence_type == SONAR_DBT) {
-        // parse DBT messages
+        // parse DBT messages and convert feet to meters
         if (_term_number == 3) {
-            _distance_m = atof(_term);
+            _distance_m = atof(_term) * 0.3048;
         }
     } else if (_sentence_type == SONAR_DPT) {
         // parse DPT messages
