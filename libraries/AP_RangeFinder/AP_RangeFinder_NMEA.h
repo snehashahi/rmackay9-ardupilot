@@ -74,4 +74,9 @@ private:
     uint8_t _checksum;                      // checksum accumulator
     bool _term_is_checksum;                 // current term is the checksum
     sentence_types _sentence_type;          // the sentence type currently being processed
+
+    //const char* test_data = {'$','S','D','D','B','T',',',',','f',',',',','M',',','2','2','.','5',',','F','*','3','3','\r','\n'};
+    const char* test_data = "$SDDBT,,f,,M,22.5,F*33\n\r";
+    const uint8_t test_data_len = 24;
+    uint8_t test_data_pos;
 };

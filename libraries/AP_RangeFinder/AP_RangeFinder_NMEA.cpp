@@ -65,9 +65,18 @@ bool AP_RangeFinder_NMEA::get_reading(uint16_t &reading_cm)
     // read any available lines from the lidar
     float sum = 0.0f;
     uint16_t count = 0;
-    int16_t nbytes = uart->available();
+    //int16_t nbytes = uart->available();
+
+    // debug
+    int16_t nbytes = 1;
+    test_data_pos++;
+    if (test_data_pos >= test_data_len) {
+        test_data_pos = 0;
+    }
+
     while (nbytes-- > 0) {
-        char c = uart->read();
+        //char c = uart->read();
+        char c = test_data[test_data_pos];
         if (decode(c)) {
             sum += _distance_m;
             count++;
