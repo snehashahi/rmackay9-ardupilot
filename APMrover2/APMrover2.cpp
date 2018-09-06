@@ -265,6 +265,28 @@ void Rover::update_aux(void)
  */
 void Rover::one_second_loop(void)
 {
+    mavlink_message_t msg;
+    mavlink_obstacle_distance_t mav_obstacle_distance = {};
+
+    // create obstacle_distance message
+    mav_obstacle_distance.time_usec = 0;
+    mav_obstacle_distance.sensor_type = 0;
+    mav_obstacle_distance.distances[0] = 10;
+    mav_obstacle_distance.distances[1] = 11;
+    mav_obstacle_distance.distances[2] = 12;
+    mav_obstacle_distance.distances[3] = 13;
+    mav_obstacle_distance.distances[4] = 14;
+    mav_obstacle_distance.distances[5] = 15;
+    mav_obstacle_distance.distances[6] = 16;
+    mav_obstacle_distance.distances[7] = 17;
+    mav_obstacle_distance.increment = 45;
+    mav_obstacle_distance.min_distance = 5;
+    mav_obstacle_distance.max_distance = 2000;
+    mavlink_msg_obstacle_distance_encode(0, 0, &msg, &mav_obstacle_distance);
+
+    // send to proximity sensor
+    g2.proximity.handle_msg(&msg);
+
     // send a heartbeat
     gcs().send_message(MSG_HEARTBEAT);
 
