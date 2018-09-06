@@ -121,25 +121,25 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         }
 
         // debug to console
-        ::printf("Dist 0:%d 1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d\n",
-            (int)_distance[0],
-            (int)_distance[1],
-            (int)_distance[2],
-            (int)_distance[3],
-            (int)_distance[4],
-            (int)_distance[5],
-            (int)_distance[6],
-            (int)_distance[7]);
+        ::printf("Dist 0:%4.2f 1:%4.2f 2:%4.2f 3:%4.2f 4:%4.2f 5:%4.2f 6:%4.2f 7:%4.2f\n",
+            (double)_distance[0],
+            (double)_distance[1],
+            (double)_distance[2],
+            (double)_distance[3],
+            (double)_distance[4],
+            (double)_distance[5],
+            (double)_distance[6],
+            (double)_distance[7]);
 
         // debug to GCS
-        gcs().send_text(MAV_SEVERITY_INFO, "Dist 0:%d 1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d",
-            (int)_distance[0],
-            (int)_distance[1],
-            (int)_distance[2],
-            (int)_distance[3],
-            (int)_distance[4],
-            (int)_distance[5],
-            (int)_distance[6],
-            (int)_distance[7]);
+        gcs().send_text(MAV_SEVERITY_INFO, "Dist 0:%4.2f 1:%4.2f 2:%4.2f 3:%4.2f 4:%4.2f 5:%4.2f 6:%4.2f 7:%4.2f",
+            (double)_distance[0],
+            (double)_distance[1],
+            (double)_distance[2],
+            (double)_distance[3],
+            (double)_distance[4],
+            (double)_distance[5],
+            (double)_distance[6],
+            (double)_distance[7]);
     }
 }
