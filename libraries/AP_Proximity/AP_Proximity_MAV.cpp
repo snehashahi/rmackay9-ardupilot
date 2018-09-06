@@ -91,8 +91,8 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         const float increment_half = packet.increment / 2.0f;
 
         // set distance min and max
-        _distance_min = packet.min_distance;
-        _distance_max = packet.max_distance;
+        _distance_min = packet.min_distance / 100.0f;
+        _distance_max = packet.max_distance / 100.0f;
         _last_update_ms = AP_HAL::millis();
 
         // iterate over distance array sectors
