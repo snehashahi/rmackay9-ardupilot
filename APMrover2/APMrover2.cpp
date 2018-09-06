@@ -271,14 +271,14 @@ void Rover::one_second_loop(void)
     // create obstacle_distance message
     mav_obstacle_distance.time_usec = 0;
     mav_obstacle_distance.sensor_type = 0;
-    mav_obstacle_distance.distances[0] = 10;
-    mav_obstacle_distance.distances[1] = 11;
-    mav_obstacle_distance.distances[2] = 12;
-    mav_obstacle_distance.distances[3] = 13;
-    mav_obstacle_distance.distances[4] = 14;
-    mav_obstacle_distance.distances[5] = 15;
-    mav_obstacle_distance.distances[6] = 16;
-    mav_obstacle_distance.distances[7] = 17;
+    mav_obstacle_distance.distances[0] = 100;
+    mav_obstacle_distance.distances[1] = 110;
+    mav_obstacle_distance.distances[2] = 120;
+    mav_obstacle_distance.distances[3] = 130;
+    mav_obstacle_distance.distances[4] = 140;
+    mav_obstacle_distance.distances[5] = 150;
+    mav_obstacle_distance.distances[6] = 160;
+    mav_obstacle_distance.distances[7] = 170;
     mav_obstacle_distance.increment = 45;
     mav_obstacle_distance.min_distance = 5;
     mav_obstacle_distance.max_distance = 2000;
