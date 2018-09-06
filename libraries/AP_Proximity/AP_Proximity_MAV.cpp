@@ -97,19 +97,22 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
 
         // iterate over distance array sectors
         for (uint8_t i = 0; i < _num_sectors; i++) {
+            const float sector_width_half = _sector_width_deg[i] / 2.0f;
             bool updated = false;
             _distance[i] = MAX_DISTANCE;
+
             // iterate over message's sectors
             for (uint8_t j = 0; j < total_distances; j++) {
+                const float packet_distance_m = packet.distances[j] / 100.0f;
                 const float mid_angle = packet.increment * (0.5f + j) - increment_half;
                 float angle_diff = fabsf(wrap_180(_sector_middle_deg[i] - mid_angle));
                 // update distance array sector with shortest distance from message
-                if (angle_diff < _sector_width_deg[i] && (packet.distances[j] /100.0f) < _distance[i]) {
-                    _distance[i] = packet.distances[j] / 100.0f;
-                    _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
+                if ((angle_diff <= sector_width_half) && (packet_distance_m < _distance[i])) {
+                    _distance[i] = packet_distance_m;
                 }
                 updated = true;
             }
+            _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
             if (updated) {
                 update_boundary_for_sector(i);
             }
