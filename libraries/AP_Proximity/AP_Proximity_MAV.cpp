@@ -118,5 +118,16 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
                 update_boundary_for_sector(i);
             }
         }
+
+        // debug
+        ::printf("Dist 0:%d 1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d\n",
+            (int)_distance[0],
+            (int)_distance[1],
+            (int)_distance[2],
+            (int)_distance[3],
+            (int)_distance[4],
+            (int)_distance[5],
+            (int)_distance[6],
+            (int)_distance[7]);
     }
 }
