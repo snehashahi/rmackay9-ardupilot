@@ -99,6 +99,7 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         for (uint8_t i = 0; i < _num_sectors; i++) {
             const float sector_width_half = _sector_width_deg[i] / 2.0f;
             bool updated = false;
+            _angle[i] = i * 45;
             _distance[i] = MAX_DISTANCE;
 
             // iterate over message's sectors
