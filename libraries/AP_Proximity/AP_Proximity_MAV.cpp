@@ -57,60 +57,66 @@ bool AP_Proximity_MAV::get_upward_distance(float &distance) const
 // handle mavlink DISTANCE_SENSOR messages
 void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
 {
-    if (msg->msgid == MAVLINK_MSG_ID_DISTANCE_SENSOR){
-    mavlink_distance_sensor_t packet;
-    mavlink_msg_distance_sensor_decode(msg, &packet);
+    if (msg->msgid == MAVLINK_MSG_ID_DISTANCE_SENSOR) {
+        mavlink_distance_sensor_t packet;
+        mavlink_msg_distance_sensor_decode(msg, &packet);
 
-    // store distance to appropriate sector based on orientation field
-    if (packet.orientation <= MAV_SENSOR_ROTATION_YAW_315) {
-        uint8_t sector = packet.orientation;
-        _angle[sector] = sector * 45;
-        _distance[sector] = packet.current_distance / 100.0f;
-        _distance_min = packet.min_distance / 100.0f;
-        _distance_max = packet.max_distance / 100.0f;
-        _distance_valid[sector] = (_distance[sector] >= _distance_min) && (_distance[sector] <= _distance_max);
+        // store distance to appropriate sector based on orientation field
+        if (packet.orientation <= MAV_SENSOR_ROTATION_YAW_315) {
+            uint8_t sector = packet.orientation;
+            _angle[sector] = sector * 45;
+            _distance[sector] = packet.current_distance / 100.0f;
+            _distance_min = packet.min_distance / 100.0f;
+            _distance_max = packet.max_distance / 100.0f;
+            _distance_valid[sector] = (_distance[sector] >= _distance_min) && (_distance[sector] <= _distance_max);
+            _last_update_ms = AP_HAL::millis();
+            update_boundary_for_sector(sector);
+        }
+
+        // store upward distance
+        if (packet.orientation == MAV_SENSOR_ROTATION_PITCH_90) {
+            _distance_upward = packet.current_distance / 100.0f;
+            _last_upward_update_ms = AP_HAL::millis();
+        }
+        return;
+    }
+
+    if (msg->msgid == MAVLINK_MSG_ID_OBSTACLE_DISTANCE) {
+        mavlink_obstacle_distance_t packet;
+        mavlink_msg_obstacle_distance_decode(msg, &packet);
+
+        const float MAX_DISTANCE = 9999.0f;
+        const uint8_t total_distances = 360.0f / packet.increment;
+        const float increment_half = packet.increment / 2.0f;
+
+        // set distance min and max
+        _distance_min = packet.min_distance;
+        _distance_max = packet.max_distance;
         _last_update_ms = AP_HAL::millis();
-        update_boundary_for_sector(sector);
-    }
 
-    // store upward distance
-    if (packet.orientation == MAV_SENSOR_ROTATION_PITCH_90) {
-        _distance_upward = packet.current_distance / 100.0f;
-        _last_upward_update_ms = AP_HAL::millis();
-    }
-    }else if (msg->msgid == MAVLINK_MSG_ID_OBSTACLE_DISTANCE){
-              mavlink_obstacle_distance_t packet;
-              mavlink_msg_obstacle_distance_decode(msg, &packet);
-              uint8_t total_distances = 360.0f / packet.increment;
-              const float increment_half = packet.increment / 2.0f;
-              _distance_min = packet.min_distance;
-              _distance_max = packet.max_distance;
-              for (uint8_t i = 0; i < _num_sectors; i++) {
-                  float upper_edge_distance = _sector_middle_deg[i] + (_sector_width_deg[i] / 2.0f);
-                  float lower_edge_distance = _sector_middle_deg[i] - (_sector_width_deg[i] / 2.0f);
-                  float MAX_DISTANCE = 9999.0f;
-                  _distance[i] = MAX_DISTANCE;
-                  bool updated = false;
-                  for (uint8_t j = 0; j < total_distances; j++) {
-                      const float mid_angle = packet.increment * (0.5f + j) - increment_half;
-                      float upper_edge = mid_angle + increment_half;
-                      float lower_edge = mid_angle - increment_half;
-                      if (lower_edge  < 0.0f) {
-                          lower_edge += 360.0f;
-                      }
-                      if (lower_edge_distance <0.0f) {
-                          lower_edge_distance += 360.0f;
-                      }
-                      if (upper_edge < upper_edge_distance && lower_edge > lower_edge_distance && (packet.distances[j] /100.0f) < _distance[i]) {
-                          _distance[i] = packet.distances[j] /100.0f;
-                          _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
-                      }
-                      updated = true;
-                  }
-                  _last_update_ms = AP_HAL::millis();
-                  if (updated) {
-                      update_boundary_for_sector(i);
-                  }
-              }
+        // iterate over distance array sectors
+        for (uint8_t i = 0; i < _num_sectors; i++) {
+            // calculate distance array sector edges
+            const float upper_edge_distance = wrap_360(_sector_middle_deg[i] + (_sector_width_deg[i] / 2.0f));
+            const float lower_edge_distance = wrap_360(_sector_middle_deg[i] - (_sector_width_deg[i] / 2.0f));
+            bool updated = false;
+            _distance[i] = MAX_DISTANCE;
+
+            // iterate over message's sectors
+            for (uint8_t j = 0; j < total_distances; j++) {
+                const float mid_angle = packet.increment * (0.5f + j) - increment_half;
+                const float upper_edge = wrap_360(mid_angle + increment_half);
+                const float lower_edge = wrap_360(mid_angle - increment_half);
+                // update distance array sector with shortest distance from message
+                if (upper_edge < upper_edge_distance && lower_edge > lower_edge_distance && (packet.distances[j] /100.0f) < _distance[i]) {
+                    _distance[i] = packet.distances[j] / 100.0f;
+                    _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
+                }
+                updated = true;
+            }
+            if (updated) {
+                update_boundary_for_sector(i);
+            }
+        }
     }
 }
