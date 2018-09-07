@@ -85,9 +85,17 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         mavlink_obstacle_distance_t packet;
         mavlink_msg_obstacle_distance_decode(msg, &packet);
 
+        // check increment (message's sector width)
+        float increment = packet.increment;
+        if (packet.increment == 0) {
+            // assume an rplidar with 64 sectors
+            increment = 360.0f / 64.0f;
+        }
+        increment = MAX(increment, 5.0f);
+        const float increment_half = increment / 2.0f;
+
         const float MAX_DISTANCE = 9999.0f;
-        const uint8_t total_distances = 360.0f / packet.increment;
-        const float increment_half = packet.increment / 2.0f;
+        const uint8_t total_distances = 360.0f / increment;
 
         // set distance min and max
         _distance_min = packet.min_distance / 100.0f;
@@ -104,7 +112,7 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
             // iterate over message's sectors
             for (uint8_t j = 0; j < total_distances; j++) {
                 const float packet_distance_m = packet.distances[j] / 100.0f;
-                const float mid_angle = packet.increment * (0.5f + j) - increment_half;
+                const float mid_angle = increment * (0.5f + j) - increment_half;
                 float angle_diff = fabsf(wrap_180(_sector_middle_deg[i] - mid_angle));
                 // update distance array sector with shortest distance from message
                 if ((angle_diff <= sector_width_half) && (packet_distance_m < _distance[i])) {
