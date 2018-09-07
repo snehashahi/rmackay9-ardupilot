@@ -208,17 +208,17 @@ void AP_MotorsMatrix::output_armed_stabilizing()
                 rp_low = _thrust_rpyt_out[i];
             }
             // record highest roll+pitch command
-            if (_thrust_rpyt_out[i] > rp_high && (!_thrust_boost || i != _motor_lost_pnt)) {
+            if (_thrust_rpyt_out[i] > rp_high && (!_thrust_boost || i != _motor_lost_index)) {
                 rp_high = _thrust_rpyt_out[i];
             }
         }
     }
 
     // include the lost motor scaled by _thrust_boost_ratio
-    if (_thrust_boost && motor_enabled[_motor_lost_pnt]){
+    if (_thrust_boost && motor_enabled[_motor_lost_index]){
         // record highest roll+pitch command
-        if (_thrust_rpyt_out[_motor_lost_pnt] > rp_high) {
-            rp_high = _thrust_boost_ratio*rp_high + (1.0f-_thrust_boost_ratio)*_thrust_rpyt_out[_motor_lost_pnt];
+        if (_thrust_rpyt_out[_motor_lost_index] > rp_high) {
+            rp_high = _thrust_boost_ratio*rp_high + (1.0f-_thrust_boost_ratio)*_thrust_rpyt_out[_motor_lost_index];
         }
     }
 
@@ -255,7 +255,7 @@ void AP_MotorsMatrix::output_armed_stabilizing()
                 rpy_low = _thrust_rpyt_out[i];
             }
             // record highest roll+pitch+yaw command
-            if (_thrust_rpyt_out[i] > rpy_high && (!_thrust_boost || i != _motor_lost_pnt)) {
+            if (_thrust_rpyt_out[i] > rpy_high && (!_thrust_boost || i != _motor_lost_index)) {
                 rpy_high = _thrust_rpyt_out[i];
             }
         }
@@ -263,8 +263,8 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     // include the lost motor scaled by _thrust_boost_ratio
     if (_thrust_boost ){
         // record highest roll+pitch+yaw command
-        if (_thrust_rpyt_out[_motor_lost_pnt] > rpy_high && motor_enabled[_motor_lost_pnt]) {
-            rpy_high = _thrust_boost_ratio*rpy_high + (1.0f-_thrust_boost_ratio)*_thrust_rpyt_out[_motor_lost_pnt];
+        if (_thrust_rpyt_out[_motor_lost_index] > rpy_high && motor_enabled[_motor_lost_index]) {
+            rpy_high = _thrust_boost_ratio*rpy_high + (1.0f-_thrust_boost_ratio)*_thrust_rpyt_out[_motor_lost_index];
         }
     }
 
@@ -320,7 +320,7 @@ void AP_MotorsMatrix::output_armed_stabilizing()
 //      b) thr_adj: the difference between the pilot's desired throttle and throttle_thrust_best_rpy
 //   records filtered motor output values in _thrust_rpyt_out_filt array
 //   sets thrust_balanced to true if motors are balanced, false if a motor failure is detected
-//   sets _motor_lost_pnt to index of failed motor
+//   sets _motor_lost_index to index of failed motor
 void AP_MotorsMatrix::check_for_failed_motor(float throttle_thrust_best_plus_adj)
 {
     // record filtered and scaled thrust output for motor loss monitoring purposes
@@ -343,7 +343,7 @@ void AP_MotorsMatrix::check_for_failed_motor(float throttle_thrust_best_plus_adj
                 rpyt_high = _thrust_rpyt_out_filt[i];
                 // hold motor lost pointer constant while thrust balance is true
                 if (_thrust_balanced) {
-                    _motor_lost_pnt = i;
+                    _motor_lost_index = i;
                 }
             }
         }
