@@ -132,7 +132,7 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         counter++;
         if (counter > 5) {
             counter = 0;
-            gcs().send_text(MAV_SEVERITY_INFO, "Dist 0:%4.2f 1:%4.2f 2:%4.2f 3:%4.2f 4:%4.2f 5:%4.2f 6:%4.2f 7:%4.2f",
+            gcs().send_text(MAV_SEVERITY_INFO, "D0:%3.1f 1:%3.1f 2:%3.1f 3:%3.1f 4:%3.1f 5:%3.1f 6:%3.1f 7:%3.1f",
                 (double)_distance[0],
                 (double)_distance[1],
                 (double)_distance[2],
