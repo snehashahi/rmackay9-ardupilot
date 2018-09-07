@@ -103,6 +103,9 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         _distance_max = packet.max_distance / 100.0f;
         _last_update_ms = AP_HAL::millis();
 
+        // get user configured yaw correction from front end
+        float yaw_correction = constrain_float(frontend.get_yaw_correction(state.instance), -360.0f, +360.0f);
+
         // iterate over distance array sectors
         for (uint8_t i = 0; i < _num_sectors; i++) {
             const float sector_width_half = _sector_width_deg[i] / 2.0f;
@@ -113,7 +116,7 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
             // iterate over message's sectors
             for (uint8_t j = 0; j < total_distances; j++) {
                 const float packet_distance_m = packet.distances[j] / 100.0f;
-                const float mid_angle = increment * (0.5f + j) - increment_half;
+                const float mid_angle = increment * (0.5f + j) - increment_half + yaw_correction;
                 float angle_diff = fabsf(wrap_180(_sector_middle_deg[i] - mid_angle));
                 // update distance array sector with shortest distance from message
                 if ((angle_diff <= sector_width_half) && (packet_distance_m < _distance[i])) {
