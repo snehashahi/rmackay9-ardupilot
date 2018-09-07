@@ -379,6 +379,9 @@ public:
     AP_Float sailboat_loiter_radius;
     AP_Float sail_heel_angle_max;
     
+    // Arming rudder
+    AP_Int8 rudder_arming_value;
+    
     // windvane
     AP_WindVane windvane;
 };

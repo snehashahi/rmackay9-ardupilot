@@ -512,7 +512,7 @@ private:
     void sailboat_update_mainsail();
     bool sailboat_update_indirect_route(float desired_heading);
     float sailboat_calc_heading(float desired_heading);
-    float sailboat_VMG(float target_heading);
+    void sailboat_VMG(float target_heading);
     float sailboat_acro_tack();
     float sailboat_update_rate_max(float rate_max);
     
@@ -524,6 +524,7 @@ private:
     float _sailboat_new_tack_heading_rad;
     uint8_t _sailboat_current_tack;
     float _sailboat_heading_last_run;
+    float _sailboat_velocity_made_good;
     enum _tack {
         Unknown = 0,
         Port = 1,

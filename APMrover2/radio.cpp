@@ -47,7 +47,6 @@ void Rover::init_rc_out()
 */
 void Rover::rudder_arm_disarm_check()
 {
-    AP_Arming_Rover::ArmingRudder arming_rudder = arming.rudder_arming();
     
     // In Rover we need to check that its set to the throttle trim and within the DZ
     // if throttle is not within trim dz, then pilot cannot rudder arm/disarm
@@ -57,7 +56,7 @@ void Rover::rudder_arm_disarm_check()
     }
 
     // check if arming/disarming allowed from this mode
-    if (!control_mode->allows_arming_from_transmitter() || arming_rudder == AP_Arming_Rover::ARMING_RUDDER_DISABLED) {
+    if (!control_mode->allows_arming_from_transmitter() || g2.rudder_arming_value == AP_Arming_Rover::ARMING_RUDDER_DISABLED) {
         rudder_arm_timer = 0;
         return;
     }
@@ -81,9 +80,9 @@ void Rover::rudder_arm_disarm_check()
             // not at full right rudder
             rudder_arm_timer = 0;
         }
-    } else if (!g2.motors.active() && arming_rudder != AP_Arming_Rover::ARMING_RUDDER_ARMONLY) {
+    } else if (!g2.motors.active() && g2.rudder_arming_value != AP_Arming_Rover::ARMING_RUDDER_ARMONLY) {
         // Dont allow  disarm if in manual and rudder arming parameter is 3, for sailboats
-        if (!(arming_rudder == AP_Arming_Rover::ARMING_RUDDER_NO_DISARM_MANUAL && rover.control_mode == &rover.mode_manual)){
+        if (!(g2.rudder_arming_value == AP_Arming_Rover::ARMING_RUDDER_NO_DISARM_MANUAL && rover.control_mode == &rover.mode_manual)){
             // when armed and motor not active (not moving), full left rudder starts disarming counter
             if (channel_steer->get_control_in() < -4000) {
                 const uint32_t now = millis();

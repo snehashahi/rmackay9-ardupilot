@@ -656,7 +656,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 0 180
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("SAIL_MAX_ST_RT", 36, ParametersG2, sailboat_hold_angle, 0),
+    AP_GROUPINFO("SAIL_HOLD_ANGLE", 36, ParametersG2, sailboat_hold_angle, 0),
     
     // @Param: SAIL_LOITER_RAD
     // @DisplayName: Sailing loiter radius 
@@ -676,7 +676,13 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SAIL_HEEL_MAX", 38, ParametersG2, sail_heel_angle_max, 30),   
     
-
+    // @Param: ARMING_RUDDER
+    // @DisplayName: Rudder Arming
+    // @Description: Control arm/disarm by rudder input. When enabled arming is done with right rudder, disarming with left rudder. Rudder arming only works in manual throttle modes with throttle at zero +- deadzone (RCx_DZ)
+    // @Values: 0:Disabled,1:ArmingOnly,2:ArmOrDisarm,3:Arm but only disarm if not in manual, for sailboats
+    // @User: Advanced
+    AP_GROUPINFO("ARMING_RUDDER", 39, ParametersG2,  rudder_arming_value, AP_Arming_Rover::ARMING_RUDDER_ARMDISARM),
+    
     AP_GROUPEND
 };
 

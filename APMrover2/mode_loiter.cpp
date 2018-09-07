@@ -54,6 +54,12 @@ void ModeLoiter::update()
         float yaw_error_ratio = 1.0f - constrain_float(fabsf(_yaw_error_cd / 9000.0f), 0.0f, 1.0f) * 0.5f;
         _desired_speed *= yaw_error_ratio;
     }
+    
+    // Sailboats shoulden't stop and cant go backwards
+    if(g2.motors.has_sail() && !is_positive(_desired_speed)) 
+    {     
+        _desired_speed = 1.0f;
+    }
 
     // run steering and throttle controllers
     calc_steering_to_heading(_desired_yaw_cd, _desired_speed < 0);

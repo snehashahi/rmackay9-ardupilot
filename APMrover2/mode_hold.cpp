@@ -17,7 +17,7 @@ void ModeHold::update()
         rover.sailboat_set_mainsail(100);
         
         // Only steer into wind if armed and a sterring angle is deffined
-        if(hal.util->get_soft_armed() && is_positive(g2.sailboat_hold_angle)){
+        if(hal.util->get_soft_armed() && !is_negative(g2.sailboat_hold_angle)){
             if(is_zero(g2.sailboat_hold_angle)){
                 // call heading controller
                 steering_out = attitude_control.get_steering_out_heading(g2.windvane.get_absolute_wind_direction_rad(),

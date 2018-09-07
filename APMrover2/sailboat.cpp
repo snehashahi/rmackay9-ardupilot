@@ -5,17 +5,14 @@ To Do List
  ----- short term
  - add calibration code for analog wind Vane
  - setup log of relevant sailing variables
- - consider drag vs lift sailing differences, ie upwind sail is like wing, dead down wind sail is like parachute
- - auto mode
- - Set up PID for the mainsail, So that it will hold at a maximum heal value, by sheeting out and/or changing heading (possibly some sort of ratio parameter here, ie only sheet out or only bear away or combination)
  - allow tack on geofence for auto mode use on restricted water
  - add sailing output messages, 'On indiret route','Starting Tack','Tack Complete' ? 
 
  ----- Long term
+ - consider drag vs lift sailing differences, ie upwind sail is like wing, dead down wind sail is like parachute
  - max speed paramiter and contoller, for maping you may not want to go too fast
  - add wind speed sensor
  - mavlink sailing messages
- - sailing loiter, boat stays inside loiter circle, more like plane than rover, will carry on sailing but stay close to a point, cant slow down too much or will lose steering
  - motor sailing, some boats may also have motor, we need to decide at what point we would be better of just motoring in low wind, or for a tight loiter, or to hit waypoint exactly, or if stuck head to wind, or to reverse esc
  - smart decision making, ie tack on windshifts, what to do if stuck head to wind
  - sailing 'mode' switching ie in light wind you may have larger vmg by pointing lower and going faster, where as it may be better to go high and slow in heavy wind, tricky because very boat dependent
@@ -61,7 +58,7 @@ void Rover::sailboat_update_mainsail()
     float mainsail = linear_interpolate(0.0f, 100.0f, mainsail_angle, g2.sail_angle_min, g2.sail_angle_max);
     
     // Use Pid controller to sheet out 
-    float pid_offset =  g2.attitude_control.get_sail_out_from_heel(g2.sail_heel_angle_max, G_Dt) * 100.0f;
+    float pid_offset =  g2.attitude_control.get_sail_out_from_heel(radians(g2.sail_heel_angle_max), G_Dt) * 100.0f;
 
     mainsail = constrain_float((mainsail+pid_offset), 0.0f ,100.0f);
     g2.motors.set_mainsail(mainsail);
@@ -77,7 +74,7 @@ bool Rover::sailboat_update_indirect_route(float desired_heading)
     _sailboat_indirect_route = false;
     
     // Check if desired heading is in the no go zone, if it is we can't go direct
-    // add 10 deg padding to try and avoid constant switching between methods
+    // add 10 deg padding to try and avoid constant switching between methods, maybe add a 'dead zone'?
     if (fabsf(wrap_PI((g2.windvane.get_absolute_wind_direction_rad() - desired_heading))) <= radians(g2.sail_no_go + 10.0f)){
         _sailboat_indirect_route = true; 
     }  
@@ -94,6 +91,8 @@ float Rover::sailboat_calc_heading(float desired_heading)
     
     desired_heading = radians(desired_heading / 100.0f);
 
+    // Update VMG for logs 
+    sailboat_VMG(desired_heading);
     
     /* 
         Until we get more fancy logic for best posible speed just assume we can sail upwind at the no go angle 
@@ -109,13 +108,13 @@ float Rover::sailboat_calc_heading(float desired_heading)
     
     // left and right no go headings looking upwind
     if (rover.control_mode == &rover.mode_hold){
-        // Use upwind tacking angles
-        left_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() + radians(g2.sail_no_go));
-        right_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() - radians(g2.sail_no_go));
-    } else {
         // In hold mode use hold angle
         left_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() + radians(g2.sailboat_hold_angle));
         right_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() - radians(g2.sailboat_hold_angle));
+    } else {
+        // Use upwind tacking angles
+        left_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() + radians(g2.sail_no_go));
+        right_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() - radians(g2.sail_no_go));
     }
 
     // Caculate what tack we are on if it has been too long since we knew
@@ -201,7 +200,7 @@ float Rover::sailboat_calc_heading(float desired_heading)
         desired_heading = _sailboat_new_tack_heading;
     } else {
         // Set new heading
-         switch (_sailboat_current_tack){
+        switch (_sailboat_current_tack){
             case _tack::Unknown: //should never be called but default to port tack       
             case _tack::Port: {
                     desired_heading = degrees(left_no_go_heading) * 100.0f;
@@ -257,15 +256,13 @@ float Rover::sailboat_update_rate_max(float rate_max)
 }
 
 // Velocity Made Good, this is the speed we are travling towards the desired destination
-// Not sure how usefull this is at this stage, but would be usefull to log
-float Rover::sailboat_VMG(float target_heading)
+// Only for logging at this stage 
+void Rover::sailboat_VMG(float target_heading)
 {
     // https://en.wikipedia.org/wiki/Velocity_made_good
 
     float speed;
     g2.attitude_control.get_forward_speed(speed);
 
-    float vmg = speed * cosf(wrap_PI(target_heading - ahrs.yaw));
-
-    return vmg;
+    _sailboat_velocity_made_good = speed * cosf(wrap_PI(target_heading - ahrs.yaw));
 }

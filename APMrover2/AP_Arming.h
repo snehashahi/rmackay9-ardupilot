@@ -27,18 +27,10 @@ public:
     bool pre_arm_rc_checks(const bool display_failure);
     bool gps_checks(bool display_failure) override;
 
-    //ArmingRudder rudder_arming() const { return (ArmingRudder)rudder_arming_value.get(); }
-    ArmingRudder rudder_arming() const { return (ArmingRudder)rudder_arming_value; }
-
 protected:
     bool fence_checks(bool report);
-    bool proximity_check(bool report);
-    
-    // parameters
-    //AP_Int8                 rudder_arming_value;
-    uint8_t rudder_arming_value = AP_Arming_Rover::ARMING_RUDDER_ARMDISARM;
-    
+    bool proximity_check(bool report);    
+   
 private:
-
-
+    
 };
