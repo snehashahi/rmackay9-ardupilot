@@ -309,10 +309,23 @@ void AP_MotorsMatrix::output_armed_stabilizing()
         }
     }
 
-    // todo: move this to external function to be done after time critical work is done
+    // check for failed motor
+    check_for_failed_motor(throttle_thrust_best_rpy + thr_adj);
+}
+
+// check for failed motor
+//   should be run immediately after output_armed_stabilizing
+//   first argument is the sum of:
+//      a) throttle_thrust_best_rpy : throttle level (from 0 to 1) providing maximum roll, pitch and yaw range without climbing
+//      b) thr_adj: the difference between the pilot's desired throttle and throttle_thrust_best_rpy
+//   records filtered motor output values in _thrust_rpyt_out_filt array
+//   sets thrust_balanced to true if motors are balanced, false if a motor failure is detected
+//   sets _motor_lost_pnt to index of failed motor
+void AP_MotorsMatrix::check_for_failed_motor(float throttle_thrust_best_plus_adj)
+{
     // record filtered and scaled thrust output for motor loss monitoring purposes
     float alpha = 1.0f / (1.0f + _loop_rate * 0.5f);
-    for (i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {
+    for (uint8_t i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             _thrust_rpyt_out_filt[i] += alpha * (_thrust_rpyt_out[i] - _thrust_rpyt_out_filt[i]);
         }
@@ -321,7 +334,7 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     float rpyt_high = 0.0f;
     float rpyt_sum = 0.0f;
     float number_motors = 0.0f;
-    for (i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {
+    for (uint8_t i = 0; i < AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             number_motors += 1;
             rpyt_sum += _thrust_rpyt_out_filt[i];
@@ -349,7 +362,7 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     }
 
     // check to see if thrust boost is using more throttle than _throttle_thrust_max
-    if (_throttle_thrust_max > throttle_thrust_best_rpy + thr_adj && rpyt_high < 0.9f && _thrust_balanced) {
+    if (_throttle_thrust_max > throttle_thrust_best_plus_adj && rpyt_high < 0.9f && _thrust_balanced) {
         _thrust_boost = false;
     }
 }
