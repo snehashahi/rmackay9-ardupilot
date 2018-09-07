@@ -16,6 +16,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include "AP_Proximity_MAV.h"
 #include <AP_SerialManager/AP_SerialManager.h>
+#include <GCS_MAVLink/GCS.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -124,6 +125,22 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
             if (updated) {
                 update_boundary_for_sector(i);
             }
+        }
+
+        // debug
+        static uint8_t counter = 0;
+        counter++;
+        if (counter > 5) {
+            counter = 0;
+            gcs().send_text(MAV_SEVERITY_INFO, "Dist 0:%4.2f 1:%4.2f 2:%4.2f 3:%4.2f 4:%4.2f 5:%4.2f 6:%4.2f 7:%4.2f",
+                (double)_distance[0],
+                (double)_distance[1],
+                (double)_distance[2],
+                (double)_distance[3],
+                (double)_distance[4],
+                (double)_distance[5],
+                (double)_distance[6],
+                (double)_distance[7]);
         }
     }
 }
