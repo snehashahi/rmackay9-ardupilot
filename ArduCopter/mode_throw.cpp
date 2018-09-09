@@ -109,7 +109,7 @@ void Copter::ModeThrow::run()
 
         // prevent motors from rotating before the throw is detected unless enabled by the user
         if (g.throw_motor_start == 1) {
-            motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+            motors->set_desired_spool_state(AP_Motors::DESIRED_GROUND_IDLE);
         } else {
             motors->set_desired_spool_state(AP_Motors::DESIRED_SHUT_DOWN);
         }
@@ -122,7 +122,7 @@ void Copter::ModeThrow::run()
 
         // prevent motors from rotating before the throw is detected unless enabled by the user
         if (g.throw_motor_start == 1) {
-            motors->set_desired_spool_state(AP_Motors::DESIRED_SPIN_WHEN_ARMED);
+            motors->set_desired_spool_state(AP_Motors::DESIRED_GROUND_IDLE);
         } else {
             motors->set_desired_spool_state(AP_Motors::DESIRED_SHUT_DOWN);
         }
