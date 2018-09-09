@@ -47,7 +47,6 @@ void Rover::init_rc_out()
 */
 void Rover::rudder_arm_disarm_check()
 {
-    
     // In Rover we need to check that its set to the throttle trim and within the DZ
     // if throttle is not within trim dz, then pilot cannot rudder arm/disarm
     if (!channel_throttle->in_trim_dz()) {

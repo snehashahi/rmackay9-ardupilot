@@ -620,7 +620,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 0 90
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("SAIL_ANGLE_IDEAL", 32, ParametersG2, sail_angle_ideal, 5),
+    AP_GROUPINFO("SAIL_ANGLE_IDEAL", 32, ParametersG2, sail_angle_ideal, 25),
     
     // @Param: SAIL_NO_GO_ANGLE
     // @DisplayName: Sailing no go zone angle 
@@ -638,7 +638,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 0 50
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("SAIL_MAX_XTRACK", 34, ParametersG2, sailboat_auto_xtrack_tack, 0),
+    AP_GROUPINFO("SAIL_MAX_XTRACK", 34, ParametersG2, sailboat_auto_xtrack_tack, 10),
     
     // @Param: SAIL_MAX_ST_RT
     // @DisplayName: Sailing auto straight line rate
@@ -665,7 +665,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 0 50
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("SAIL_LOITER_RAD", 37, ParametersG2, sailboat_loiter_radius, 8),
+    AP_GROUPINFO("SAIL_LOITER_RAD", 37, ParametersG2, sailboat_loiter_radius, 5),
     
     // @Param: SAIL_HEEL_MAX
     // @DisplayName: Sailing maximum heel angle 
@@ -674,7 +674,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Range: 0 90
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("SAIL_HEEL_MAX", 38, ParametersG2, sail_heel_angle_max, 30),   
+    AP_GROUPINFO("SAIL_HEEL_MAX", 38, ParametersG2, sail_heel_angle_max, 20),   
     
     // @Param: ARMING_RUDDER
     // @DisplayName: Rudder Arming
@@ -689,6 +689,10 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Values: 0:True Wind,1:Apparent wind
     // @User: Standard
     AP_GROUPINFO("SAIL_GCS_TRU_WND", 40, ParametersG2, sail_mavlink_true_apparent, 0),   
+    
+    // @Group: ARSPD_
+    // @Path: ../libraries/AP_WindVane/AP_WindVane.cpp
+    AP_SUBGROUPINFO(airspeed, "ARSPD_", 41, ParametersG2, AP_Airspeed),
     
     AP_GROUPEND
 };
@@ -722,7 +726,8 @@ ParametersG2::ParametersG2(void)
     avoid(rover.ahrs, fence, rover.g2.proximity, &rover.g2.beacon),
     follow(),
     rally(rover.ahrs),
-    windvane()
+    windvane(),
+    airspeed()
 {
     AP_Param::setup_object_defaults(this, var_info);
 }
