@@ -83,7 +83,7 @@ const AP_Param::GroupInfo AP_WindVane::var_info[] = {
     // @Description: Wind vane low pass filter frequency, a value of -1 diables filter
     // @Units: Hz
     // @User: Standard
-    AP_GROUPINFO("FILT", 7, AP_WindVane, _filt_hz, 0.1f),
+    AP_GROUPINFO("FILT", 7, AP_WindVane, _filt_hz, 0.5f),
     
     // @Param: CAL
     // @DisplayName: set to one to enter clabration on reboot
@@ -184,15 +184,18 @@ void AP_WindVane::update_apparent_wind()
     
     // Try and spot a stuck vane, must have moved by atlest 2deg, probably some tuning to be done to the value
     if (fabsf(wrap_PI(_apparent_angle_last-apparent_angle_in)) < radians(2.0f)) {
-        apparent_angle_in = _apparent_angle; // if its not moved just use current apparent angle
+        return; // If no chage do not update value 
     } else {
         _apparent_angle_last = apparent_angle_in;
     }
     
+    // If not enough wind to move vane do not update value
+    
+    
 
     // apply low pass filter if enabled
     if(is_positive(_filt_hz)){
-        // Update frequency if its been changed
+        // Update filter frequency if its been changed
         if (fabsf(_last_filt_hz - _filt_hz) > 0.0001f){
             low_pass_filter_wind_sin.set_cutoff_frequency(_filt_hz);
             low_pass_filter_wind_cos.set_cutoff_frequency(_filt_hz);
@@ -363,7 +366,7 @@ void AP_WindVane::calibrate()
             _voltage_max = fmaxf(_voltage_max,_current_analog_voltage);
             _voltage_min = fminf(_voltage_min,_current_analog_voltage);                
             
-            // Calibarate for 60 seconds
+            // Calibarate for 30 seconds
             if ((AP_HAL::millis() - _current_time) > 30000.0f ){
                 // save to params
                 _analog_volt_max.set_and_save(_voltage_max);
