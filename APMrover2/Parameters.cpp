@@ -683,12 +683,12 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("ARMING_RUDDER", 39, ParametersG2,  rudder_arming_value, AP_Arming_Rover::ARMING_RUDDER_ARMDISARM),
     
-    // @Param: SAIL_AP_TRU
+    // @Param: SAIL_GCS_TRU_WND
     // @DisplayName: Sailing send true or apparent wind as wind mavling message 
     // @Description: Send true wind speed and direction or apparent wind speed and direction to GCS via mavlink
     // @Values: 0:True Wind,1:Apparent wind
     // @User: Standard
-    AP_GROUPINFO("SAIL_AP_TRU", 40, ParametersG2, sail_mavlink_true_apparent, 0),   
+    AP_GROUPINFO("SAIL_GCS_TRU_WND", 40, ParametersG2, sail_mavlink_true_apparent, 0),   
     
     AP_GROUPEND
 };
