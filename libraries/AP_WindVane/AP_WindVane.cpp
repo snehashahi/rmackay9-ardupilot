@@ -93,8 +93,8 @@ const AP_Param::GroupInfo AP_WindVane::var_info[] = {
     AP_GROUPINFO("CAL", 8, AP_WindVane, _calibration,  0),
     
     // @Param: ANA_DZ
-    // @DisplayName: Analog potentiopmeter dead zone
-    // @Description: set to one to enter clabration on reboot
+    // @DisplayName: Analog potentiometer dead zone
+    // @Description: Analog potentiometer mechanical dead zene
     // @Units: deg
     // @Increment: 1
     // @Range: 0 360
@@ -360,8 +360,8 @@ void AP_WindVane::calibrate()
             }             
                
             // record min and max voltage
-            _voltage_max = fmax(_voltage_max,_current_analog_voltage);
-            _voltage_min = fmin(_voltage_min,_current_analog_voltage);                
+            _voltage_max = fmaxf(_voltage_max,_current_analog_voltage);
+            _voltage_min = fminf(_voltage_min,_current_analog_voltage);                
             
             // Calibarate for 60 seconds
             if ((AP_HAL::millis() - _current_time) > 30000.0f ){
