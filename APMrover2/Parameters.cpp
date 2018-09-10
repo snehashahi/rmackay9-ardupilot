@@ -621,25 +621,25 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("SAIL_ANGLE_IDEAL", 32, ParametersG2, sail_angle_ideal, 25),
-    
+
     // @Param: SAIL_NO_GO_ANGLE
-    // @DisplayName: Sailing no go zone angle 
+    // @DisplayName: Sailing no go zone angle
     // @Description: The typical closest angle to the wind the vehicle will sail at
     // @Units: deg
     // @Range: 0 90
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("SAIL_NO_GO_ANGLE", 33, ParametersG2, sail_no_go, 45),
-    
+
     // @Param: SAIL_MAX_XTRACK
-    // @DisplayName: Sailing max auto cross track error 
+    // @DisplayName: Sailing max auto cross track error
     // @Description: When sailing upwind a sailboat will tack when it reaches this cross track error, this efectively defines a 'corridor' of width 2*SAIL_MAX_XTRACK that the boat will stay within, 0 = disabled
     // @Units: m
     // @Range: 0 50
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("SAIL_MAX_XTRACK", 34, ParametersG2, sailboat_auto_xtrack_tack, 10),
-    
+
     // @Param: SAIL_MAX_ST_RT
     // @DisplayName: Sailing auto straight line rate
     // @Description: Maximum rate used when sailing on one tack in auto modes, this changes how quicky the heading responds to changes in wind direciton, tacks do not use this rate
@@ -648,7 +648,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("SAIL_MAX_ST_RT", 35, ParametersG2, sailboat_straight_rate, 25),
-    
+
     // @Param: SAIL_HOLD_ANGLE
     // @DisplayName: Sailing hold mode wind angle
     // @Description: Sailing hold mode will hold this angle into the wind, zero is head to wind, if none zero aux switch tacking is enabled, if negative hold mode will not steer  
@@ -657,34 +657,34 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("SAIL_HOLD_ANGLE", 36, ParametersG2, sailboat_hold_angle, 0),
-    
+
     // @Param: SAIL_LOITER_RAD
-    // @DisplayName: Sailing loiter radius 
+    // @DisplayName: Sailing loiter radius
     // @Description: In loiter mode the sailboat will sail within this radius of the loiter point
     // @Units: m
     // @Range: 0 50
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("SAIL_LOITER_RAD", 37, ParametersG2, sailboat_loiter_radius, 5),
-    
+
     // @Param: SAIL_HEEL_MAX
-    // @DisplayName: Sailing maximum heel angle 
+    // @DisplayName: Sailing maximum heel angle
     // @Description: When in auto sail trim modes the heel will be limited to this value using PID control
     // @Units: deg
     // @Range: 0 90
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("SAIL_HEEL_MAX", 38, ParametersG2, sail_heel_angle_max, 20),   
-    
+    AP_GROUPINFO("SAIL_HEEL_MAX", 38, ParametersG2, sail_heel_angle_max, 20),
+
     // @Param: ARMING_RUDDER
     // @DisplayName: Rudder Arming
     // @Description: Control arm/disarm by rudder input. When enabled arming is done with right rudder, disarming with left rudder. Rudder arming only works in manual throttle modes with throttle at zero +- deadzone (RCx_DZ)
     // @Values: 0:Disabled,1:ArmingOnly,2:ArmOrDisarm,3:Arm but only disarm if not in manual, for sailboats
     // @User: Advanced
     AP_GROUPINFO("ARMING_RUDDER", 39, ParametersG2,  rudder_arming_value, AP_Arming_Rover::ARMING_RUDDER_ARMDISARM),
-    
+
     // @Param: SAIL_GCS_TRU_WND
-    // @DisplayName: Sailing send true or apparent wind as wind mavling message 
+    // @DisplayName: Sailing send true or apparent wind as wind mavling message
     // @Description: Send true wind speed and direction or apparent wind speed and direction to GCS via mavlink
     // @Values: 0:True Wind,1:Apparent wind
     // @User: Standard
