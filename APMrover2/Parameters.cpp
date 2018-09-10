@@ -689,11 +689,11 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Values: 0:True Wind,1:Apparent wind
     // @User: Standard
     AP_GROUPINFO("SAIL_GCS_TRU_WND", 40, ParametersG2, sail_mavlink_true_apparent, 0),   
-    
-    // @Group: ARSPD_
+
+    // @Group: ARSPD
     // @Path: ../libraries/AP_WindVane/AP_WindVane.cpp
-    AP_SUBGROUPINFO(airspeed, "ARSPD_", 41, ParametersG2, AP_Airspeed),
-    
+    AP_SUBGROUPINFO(airspeed, "ARSPD", 41, ParametersG2, AP_Airspeed),
+
     AP_GROUPEND
 };
 
