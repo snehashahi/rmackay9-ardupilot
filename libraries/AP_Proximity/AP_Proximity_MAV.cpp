@@ -105,29 +105,43 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
 
         // get user configured yaw correction from front end
         float yaw_correction = constrain_float(frontend.get_yaw_correction(state.instance), -360.0f, +360.0f);
+        uint8_t dir_correction;
+        if (frontend.get_orientation(state.instance) == 0) {
+            dir_correction = 1;
+        } else {
+            dir_correction = -1;
+        }
+        bool used[72] = {false};
 
         // iterate over distance array sectors
         for (uint8_t i = 0; i < _num_sectors; i++) {
-            const float sector_width_half = _sector_width_deg[i] / 2.0f;
-            bool updated = false;
-            _angle[i] = i * 45;
-            _distance[i] = MAX_DISTANCE;
+             const float sector_width_half = _sector_width_deg[i] / 2.0f;
+             bool updated = false;
+             _angle[i] = _sector_middle_deg[i];
+             _distance[i] = MAX_DISTANCE;
 
-            // iterate over message's sectors
-            for (uint8_t j = 0; j < total_distances; j++) {
-                const float packet_distance_m = packet.distances[j] / 100.0f;
-                const float mid_angle = increment * (0.5f + j) - increment_half + yaw_correction;
-                float angle_diff = fabsf(wrap_180(_sector_middle_deg[i] - mid_angle));
-                // update distance array sector with shortest distance from message
-                if ((angle_diff <= sector_width_half) && (packet_distance_m < _distance[i])) {
-                    _distance[i] = packet_distance_m;
-                }
+             // iterate over message's sectors
+             for (uint8_t j = 0; j < total_distances; j++) {
+                 if (!used[j]) {
+                     const float packet_distance_m = packet.distances[j] / 100.0f;
+                     const float mid_angle = increment * dir_correction * (0.5f + j) - increment_half + yaw_correction;
+                     float angle_diff = fabsf(wrap_180(_sector_middle_deg[i] - mid_angle));
+
+                     // update distance array sector with shortest distance from message
+                     if ((angle_diff <= sector_width_half)) {
+                         if((packet_distance_m < _distance[i])){
+                            _distance[i] = packet_distance_m;
+                            _angle[i] = mid_angle;
+                         }
+                         used[j] = true;
+                     }
+                 }
                 updated = true;
-            }
-            _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
-            if (updated) {
-                update_boundary_for_sector(i);
-            }
+             }
+             _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
+             if (updated) {
+                 update_boundary_for_sector(i);
+             }
         }
 
         // debug
