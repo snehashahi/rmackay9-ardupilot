@@ -547,6 +547,7 @@ private:
     void read_rangefinders(void);
     void init_proximity();
     void windvane_update();
+    void read_airspeed();
     void update_sensor_status_flags(void);
 
     // Steering.cpp

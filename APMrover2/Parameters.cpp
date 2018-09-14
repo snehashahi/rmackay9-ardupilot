@@ -691,6 +691,10 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SAIL_GCS_TRU_WND", 40, ParametersG2, sail_mavlink_true_apparent, 0),
 
+    // @Group: ARSPD
+    // @Path: ../libraries/AP_WindVane/AP_WindVane.cpp
+    AP_SUBGROUPINFO(airspeed, "ARSPD", 41, ParametersG2, AP_Airspeed),
+
     AP_GROUPEND
 };
 
@@ -723,7 +727,8 @@ ParametersG2::ParametersG2(void)
     avoid(rover.ahrs, fence, rover.g2.proximity, &rover.g2.beacon),
     follow(),
     rally(rover.ahrs),
-    windvane()
+    windvane(),
+    airspeed()
 {
     AP_Param::setup_object_defaults(this, var_info);
 }

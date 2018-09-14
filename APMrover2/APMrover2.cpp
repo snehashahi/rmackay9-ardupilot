@@ -96,6 +96,7 @@ const AP_Scheduler::Task Rover::scheduler_tasks[] = {
     SCHED_TASK(afs_fs_check,           10,    200),
 #endif
     SCHED_TASK(windvane_update,        10,    200),
+    SCHED_TASK(read_airspeed,          10,    100),
 };
 
 void Rover::read_mode_switch()

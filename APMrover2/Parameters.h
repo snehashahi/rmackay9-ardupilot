@@ -385,6 +385,9 @@ public:
 
     // windvane
     AP_WindVane windvane;
+
+    // Airspeed
+    AP_Airspeed airspeed;
 };
 
 extern const AP_Param::Info var_info[];
