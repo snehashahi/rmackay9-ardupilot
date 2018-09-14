@@ -79,6 +79,7 @@
 #include <AC_Avoidance/AC_Avoid.h>
 #include <AP_Follow/AP_Follow.h>
 #include <AP_OSD/AP_OSD.h>
+#include <AP_WindVane/AP_WindVane.h>
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 #include <SITL/SITL.h>
 #endif
@@ -386,6 +387,22 @@ private:
         LowPassFilterFloat throttle_filt = LowPassFilterFloat(2.0f);
     } cruise_learn;
 
+    // sailboat variables
+    bool _sailboat_indirect_route;
+    bool _sailboat_tack;
+    bool _sailboat_tacking;
+    float _sailboat_tack_stat_time;
+    float _sailboat_new_tack_heading;
+    float _sailboat_new_tack_heading_rad;
+    uint8_t _sailboat_current_tack;
+    float _sailboat_heading_last_run;
+    float _sailboat_velocity_made_good;
+    enum _tack {
+        Unknown = 0,
+        Port = 1,
+        STBD = 2
+    };
+
 private:
 
     // APMrover2.cpp
@@ -472,6 +489,7 @@ private:
     void send_pid_tuning(mavlink_channel_t chan);
     void send_wheel_encoder(mavlink_channel_t chan);
     void send_fence_status(mavlink_channel_t chan);
+    void send_wind(mavlink_channel_t chan);
     void gcs_data_stream_send(void);
     void gcs_update(void);
     void gcs_retry_deferred(void);
@@ -484,6 +502,7 @@ private:
     void Log_Write_GuidedTarget(uint8_t target_type, const Vector3f& pos_target, const Vector3f& vel_target);
     void Log_Write_Nav_Tuning();
     void Log_Write_Proximity();
+    void Log_Write_Sail();
     void Log_Write_Startup(uint8_t type);
     void Log_Write_Steering();
     void Log_Write_Throttle();
@@ -506,6 +525,15 @@ private:
     void control_failsafe(uint16_t pwm);
     bool trim_radio();
 
+    // sailboat.cpp
+    void sailboat_set_mainsail(float mainsail);
+    void sailboat_update_mainsail();
+    bool sailboat_update_indirect_route(float desired_heading);
+    float sailboat_calc_heading(float desired_heading);
+    void sailboat_VMG(float target_heading);
+    float sailboat_acro_tack();
+    float sailboat_update_rate_max(float rate_max_degs);
+
     // sensors.cpp
     void init_compass(void);
     void init_compass_location(void);
@@ -518,6 +546,7 @@ private:
     void accel_cal_update(void);
     void read_rangefinders(void);
     void init_proximity();
+    void windvane_update();
     void update_sensor_status_flags(void);
 
     // Steering.cpp

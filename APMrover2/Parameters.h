@@ -370,6 +370,21 @@ public:
 
     // Simple mode types
     AP_Int8 simple_type;
+
+    // sailboat parameters
+    AP_Float sail_angle_min;
+    AP_Float sail_angle_max;
+    AP_Float sail_angle_ideal;
+    AP_Float sail_no_go;
+    AP_Float sailboat_auto_xtrack_tack;
+    AP_Float sailboat_straight_rate;
+    AP_Float sailboat_hold_angle;
+    AP_Float sailboat_loiter_radius;
+    AP_Float sail_heel_angle_max;
+    AP_Int8 sail_mavlink_true_apparent;
+
+    // windvane
+    AP_WindVane windvane;
 };
 
 extern const AP_Param::Info var_info[];

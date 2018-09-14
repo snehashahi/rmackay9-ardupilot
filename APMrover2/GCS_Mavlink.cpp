@@ -264,6 +264,33 @@ void Rover::send_fence_status(mavlink_channel_t chan)
     fence_send_mavlink_status(chan);
 }
 
+void Rover::send_wind(mavlink_channel_t chan)
+{
+    // exit immediately if no wind vane
+    if (!rover.g2.windvane.enabled()) {
+        return;
+    }
+
+    float wind_angle = 0.0f;
+    float wind_speed = 0.0f;
+
+    // send apparent or true wind speed and direction
+    if (rover.g2.sail_mavlink_true_apparent == 0) { // True
+        wind_angle = degrees(rover.g2.windvane.get_absolute_wind_direction_rad());
+        wind_speed = rover.g2.windvane.get_true_wind_speed();
+    } else { // apparent
+        wind_angle = degrees(rover.g2.windvane.get_apparent_wind_direction_rad());
+        wind_speed = g2.windvane.get_apparent_wind_speed();
+    }
+
+    // send wind
+    mavlink_msg_wind_send(
+        chan,
+        wind_angle,
+        wind_speed,
+        0);
+}
+
 void Rover::send_wheel_encoder(mavlink_channel_t chan)
 {
     // send wheel encoder data using rpm message
@@ -347,6 +374,9 @@ bool GCS_MAVLINK_Rover::try_send_message(enum ap_message id)
         rover.send_fence_status(chan);
         break;
 
+    case MSG_WIND:
+        CHECK_PAYLOAD_SIZE(WIND);
+        rover.send_wind(chan);
         break;
 
     case MSG_PID_TUNING:
@@ -492,6 +522,7 @@ static const ap_message STREAM_EXTRA2_msgs[] = {
 static const ap_message STREAM_EXTRA3_msgs[] = {
     MSG_AHRS,
     MSG_HWSTATUS,
+    MSG_WIND,
     MSG_RANGEFINDER,
     MSG_SYSTEM_TIME,
     MSG_BATTERY2,
