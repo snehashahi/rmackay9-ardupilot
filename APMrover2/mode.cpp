@@ -20,6 +20,10 @@ void Mode::exit()
 
 bool Mode::enter()
 {
+    // clear sailboat tacking flags
+    rover._sailboat_tack = false;
+    rover._sailboat_tacking = false;
+
     const bool ignore_checks = !hal.util->get_soft_armed();   // allow switching to any mode if disarmed.  We rely on the arming check to perform
     if (!ignore_checks) {
 
@@ -435,7 +439,13 @@ void Mode::calc_steering_to_waypoint(const struct Location &origin, const struct
     }
     _yaw_error_cd = wrap_180_cd(desired_heading - ahrs.yaw_sensor);
 
-    if (rover.use_pivot_steering(_yaw_error_cd)) {
+    if (rover.sailboat_use_indirect_route(desired_heading)) {
+        // sailboats use heading controller on indirect routes
+        // if we can't sail at desired heading calculate new heading to sailing on, also update maximum rate
+        desired_heading = rover.sailboat_calc_heading(desired_heading);
+        const float rate_max_degs = rover.sailboat_get_rate_max(g2.pivot_turn_rate);
+        calc_steering_to_heading(desired_heading, rate_max_degs);
+    } else if (rover.use_pivot_steering(_yaw_error_cd)) {
         // for pivot turns use heading controller
         calc_steering_to_heading(desired_heading, g2.pivot_turn_rate);
     } else {

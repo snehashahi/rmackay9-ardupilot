@@ -16,6 +16,12 @@ void Rover::fence_check()
 
     // if there is a new breach take action
     if (new_breaches) {
+
+        // if were sailing on a indirect route we should tack on the breach
+        if (_sailboat_indirect_route && !sailboat_tacking()){
+            _sailboat_tack = true;
+        }
+
         // if the user wants some kind of response and motors are armed
         if (g2.fence.get_action() != AC_FENCE_ACTION_REPORT_ONLY) {
             // if we are within 100m of the fence, RTL

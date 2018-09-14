@@ -65,6 +65,9 @@ public:
     // returns true if vehicle can be armed or disarmed from the transmitter in this mode
     virtual bool allows_arming_from_transmitter() { return !is_autopilot_mode(); }
 
+    // returns true if sailboats in this mode allow user initiated tacking from an aux switch
+    virtual bool allows_tacking_from_transmitter() const { return is_autopilot_mode(); }
+
     //
     // attributes for mavlink system status reporting
     //
@@ -215,6 +218,9 @@ public:
 
     // methods that affect movement of the vehicle in this mode
     void update() override;
+
+    // acro mode supports user manually initiating tacking from transmitter
+    bool allows_tacking_from_transmitter() const { return true; }
 
     // attributes for mavlink system status reporting
     bool has_manual_input() const override { return true; }

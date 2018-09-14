@@ -647,6 +647,37 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("SAIL_HEEL_MAX", 35, ParametersG2, sail_heel_angle_max, 15),
+
+    // @Param: SAIL_NO_GO_ANGLE
+    // @DisplayName: Sailing no go zone angle
+    // @Description: The typical closest angle to the wind the vehicle will sail at. the vehicle will sail at this angle when going upwind
+    // @Units: deg
+    // @Range: 0 90
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("SAIL_NO_GO_ANGLE", 36, ParametersG2, sail_no_go, 45),
+
+    // @Param: SAIL_ST_RATE_MAX
+    // @DisplayName: Sailing straight line turn rate maximum
+    // @Description: Maximum turn rate limit used when sailing on one tack in auto modes, tacks do not use this rate. set to use attitude controller's limit.
+    // @Units: deg/s
+    // @Range: 0 360
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("SAIL_ST_RATE_MAX", 37, ParametersG2, sail_straight_rate_max, 0),
+    // @Param: SAIL_HEEL_MAX
+    // @DisplayName: Sailing maximum heel angle
+    // @Description: When in auto sail trim modes the heel will be limited to this value using PID control
+    // @Units: deg
+    // @Range: 0 90
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("SAIL_HEEL_MAX", 38, ParametersG2, sail_heel_angle_max, 15),
+
+    // @Group: ARSPD
+    // @Path: ../libraries/AP_WindVane/AP_WindVane.cpp
+    AP_SUBGROUPINFO(airspeed, "ARSPD", 39, ParametersG2, AP_Airspeed),
+
     AP_GROUPEND
 };
 
@@ -679,7 +710,8 @@ ParametersG2::ParametersG2(void)
     avoid(rover.ahrs, fence, rover.g2.proximity, &rover.g2.beacon),
     follow(),
     rally(rover.ahrs),
-    windvane()
+    windvane(),
+    airspeed()
 {
     AP_Param::setup_object_defaults(this, var_info);
 }
