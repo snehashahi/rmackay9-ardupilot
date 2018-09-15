@@ -49,12 +49,14 @@ const AP_Param::GroupInfo AP_WindVane::var_info[] = {
     // @DisplayName: RC Input Channel to use as wind angle value
     // @Description: RC Input Channel to use as wind angle value
     // @Range: 0 16
+    // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("RC_IN_NO", 2, AP_WindVane, _rc_in_no, 0),
 
     // @Param: ANA_PIN
     // @DisplayName: Analog input
     // @Description: Analog input pin to read as Wind vane sensor pot
+    // @Values: 11:Pixracer,13:Pixhawk ADC4,14:Pixhawk ADC3,15:Pixhawk ADC6,15:Pixhawk2 ADC,50:PixhawkAUX1,51:PixhawkAUX2,52:PixhawkAUX3,53:PixhawkAUX4,54:PixhawkAUX5,55:PixhawkAUX6,103:Pixhawk SBUS
     // @User: Standard
     AP_GROUPINFO("ANA_PIN", 3, AP_WindVane, _analog_pin_no, WINDVANE_DEFAULT_PIN),
 
@@ -85,23 +87,23 @@ const AP_Param::GroupInfo AP_WindVane::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("ANA_OF_HD", 6, AP_WindVane, _analog_head_bearing_offset, 0.0f),
 
-    // @Param: VANE_FLT
+    // @Param: VANE_FILT
     // @DisplayName: Wind vane low pass filter frequency
     // @Description: Wind vane low pass filter frequency, a value of -1 disables filter
     // @Units: Hz
     // @User: Standard
-    AP_GROUPINFO("VANE_FLT", 7, AP_WindVane, _vane_filt_hz, 0.5f),
+    AP_GROUPINFO("VANE_FILT", 7, AP_WindVane, _vane_filt_hz, 0.5f),
 
     // @Param: CAL
-    // @DisplayName: set to one to enter clabration on reboot
-    // @Description: set to one to enter clabration on reboot
-    // @Values: 0:None, 1:Calabrate
+    // @DisplayName: set to one to enter calibration on reboot
+    // @Description: set to one to enter calibration on reboot
+    // @Values: 0:None, 1:Calibrate
     // @User: Standard
     AP_GROUPINFO("CAL", 8, AP_WindVane, _calibration, 0),
 
     // @Param: ANA_DZ
     // @DisplayName: Analog potentiometer dead zone
-    // @Description: Analog potentiometer mechanical dead zene
+    // @Description: Analog potentiometer mechanical dead zone
     // @Units: deg
     // @Increment: 1
     // @Range: 0 360
@@ -127,30 +129,32 @@ const AP_Param::GroupInfo AP_WindVane::var_info[] = {
     // @Param: SPEED_PIN1
     // @DisplayName: Analog speed sensor input 1
     // @Description: Wind speed analog speed input pin for Moden Devices Wind Sensor rev. p
+    // @Values: 11:Pixracer,13:Pixhawk ADC4,14:Pixhawk ADC3,15:Pixhawk ADC6,15:Pixhawk2 ADC,50:PixhawkAUX1,51:PixhawkAUX2,52:PixhawkAUX3,53:PixhawkAUX4,54:PixhawkAUX5,55:PixhawkAUX6,103:Pixhawk SBUS
     // @User: Standard
     AP_GROUPINFO("SPEED_PIN1", 12, AP_WindVane, _wind_speed_sensor_speed_in,  WINDSPEED_DEFAULT_SPEED_PIN),
 
     // @Param: SPEED_PIN2
     // @DisplayName: Analog speed sensor input 2
     // @Description: Wind speed sensor analog temp input pin for Moden Devices Wind Sensor rev. p, set to -1 to diasble temp readings
+    // @Values: 11:Pixracer,13:Pixhawk ADC4,14:Pixhawk ADC3,15:Pixhawk ADC6,15:Pixhawk2 ADC,50:PixhawkAUX1,51:PixhawkAUX2,52:PixhawkAUX3,53:PixhawkAUX4,54:PixhawkAUX5,55:PixhawkAUX6,103:Pixhawk SBUS
     // @User: Standard
     AP_GROUPINFO("SPEED_PIN2", 13, AP_WindVane, _wind_speed_sensor_temp_in,  WINDSPEED_DEFAULT_TEMP_PIN),
 
-    // @Param: SPEED_OFST
+    // @Param: SPEED_OFS
     // @DisplayName: Analog speed zero wind voltage offset
     // @Description: Wind sensor analog voltage offset at zero wind speed
     // @Units: V
     // @Increment: 0.01
     // @Range: 0 3.3
     // @User: Standard
-    AP_GROUPINFO("SPEED_OFST", 14, AP_WindVane, _wind_speed_sensor_voltage_offset, WINDSPEED_DEFAULT_VOLT_OFFSET),
+    AP_GROUPINFO("SPEED_OFS", 14, AP_WindVane, _wind_speed_sensor_voltage_offset, WINDSPEED_DEFAULT_VOLT_OFFSET),
 
-    // @Param: SPEED_FLT
+    // @Param: SPEED_FILT
     // @DisplayName: Wind speed low pass filter frequency
     // @Description: Wind speed low pass filter frequency, a value of -1 disables filter
     // @Units: Hz
     // @User: Standard
-    AP_GROUPINFO("SPEED_FLT", 15, AP_WindVane, _speed_filt_hz, 0.5f),
+    AP_GROUPINFO("SPEED_FILT", 15, AP_WindVane, _speed_filt_hz, 0.5f),
 
     AP_GROUPEND
 };
