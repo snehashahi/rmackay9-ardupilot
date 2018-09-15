@@ -230,8 +230,8 @@ void AP_WindVane::update()
     }
 
     update_wind_speed();
-    update_apparent_wind();
-    update_true_wind();
+    update_apparent_wind_direction();
+    update_true_wind_direction();
 }
 
 // Return the absoute wind bearing in radians, the wind comes from this direction, 0 = North
@@ -344,8 +344,8 @@ void AP_WindVane::update_wind_speed()
     }
 }
 
-// Caculate the apparent wind bearing in radians, the wind comes from this direciton, 0 = head to wind
-void AP_WindVane::update_apparent_wind()
+// Calculate the apparent wind direction in radians, the wind comes from this direction, 0 = head to wind
+void AP_WindVane::update_apparent_wind_direction()
 {
     float apparent_angle_in = 0.0f;
 
@@ -393,7 +393,7 @@ void AP_WindVane::update_apparent_wind()
 
 // convert from apparent wind angle to true wind absolute angle and true wind speed
 // https://en.wikipedia.org/wiki/Apparent_wind
-void AP_WindVane::update_true_wind()
+void AP_WindVane::update_true_wind_direction()
 {
     float heading =  AP::ahrs().yaw;
 
