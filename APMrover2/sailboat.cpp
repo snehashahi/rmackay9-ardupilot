@@ -56,7 +56,7 @@ void Rover::sailboat_update_mainsail()
     Log_Write_Sail();
 }
 
-// Should we take a indirect navigaion route, either to go upwind or in the future for speed
+// Should we take a indirect navigation route, either to go upwind or in the future for speed
 bool Rover::sailboat_update_indirect_route(float desired_heading)
 {
     if (!g2.motors.has_sail()) {
