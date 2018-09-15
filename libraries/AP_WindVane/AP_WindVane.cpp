@@ -210,12 +210,6 @@ void AP_WindVane::init()
     _last_filt_hz = 10000.0f;
     _last_filt_hz_speed = 10000.0f;
 
-    // Trigger Calabration
-    if (_calibration) {
-        _calibrate_vane = true;
-        _calibration.set_and_save(0);
-    }
-
     // Link the airspeed libary
     _airspeed = AP_Airspeed::get_singleton();
 
@@ -232,6 +226,9 @@ void AP_WindVane::update()
     if (!enabled()) {
         return;
     }
+
+    // check for calibration
+    calibrate();
 
     update_wind_speed();
     update_apparent_wind_direction();
@@ -365,11 +362,6 @@ void AP_WindVane::update_apparent_wind_direction()
             break;
     }
 
-    // calibration, make sure not armed and wait a bit after boot
-    if (_calibrate_vane && !(hal.util->get_soft_armed()) && AP_HAL::millis() > 30000.0f) {
-        calibrate();
-    }
-
     // if not enough wind to move vane do not update the value
     if (_apparent_wind_speed < _apparent_wind_vane_cutoff){
         return;
@@ -439,36 +431,46 @@ void AP_WindVane::update_true_wind_direction()
     _true_bearing = wrap_2PI(heading + bearing);
 }
 
-// calibrate windwane
+// calibrate windvane
 void AP_WindVane::calibrate()
 {
+    // exit immediately if armed or too soon after start
+    if (hal.util->get_soft_armed()) {
+        return;
+    }
+
+    // return if not calibrating
+    if (_calibration == 0) {
+        return;
+    }
+
     switch (_type) {
         case WindVaneType::WINDVANE_HOME_HEADING:
         case WindVaneType::WINDVANE_PWM_PIN:
-            gcs().send_text(MAV_SEVERITY_INFO, "WindVane - No cal required");
-            _calibrate_vane = false;
+            gcs().send_text(MAV_SEVERITY_INFO, "WindVane: No cal required");
+            _calibration.set_and_save(0);
             break;
         case WindVaneType::WINDVANE_ANALOG_PIN:
-            if (!_calibration_in_progress) {
-                _current_time =  AP_HAL::millis();
-                _calibration_in_progress = true;
-                _voltage_max = _current_analog_voltage;
-                _voltage_min = _current_analog_voltage;
-                gcs().send_text(MAV_SEVERITY_INFO, "WindVane - Analog input calibrating");
+            // start calibration
+            if (_cal_start_ms == 0) {
+                _cal_start_ms = AP_HAL::millis();
+                _cal_volt_max = _current_analog_voltage;
+                _cal_volt_min = _current_analog_voltage;
+                gcs().send_text(MAV_SEVERITY_INFO, "WindVane: Analog input calibrating");
             }
 
             // record min and max voltage
-            _voltage_max = fmaxf(_voltage_max,_current_analog_voltage);
-            _voltage_min = fminf(_voltage_min,_current_analog_voltage);
+            _cal_volt_max = fmaxf(_cal_volt_max, _current_analog_voltage);
+            _cal_volt_min = fminf(_cal_volt_min, _current_analog_voltage);
 
-            // Calibrate for 30 seconds
-            if ((AP_HAL::millis() - _current_time) > 30000.0f ) {
-                // save to params
-                _analog_volt_max.set_and_save(_voltage_max);
-                _analog_volt_min.set_and_save(_voltage_min);
-
-                gcs().send_text(MAV_SEVERITY_INFO, "WindVane - Analog input calibration complete");
-                _calibrate_vane = false;
+            // calibrate for 30 seconds
+            if ((AP_HAL::millis() - _cal_start_ms) > 30000) {
+                // save min and max voltage
+                _analog_volt_max.set_and_save(_cal_volt_max);
+                _analog_volt_min.set_and_save(_cal_volt_min);
+                _calibration.set_and_save(0);
+                _cal_start_ms = 0;
+                gcs().send_text(MAV_SEVERITY_INFO, "WindVane: Analog input calibration complete");
             }
             break;
     }

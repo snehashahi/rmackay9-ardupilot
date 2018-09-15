@@ -118,12 +118,12 @@ private:
     float _true_wind_speed;
     float _true_bearing;
     float _apparent_wind_speed;
-    bool _calibrate_vane = false;
-    bool _calibration_in_progress = false;
     float _current_analog_voltage;
-    float _voltage_max;
-    float _voltage_min;
-    float _current_time;
+
+    // calibration variables
+    uint32_t _cal_start_ms = 0;                     // calibration start time in milliseconds after boot
+    float _cal_volt_max;                            // maximum observed voltage during calibration
+    float _cal_volt_min;                            // minimum observed voltage during calibration
 
     enum Speed_type {
         WINDSPEED_NONE               = 0,
