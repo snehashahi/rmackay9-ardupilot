@@ -52,16 +52,16 @@ public:
     void update();
 
     // get the apparent wind direction in radians, 0 = head to wind
-    float get_apparent_wind_direction_rad() const { return _apparent_angle; }
+    float get_apparent_wind_direction_rad() const { return _direction_apparent; }
 
     // get the absolute wind direction in radians, 0 = North
     float get_absolute_wind_direction_rad();
 
     // Return true wind speed
-    float get_true_wind_speed() const { return _true_wind_speed; }
+    float get_true_wind_speed() const { return _speed_true; }
 
     // Return apparent wind speed
-    float get_apparent_wind_speed() const { return _apparent_wind_speed; }
+    float get_apparent_wind_speed() const { return _speed_apparent; }
 
     // record home heading
     void record_home_headng();
@@ -110,15 +110,16 @@ private:
     AP_Float _speed_filt_hz;                        // speed sensor low pass filter frequency
 
     static AP_WindVane *_s_instance;
-    float _home_heading;
-    float _apparent_angle;
-    float _apparent_angle_last;
-    float _last_filt_hz;
-    float _last_filt_hz_speed;
-    float _true_wind_speed;
-    float _true_bearing;
-    float _apparent_wind_speed;
-    float _current_analog_voltage;
+
+    // wind direction variables
+    float _home_heading;                            // heading recorded when vehicle was armed
+    float _direction_apparent;                      // wind's apparent direction (0 = ahead of vehicle)
+    float _direction_absolute;                      // wind's absolute direction (0 = North)
+    float _current_analog_voltage;                  // wind direction's latest analog voltage reading
+
+    // wind speed variables
+    float _speed_apparent;                          // wind's apparent speed in m/s
+    float _speed_true;                              // wind's true estimated speed in m/s
 
     // calibration variables
     uint32_t _cal_start_ms = 0;                     // calibration start time in milliseconds after boot

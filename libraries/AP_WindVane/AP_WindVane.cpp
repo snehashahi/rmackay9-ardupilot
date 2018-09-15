@@ -206,10 +206,6 @@ void AP_WindVane::init()
     wind_speed_analog_source = hal.analogin->channel(ANALOG_INPUT_NONE);
     wind_speed_temp_analog_source = hal.analogin->channel(ANALOG_INPUT_NONE);
 
-    // set _last_filt_hz to trigger set-up filter
-    _last_filt_hz = 10000.0f;
-    _last_filt_hz_speed = 10000.0f;
-
     // Link the airspeed libary
     _airspeed = AP_Airspeed::get_singleton();
 
@@ -247,7 +243,7 @@ float AP_WindVane::get_absolute_wind_direction_rad()
             return wrap_2PI(read_PWM_bearing() + _home_heading);
     }
 
-    return wrap_PI(_true_bearing);
+    return wrap_PI(_direction_absolute);
 }
 
 // record home heading for use as wind direction if no sensor is fitted
@@ -269,7 +265,7 @@ float AP_WindVane::read_analog()
     float current_analog_voltage_constrain = constrain_float(_current_analog_voltage,_analog_volt_min,_analog_volt_max);
     float voltage_ratio = linear_interpolate(0.0f, 1.0f, current_analog_voltage_constrain, _analog_volt_min, _analog_volt_max);
 
-    float bearing = (voltage_ratio * radians(360-_analog_deadzone)) + radians(_analog_head_bearing_offset);
+    float bearing = (voltage_ratio * radians(360 - _analog_deadzone)) + radians(_analog_head_bearing_offset);
 
     return wrap_PI(bearing);
 }
@@ -328,20 +324,16 @@ void AP_WindVane::update_wind_speed()
             apparent_wind_speed_in = read_wind_sensor_rev_p();
             break;
         default:
-            _apparent_wind_speed = 0.0f;
+            _speed_apparent = 0.0f;
             return;
     }
 
     // apply low pass filter if enabled
     if (is_positive(_speed_filt_hz)) {
-        // update filter frequency if its been changed
-        if (fabsf(_last_filt_hz - _speed_filt_hz) > 0.0001f) {
-            low_pass_filter_wind_speed.set_cutoff_frequency(_speed_filt_hz);
-            _last_filt_hz = _speed_filt_hz;
-        }
-        _apparent_wind_speed = low_pass_filter_wind_speed.apply(apparent_wind_speed_in, 0.02f);
+        low_pass_filter_wind_speed.set_cutoff_frequency(_speed_filt_hz);
+        _speed_apparent = low_pass_filter_wind_speed.apply(apparent_wind_speed_in, 0.02f);
     } else {
-        _apparent_wind_speed = apparent_wind_speed_in;
+        _speed_apparent = apparent_wind_speed_in;
     }
 }
 
@@ -355,7 +347,7 @@ void AP_WindVane::update_apparent_wind_direction()
         case WindVaneType::WINDVANE_PWM_PIN:
             // this is a approximation as we are not considering boat speed and wind speed
             // do not filter home heading and pwm type vanes
-            _apparent_angle = wrap_PI(get_absolute_wind_direction_rad() - AP::ahrs().yaw);
+            _direction_apparent = wrap_PI(get_absolute_wind_direction_rad() - AP::ahrs().yaw);
             return;
         case WindVaneType::WINDVANE_ANALOG_PIN:
             apparent_angle_in = read_analog();
@@ -363,28 +355,24 @@ void AP_WindVane::update_apparent_wind_direction()
     }
 
     // if not enough wind to move vane do not update the value
-    if (_apparent_wind_speed < _apparent_wind_vane_cutoff){
+    if (_speed_apparent < _apparent_wind_vane_cutoff){
         return;
     }
 
     // apply low pass filter if enabled
     if (is_positive(_vane_filt_hz)) {
-        // update filter frequency if its been changed
-        if (fabsf(_last_filt_hz - _vane_filt_hz) > 0.0001f) {
-            low_pass_filter_wind_sin.set_cutoff_frequency(_vane_filt_hz);
-            low_pass_filter_wind_cos.set_cutoff_frequency(_vane_filt_hz);
-            _last_filt_hz = _vane_filt_hz;
-        }
+        low_pass_filter_wind_sin.set_cutoff_frequency(_vane_filt_hz);
+        low_pass_filter_wind_cos.set_cutoff_frequency(_vane_filt_hz);
         // https://en.wikipedia.org/wiki/Mean_of_circular_quantities
         float filtered_sin = low_pass_filter_wind_sin.apply(sinf(apparent_angle_in), 0.02f);
         float filtered_cos = low_pass_filter_wind_cos.apply(cosf(apparent_angle_in), 0.02f);
-        _apparent_angle = atan2f(filtered_sin, filtered_cos);
+        _direction_apparent = atan2f(filtered_sin, filtered_cos);
     } else {
-        _apparent_angle = apparent_angle_in;
+        _direction_apparent = apparent_angle_in;
     }
 
     // make sure between -pi and pi
-    _apparent_angle = wrap_PI(_apparent_angle);
+    _direction_apparent = wrap_PI(_direction_apparent);
 }
 
 // convert from apparent wind angle to true wind absolute angle and true wind speed
@@ -395,7 +383,7 @@ void AP_WindVane::update_true_wind_direction()
 
     // no wind speed sensor, so can't do true wind calcs
     if (_wind_speed_sensor_type == Speed_type::WINDSPEED_NONE) {
-        _true_bearing = wrap_2PI(heading + _apparent_angle);
+        _direction_absolute = wrap_2PI(heading + _direction_apparent);
         return;
     }
 
@@ -416,19 +404,19 @@ void AP_WindVane::update_true_wind_direction()
     ground_speed = velocity.x*AP::ahrs().cos_yaw() + velocity.y*AP::ahrs().sin_yaw();
 
     // update true wind speed
-    _true_wind_speed = sqrtf( powf(_apparent_wind_speed,2) + powf(ground_speed,2) - 2 * _apparent_wind_speed * ground_speed * cosf(_apparent_angle));
+    _speed_true = sqrtf(powf(_speed_apparent, 2) + powf(ground_speed, 2) - 2 * _speed_apparent * ground_speed * cosf(_direction_apparent));
 
     float bearing = 0.0f;
-    if (is_zero(_true_wind_speed)) { // no wind so ignore apparent wind effects
-        bearing = _apparent_angle;
-    } else if (is_positive(_apparent_angle)) {
-        bearing = acosf((_apparent_wind_speed * cosf(_apparent_angle) - ground_speed) / _true_wind_speed);
+    if (is_zero(_speed_true)) { // no wind so ignore apparent wind effects
+        bearing = _direction_apparent;
+    } else if (is_positive(_direction_apparent)) {
+        bearing = acosf((_speed_apparent * cosf(_direction_apparent) - ground_speed) / _speed_true);
     } else {
-        bearing = -acosf((_apparent_wind_speed * cosf(_apparent_angle) - ground_speed) / _true_wind_speed);
+        bearing = -acosf((_speed_apparent * cosf(_direction_apparent) - ground_speed) / _speed_true);
     }
 
     // make sure between -pi and pi
-    _true_bearing = wrap_2PI(heading + bearing);
+    _direction_absolute = wrap_2PI(heading + bearing);
 }
 
 // calibrate windvane
