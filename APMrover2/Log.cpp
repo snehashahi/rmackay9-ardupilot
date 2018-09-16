@@ -44,6 +44,11 @@ void Rover::Log_Write_Attitude()
     if (is_balancebot()) {
         DataFlash.Log_Write_PID(LOG_PIDP_MSG, g2.attitude_control.get_pitch_to_throttle_pid().get_pid_info());
     }
+
+    // log heel to sail control for sailboats
+    if (g2.motors.has_sail()) {
+        DataFlash.Log_Write_PID(LOG_PIDR_MSG, g2.attitude_control.get_sailboat_heel_pid().get_pid_info());
+    }
 }
 
 // Write a range finder depth message
