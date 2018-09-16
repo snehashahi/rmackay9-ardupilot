@@ -284,12 +284,7 @@ void AP_MotorsUGV::set_lateral(float lateral)
 // set mainsail input as a value from 0 to 100
 void AP_MotorsUGV::set_mainsail(float mainsail)
 {
-    // if disarmed sheet out
-    if (!hal.util->get_soft_armed()) {
-        _mainsail = 100;
-    } else {
-        _mainsail = mainsail;
-    }
+    _mainsail = constrain_float(mainsail, 0.0f, 100.0f);
 }
 
 // get slew limited throttle
