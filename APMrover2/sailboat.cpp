@@ -56,17 +56,19 @@ void Rover::sailboat_update_mainsail()
     Log_Write_Sail();
 }
 
-// Should we take a indirect navigation route, either to go upwind or in the future for speed
-bool Rover::sailboat_update_indirect_route(float desired_heading)
+// returns true if sailboat should take a indirect navigation route, either to go upwind or in the future for speed
+// desired_heading should be in centi-degrees
+bool Rover::sailboat_use_indirect_route(float desired_heading_cd)
 {
     if (!g2.motors.has_sail()) {
         return false;
     }
-    desired_heading = radians(desired_heading * 0.01f);
+
+    const float desired_heading_rad = radians(desired_heading_cd * 0.01f);
 
     // check if desired heading is in the no go zone, if it is we can't go direct
     // add 10 deg padding to try and avoid constant switching between methods, maybe add a 'dead zone'?
-    if (fabsf(wrap_PI((g2.windvane.get_absolute_wind_direction_rad() - desired_heading))) <= radians(g2.sail_no_go + 10.0f)) {
+    if (fabsf(wrap_PI((g2.windvane.get_absolute_wind_direction_rad() - desired_heading_rad))) <= radians(g2.sail_no_go + 10.0f)) {
         _sailboat_indirect_route = true;
     } else {
         _sailboat_indirect_route = false;
