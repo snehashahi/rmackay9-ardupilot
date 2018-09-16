@@ -229,7 +229,8 @@ float Rover::sailboat_acro_tack()
     return _sailboat_new_tack_heading_rad;
 }
 
-float Rover::sailboat_update_rate_max(float rate_max_degs)
+// return sailboat's maximum turn rate in deg/sec
+float Rover::sailboat_get_rate_max(float rate_max_degs) const
 {
     if (!g2.motors.has_sail()) {
         return rate_max_degs;

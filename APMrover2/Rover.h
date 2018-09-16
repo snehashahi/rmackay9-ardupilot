@@ -532,7 +532,7 @@ private:
     float sailboat_calc_heading(float desired_heading);
     void sailboat_VMG(float target_heading);
     float sailboat_acro_tack();
-    float sailboat_update_rate_max(float rate_max_degs);
+    float sailboat_get_rate_max(float rate_max_degs) const;
 
     // sensors.cpp
     void init_compass(void);
