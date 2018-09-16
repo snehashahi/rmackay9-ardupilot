@@ -169,7 +169,7 @@ void AP_MotorsUGV::setup_servo_output()
         SRV_Channels::set_angle(function, 100);
     }
 
-    // mainsail range from 0 to 100;
+    // mainsail range from 0 to 100
     SRV_Channels::set_range(SRV_Channel::k_mainsail_sheet, 100);
 }
 
