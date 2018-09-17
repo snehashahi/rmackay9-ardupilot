@@ -58,8 +58,6 @@ void Rover::sailboat_update_mainsail(float desired_speed)
 
     mainsail = constrain_float((mainsail+pid_offset), 0.0f ,100.0f);
     g2.motors.set_mainsail(mainsail);
-
-    Log_Write_Sail();
 }
 
 // returns true if sailboat should take a indirect navigation route, either to go upwind or in the future for speed
