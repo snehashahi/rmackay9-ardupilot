@@ -527,7 +527,7 @@ private:
 
     // sailboat.cpp
     void sailboat_set_mainsail(float mainsail);
-    void sailboat_update_mainsail();
+    void sailboat_update_mainsail(float desired_speed);
     bool sailboat_use_indirect_route(float desired_heading_cd);
     float sailboat_calc_heading(float desired_heading);
     void sailboat_VMG(float target_heading);

@@ -290,12 +290,7 @@ void Mode::calc_throttle(float target_speed, bool nudge_allowed, bool avoidance_
     }
 
     // update mainsail position if present
-    if (is_positive(target_speed)) {
-        rover.sailboat_update_mainsail();
-    } else {
-        // relax mainsail if desired speed is zero
-        rover.sailboat_set_mainsail(100.0f);
-    }
+    rover.sailboat_update_mainsail(target_speed);
 
     // send to motor
     g2.motors.set_throttle(throttle_out);

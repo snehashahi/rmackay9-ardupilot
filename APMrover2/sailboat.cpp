@@ -27,10 +27,16 @@ void Rover::sailboat_set_mainsail(float mainsail)
     g2.motors.set_mainsail(mainsail);
 }
 
-// update mainsail's desired angle based on wind speed and direction
-void Rover::sailboat_update_mainsail()
+// update mainsail's desired angle based on wind speed and direction and desired speed (in m/s)
+void Rover::sailboat_update_mainsail(float desired_speed)
 {
     if (!g2.motors.has_sail()) {
+        return;
+    }
+
+    // relax sail if desired speed is zero
+    if (!is_positive(desired_speed)) {
+        g2.motors.set_mainsail(100.0f);
         return;
     }
 
