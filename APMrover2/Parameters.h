@@ -376,7 +376,6 @@ public:
     AP_Float sail_angle_max;
     AP_Float sail_angle_ideal;
     AP_Float sail_no_go;
-    AP_Float sailboat_auto_xtrack_tack;
     AP_Float sailboat_straight_rate;
     AP_Float sailboat_hold_angle;
     AP_Float sailboat_loiter_radius;

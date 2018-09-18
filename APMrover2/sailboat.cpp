@@ -145,8 +145,8 @@ float Rover::sailboat_calc_heading(float desired_heading)
         }
     }
 
-    // maximum cross track error before tack, this effectively defines a 'corridor' of width 2*sailboat_auto_xtrack_tack that the boat will stay within, disable if tacking or in hold mode
-    if (fabsf(rover.nav_controller->crosstrack_error()) >= g2.sailboat_auto_xtrack_tack && !is_zero(g2.sailboat_auto_xtrack_tack) && !_sailboat_tack && !_sailboat_tacking && rover.control_mode != &rover.mode_hold) {
+    // maximum cross track error before tack, this effectively defines a 'corridor' of width 2*waypoint_overshoot that the boat will stay within, disable if tacking or in hold mode
+    if (fabsf(rover.nav_controller->crosstrack_error()) >= g.waypoint_overshoot && !is_zero(g.waypoint_overshoot) && !_sailboat_tack && !_sailboat_tacking && rover.control_mode != &rover.mode_hold) {
         // Make sure the new tack will reduce the cross track error
         // If were on starbard tack we a travling towards the left hand boundary
         if (is_positive(rover.nav_controller->crosstrack_error()) && _sailboat_current_tack == _tack::STBD) {

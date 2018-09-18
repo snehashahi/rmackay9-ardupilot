@@ -639,15 +639,6 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SAIL_NO_GO_ANGLE", 34, ParametersG2, sail_no_go, 45),
 
-    // @Param: SAIL_XTRACK_MAX
-    // @DisplayName: Sailing max auto mode cross track error
-    // @Description: When sailing upwind vehicle will tack when it reaches this cross track error, this effectively defines a corridor of width 2*SAIL_MAX_XTRACK that the vehicle will stay within, 0 = disabled
-    // @Units: m
-    // @Range: 0 50
-    // @Increment: 1
-    // @User: Standard
-    AP_GROUPINFO("SAIL_XTRACK_MAX", 35, ParametersG2, sailboat_auto_xtrack_tack, 10),
-
     // @Param: SAIL_ST_RT_MAX
     // @DisplayName: Sailing auto mode straight line rate
     // @Description: Maximum rate used when sailing on one tack in auto modes, this changes how quicky the heading responds to changes in wind direction, tacks do not use this rate
@@ -793,9 +784,11 @@ void Rover::load_parameters(void)
         g2.crash_angle.set_default(30);
     }
 
+    // sailboat defaults
     if (g2.motors.has_sail()) {
         g2.crash_angle.set_default(0);
         g2.loit_type.set_default(1);
+        g.waypoint_overshoot.set_default(10);
     }
 
     const uint8_t old_rc_keys[14] = { Parameters::k_param_rc_1_old,  Parameters::k_param_rc_2_old,
