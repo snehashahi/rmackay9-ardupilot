@@ -198,6 +198,18 @@ float Rover::sailboat_calc_heading(float desired_heading)
     return desired_heading;
 }
 
+// user initiated tack
+void Rover::sailboat_trigger_tack()
+{
+    if (!rover.control_mode->allows_tacking_from_transmitter()) {
+        return;
+    }
+
+    if (!rover._sailboat_tack && !rover._sailboat_tacking && rover._sailboat_indirect_route) {
+        rover._sailboat_tack = true;
+    }
+}
+
 float Rover::sailboat_acro_tack()
 {
 

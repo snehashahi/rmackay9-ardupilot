@@ -531,6 +531,7 @@ private:
     bool sailboat_use_indirect_route(float desired_heading_cd);
     float sailboat_calc_heading(float desired_heading);
     void sailboat_VMG(float target_heading);
+    void sailboat_trigger_tack();
     float sailboat_acro_tack();
     float sailboat_get_rate_max(float rate_max_degs) const;
 
