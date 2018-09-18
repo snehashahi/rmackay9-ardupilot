@@ -526,7 +526,6 @@ private:
     bool trim_radio();
 
     // sailboat.cpp
-    void sailboat_set_mainsail(float mainsail);
     void sailboat_update_mainsail(float desired_speed);
     bool sailboat_use_indirect_route(float desired_heading_cd);
     float sailboat_calc_heading(float desired_heading);

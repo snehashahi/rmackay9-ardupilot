@@ -18,15 +18,6 @@ To Do List
  - add option to do proper tacks, ie tacking on flat spot in the waves, or only try once at a certain speed, or some better method than just changing the desired heading suddenly
 */
 
-// directly set a mainsail value (used for manual modes)
-void Rover::sailboat_set_mainsail(float mainsail)
-{
-    if (!g2.motors.has_sail()) {
-        return;
-    }
-    g2.motors.set_mainsail(mainsail);
-}
-
 // update mainsail's desired angle based on wind speed and direction and desired speed (in m/s)
 void Rover::sailboat_update_mainsail(float desired_speed)
 {

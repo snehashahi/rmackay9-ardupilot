@@ -19,7 +19,7 @@ void ModeManual::update()
     }
 
     // set sailboat mainsail from throttle position
-    rover.sailboat_set_mainsail(desired_throttle);
+    g2.motors.set_mainsail(desired_throttle);
 
     // copy RC scaled inputs to outputs
     g2.motors.set_throttle(desired_throttle);

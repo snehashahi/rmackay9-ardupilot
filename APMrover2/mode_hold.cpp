@@ -11,7 +11,7 @@ void ModeHold::update()
     }
 
     // relax mainsail
-    rover.sailboat_set_mainsail(100);
+    g2.motors.set_mainsail(100.0f);
 
     // hold position - stop motors and center steering
     g2.motors.set_throttle(throttle);

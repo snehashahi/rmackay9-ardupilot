@@ -309,7 +309,7 @@ bool Mode::stop_vehicle()
     }
 
     // relax mainsail if present
-    rover.sailboat_set_mainsail(100.0f);
+    g2.motors.set_mainsail(100.0f);
 
     // send to motor
     g2.motors.set_throttle(throttle_out);
