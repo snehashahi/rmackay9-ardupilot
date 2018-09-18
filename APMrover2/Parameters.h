@@ -377,7 +377,7 @@ public:
     AP_Float sail_angle_max;
     AP_Float sail_angle_ideal;
     AP_Float sail_no_go;
-    AP_Float sailboat_straight_rate;
+    AP_Float sail_straight_rate_max;
     AP_Float sail_heel_angle_max;
     AP_Int8 sail_mavlink_true_apparent;
 

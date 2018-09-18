@@ -639,14 +639,14 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SAIL_NO_GO_ANGLE", 34, ParametersG2, sail_no_go, 45),
 
-    // @Param: SAIL_ST_RT_MAX
-    // @DisplayName: Sailing auto mode straight line rate
-    // @Description: Maximum rate used when sailing on one tack in auto modes, this changes how quicky the heading responds to changes in wind direction, tacks do not use this rate
+    // @Param: SAIL_ST_RATE_MAX
+    // @DisplayName: Sailing straight line turn rate maximum
+    // @Description: Maximum turn rate limit used when sailing on one tack in auto modes, tacks do not use this rate. set to use attitude controller's limit.
     // @Units: deg/s
     // @Range: 0 360
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("SAIL_ST_RT_MAX", 36, ParametersG2, sailboat_straight_rate, 10),
+    AP_GROUPINFO("SAIL_ST_RATE_MAX", 36, ParametersG2, sail_straight_rate_max, 0),
 
     // @Param: LOIT_RADIUS
     // @DisplayName: Loiter radius

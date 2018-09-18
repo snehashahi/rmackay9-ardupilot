@@ -234,8 +234,8 @@ float Rover::sailboat_get_rate_max(float rate_max_degs) const
     }
 
     // if were traveling in a 'straight line' on a single tack reduce the maximum allowed rate to smooth out heading response to wind changes, use normal max rate for tacking
-    if (!_sailboat_tack && !_sailboat_tacking) {
-        rate_max_degs = g2.sailboat_straight_rate;
+    if (!_sailboat_tack && !_sailboat_tacking && is_positive(g2.sail_straight_rate_max)) {
+        return g2.sail_straight_rate_max;
     }
 
     return rate_max_degs;
