@@ -18,7 +18,7 @@ void Rover::fence_check()
     if (new_breaches) {
 
         // if were sailing on a indirect route we should tack on the breach
-        if (_sailboat_indirect_route && !_sailboat_tack && !_sailboat_tacking){
+        if (_sailboat_indirect_route && !sailboat_tacking()){
             _sailboat_tack = true;
         }
 

@@ -73,13 +73,11 @@ bool Rover::sailboat_use_indirect_route(float desired_heading_cd)
 }
 
 // If we can't sail on the desired heading then we should pick the best heading that we can sail on
-float Rover::sailboat_calc_heading(float desired_heading)
+float Rover::sailboat_calc_heading(float desired_heading_cd)
 {
     if (!g2.motors.has_sail()) {
-        return desired_heading;
+        return desired_heading_cd;
     }
-
-    desired_heading = radians(desired_heading * 0.01f);
 
     /*
         Until we get more fancy logic for best possible speed just assume we can sail upwind at the no go angle
@@ -91,47 +89,28 @@ float Rover::sailboat_calc_heading(float desired_heading)
     */
 
     // left and right no go headings looking upwind
-    const float left_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() + radians(g2.sail_no_go));
-    const float right_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() - radians(g2.sail_no_go));
+    const float left_no_go_heading_rad = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() + radians(g2.sail_no_go));
+    const float right_no_go_heading_rad = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() - radians(g2.sail_no_go));
 
     // calculate what tack we are on if it has been too long since we knew
-    if (_sailboat_current_tack ==  _tack::Unknown || (AP_HAL::millis() - _sailboat_heading_last_run) > 1000) {
+    if (_sailboat_current_tack == Tack_Unknown || (AP_HAL::millis() - _sailboat_last_calc_heading_ms) > 1000) {
         if (is_negative(g2.windvane.get_apparent_wind_direction_rad())) {
-            _sailboat_current_tack = _tack::Port;
+            _sailboat_current_tack = Tack_Port;
         } else {
-            _sailboat_current_tack = _tack::STBD;
+            _sailboat_current_tack = Tack_STBD;
         }
     }
-    _sailboat_heading_last_run = AP_HAL::millis();
-
-    // allow force tack from rudder input
-    const float steering_in = rover.channel_steer->norm_input();
-    #define steer_threshold 0.9f // rudder threshold to trigger tack in auto heading modes
-    if (fabsf(steering_in) > steer_threshold && !_sailboat_tack && !_sailboat_tacking) {
-
-        switch (_sailboat_current_tack) {
-            case _tack::Port:
-                if (steering_in < -steer_threshold) { // if were on port a left hand steering input would be a tack
-                    _sailboat_tack = true;
-                }
-                break;
-            case _tack::STBD:
-                if (steering_in > steer_threshold) { // if on stbd right hand turn is a tack
-                    _sailboat_tack = true;
-                }
-                break;
-        }
-    }
+    _sailboat_last_calc_heading_ms = AP_HAL::millis();
 
     // maximum cross track error before tack, this effectively defines a 'corridor' of width 2*waypoint_overshoot that the boat will stay within, disable if tacking or in hold mode
-    if (fabsf(rover.nav_controller->crosstrack_error()) >= g.waypoint_overshoot && !is_zero(g.waypoint_overshoot) && !_sailboat_tack && !_sailboat_tacking) {
-        // Make sure the new tack will reduce the cross track error
-        // If were on starbard tack we a travling towards the left hand boundary
-        if (is_positive(rover.nav_controller->crosstrack_error()) && _sailboat_current_tack == _tack::STBD) {
+    if ((fabsf(rover.nav_controller->crosstrack_error()) >= g.waypoint_overshoot) && !is_zero(g.waypoint_overshoot) && !sailboat_tacking()) {
+        // make sure the new tack will reduce the cross track error
+        // if were on starboard tack we are traveling towards the left hand boundary
+        if (is_positive(rover.nav_controller->crosstrack_error()) && (_sailboat_current_tack == Tack_STBD)) {
             _sailboat_tack = true;
         }
-        // If were on port tack we a travling towards the right hand boundary
-        if (is_negative(rover.nav_controller->crosstrack_error()) && _sailboat_current_tack == _tack::Port) {
+        // if were on port tack we are traveling towards the right hand boundary
+        if (is_negative(rover.nav_controller->crosstrack_error()) && (_sailboat_current_tack == Tack_Port)) {
             _sailboat_tack = true;
         }
     }
@@ -144,83 +123,127 @@ float Rover::sailboat_calc_heading(float desired_heading)
 
         // Pick a heading for the new tack
         switch (_sailboat_current_tack) {
-            case _tack::Port:
-                _sailboat_new_tack_heading = degrees(right_no_go_heading) * 100.0f;
-                _sailboat_current_tack = _tack::STBD;
+            case Tack_Unknown:
+                // should never happen
                 break;
-            case _tack::STBD:
-                _sailboat_new_tack_heading = degrees(left_no_go_heading) * 100.0f;
-                _sailboat_current_tack = _tack::Port;
+            case Tack_Port:
+                _sailboat_new_tack_heading_cd = degrees(right_no_go_heading_rad) * 100.0f;
+                _sailboat_current_tack = Tack_STBD;
+                break;
+            case Tack_STBD:
+                _sailboat_new_tack_heading_cd = degrees(left_no_go_heading_rad) * 100.0f;
+                _sailboat_current_tack = Tack_Port;
                 break;
         }
 
         _sailboat_tack = false;
         _sailboat_tacking = true;
-        _sailboat_tack_stat_time = AP_HAL::millis();
+        _sailboat_tack_start_ms = AP_HAL::millis();
     }
 
     // if were in the process of a tack we should not change the target heading, not sure if this is a good idea or not, the target shouldn't change too much while tacking, except if the vane provides poor readings as we are tacking
     if (_sailboat_tacking) {
         // Check if we have tacked round enough or if we have timed out
         // not sure if the time out is necessary
-        if (AP_HAL::millis() - _sailboat_tack_stat_time > 50000.0f || fabsf(wrap_180_cd(_sailboat_new_tack_heading - ahrs.yaw_sensor)) < (10.0f * 100.0f)){
+        if (AP_HAL::millis() - _sailboat_tack_start_ms > 50000.0f || fabsf(wrap_180_cd(_sailboat_new_tack_heading_cd - ahrs.yaw_sensor)) < (10.0f * 100.0f)){
             _sailboat_tacking = false;
-            // If we timed out and did not reached the desired heading so we canot be sure what tack we are on
-            if(AP_HAL::millis() - _sailboat_tack_stat_time > 50000.0f) {
-                _sailboat_current_tack = _tack::Unknown;
+            // If we timed out and did not reached the desired heading so we cannot be sure what tack we are on
+            if (AP_HAL::millis() - _sailboat_tack_start_ms > 50000.0f) {
+                _sailboat_current_tack = Tack_Unknown;
             }
         }
-        desired_heading = _sailboat_new_tack_heading;
+        desired_heading_cd = _sailboat_new_tack_heading_cd;
     } else {
         // set new heading
         switch (_sailboat_current_tack) {
-            case _tack::Port:
-                desired_heading = degrees(left_no_go_heading) * 100.0f;
+            case Tack_Unknown:
+                // should never happen
                 break;
-            case _tack::STBD:
-                desired_heading = degrees(right_no_go_heading) * 100.0f;
+            case Tack_Port:
+                desired_heading_cd = degrees(left_no_go_heading_rad) * 100.0f;
+                break;
+            case Tack_STBD:
+                desired_heading_cd = degrees(right_no_go_heading_rad) * 100.0f;
                 break;
         }
     }
 
-    return desired_heading;
+    return desired_heading_cd;
+}
+
+// returns true if boat is currently tacking
+bool Rover::sailboat_tacking() const
+{
+    return (_sailboat_tack || _sailboat_tacking);
 }
 
 // user initiated tack
 void Rover::sailboat_trigger_tack()
 {
-    if (!rover.control_mode->allows_tacking_from_transmitter()) {
+    if (!control_mode->allows_tacking_from_transmitter()) {
         return;
     }
 
-    if (!rover._sailboat_tack && !rover._sailboat_tacking && rover._sailboat_indirect_route) {
-        rover._sailboat_tack = true;
+    if (!sailboat_tacking() && rover._sailboat_indirect_route) {
+        _sailboat_tack = true;
     }
 }
 
-float Rover::sailboat_acro_tack()
+// check if user triggers tack by holding steering to > 90%
+void Rover::sailboat_check_steering_triggered_tack()
 {
+    // exit immediately if not sailboat
+    if (!g2.motors.has_sail()) {
+        return;
+    }
 
+    // rudder threshold to trigger tack in auto heading modes
+    const float steer_threshold = 0.9f;
+
+    // allow force tack from rudder input
+    const float steering_in = rover.channel_steer->norm_input();
+
+    if ((fabsf(steering_in) > steer_threshold) && !sailboat_tacking()) {
+        switch (_sailboat_current_tack) {
+            case Tack_Unknown:
+                // sailboat_calc_heading has not been called so ignore
+                break;
+            case Tack_Port:
+                if (steering_in < -steer_threshold) { // if we are on port a left hand steering input would be a tack
+                    _sailboat_tack = true;
+                }
+                break;
+            case Tack_STBD:
+                if (steering_in > steer_threshold) { // if on stbd right hand turn is a tack
+                    _sailboat_tack = true;
+                }
+                break;
+        }
+    }
+}
+
+// return heading in radians when tacking in acro
+float Rover::sailboat_acro_tack_heading_rad()
+{
     // initiate tack
     if (_sailboat_tack) {
         // match the current angle to the true wind on the new tack
-        _sailboat_new_tack_heading_rad = wrap_2PI(ahrs.yaw + 2.0f * wrap_PI((g2.windvane.get_absolute_wind_direction_rad() - ahrs.yaw)));
-
+        _sailboat_acro_tack_heading_rad = wrap_2PI(ahrs.yaw + 2.0f * wrap_PI((g2.windvane.get_absolute_wind_direction_rad() - ahrs.yaw)));
         _sailboat_tack = false;
         _sailboat_tacking = true;
-        _sailboat_tack_stat_time = AP_HAL::millis();
+        _sailboat_tack_start_ms = AP_HAL::millis();
     }
 
     // wait until tack is completed
     // check if we have tacked round enough or if we have timed out
     // time out needed for acro as the pilot is not in control while tacking
     if (_sailboat_tacking ) {
-        if (AP_HAL::millis() - _sailboat_tack_stat_time > 5000.0f || fabsf(wrap_PI(_sailboat_new_tack_heading_rad - ahrs.yaw)) < radians(5.0f)){
+        if (((AP_HAL::millis() - _sailboat_tack_start_ms) > 5000.0f) || fabsf(wrap_PI(_sailboat_acro_tack_heading_rad - ahrs.yaw)) < radians(5.0f)){
             _sailboat_tacking = false;
         }
     }
 
-    return _sailboat_new_tack_heading_rad;
+    return _sailboat_acro_tack_heading_rad;
 }
 
 // return sailboat's maximum turn rate in deg/sec

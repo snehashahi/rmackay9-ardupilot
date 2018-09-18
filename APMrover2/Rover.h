@@ -388,19 +388,19 @@ private:
     } cruise_learn;
 
     // sailboat variables
-    bool _sailboat_indirect_route;
-    bool _sailboat_tack;
-    bool _sailboat_tacking;
-    float _sailboat_tack_stat_time;
-    float _sailboat_new_tack_heading;
-    float _sailboat_new_tack_heading_rad;
-    uint8_t _sailboat_current_tack;
-    float _sailboat_heading_last_run;
-    enum _tack {
-        Unknown = 0,
-        Port = 1,
-        STBD = 2
+    enum Sailboat_Tack {
+        Tack_Unknown = 0,
+        Tack_Port = 1,
+        Tack_STBD = 2
     };
+    bool _sailboat_indirect_route;          // result of latest call to sailboat_use_indirect_route
+    bool _sailboat_tack;                    // set to true to trigger tack on next call to sailboat_calc_heading
+    bool _sailboat_tacking;                 // true when sailboat is in the process of tacking to a new heading
+    float _sailboat_tack_start_ms;          // system time when tack was triggered
+    float _sailboat_new_tack_heading_cd;    // target heading in centi-degrees while tacking
+    float _sailboat_acro_tack_heading_rad;  // target heading in radians while tacking in acro mode
+    Sailboat_Tack _sailboat_current_tack;   // current tack state (Port if heading is left of no-go, STBD if right of no-go)
+    float _sailboat_last_calc_heading_ms;   // system time of last call to sailboat_calc_heading
 
 private:
 
@@ -527,10 +527,12 @@ private:
     // sailboat.cpp
     void sailboat_update_mainsail(float desired_speed);
     bool sailboat_use_indirect_route(float desired_heading_cd);
-    float sailboat_calc_heading(float desired_heading);
+    float sailboat_calc_heading(float desired_heading_cd);
+    bool sailboat_tacking() const;
     float sailboat_get_VMG() const;
     void sailboat_trigger_tack();
-    float sailboat_acro_tack();
+    void sailboat_check_steering_triggered_tack();
+    float sailboat_acro_tack_heading_rad();
     float sailboat_get_rate_max(float rate_max_degs) const;
 
     // sensors.cpp
