@@ -81,9 +81,6 @@ float Rover::sailboat_calc_heading(float desired_heading)
 
     desired_heading = radians(desired_heading * 0.01f);
 
-    // Update VMG for logs
-    sailboat_VMG(desired_heading);
-
     /*
         Until we get more fancy logic for best possible speed just assume we can sail upwind at the no go angle
         Just set off on which ever of the no go angles is on the current tack, once the end destination is within a single tack it will switch back to direct route method
@@ -244,10 +241,16 @@ float Rover::sailboat_get_rate_max(float rate_max_degs) const
 // Velocity Made Good, this is the speed we are traveling towards the desired destination
 // only for logging at this stage
 // https://en.wikipedia.org/wiki/Velocity_made_good
-void Rover::sailboat_VMG(float target_heading)
+float Rover::sailboat_get_VMG() const
 {
-    float speed;
-    g2.attitude_control.get_forward_speed(speed);
+    // return 0 if not heading towards waypoint
+    if (!control_mode->is_autopilot_mode()) {
+        return 0.0f;
+    }
 
-    _sailboat_velocity_made_good = speed * cosf(wrap_PI(target_heading - ahrs.yaw));
+    float speed;
+    if (!g2.attitude_control.get_forward_speed(speed)) {
+        return 0.0f;
+    }
+    return (speed * cosf(wrap_PI(radians(nav_controller->target_bearing_cd()) - ahrs.yaw)));
 }

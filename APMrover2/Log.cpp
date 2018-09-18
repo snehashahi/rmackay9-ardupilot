@@ -177,10 +177,6 @@ void Rover::Log_Write_Sail()
         true_wind_speed = g2.windvane.get_true_wind_speed();
         aparent_wind_speed = g2.windvane.get_apparent_wind_speed();
     }
-    float vmg = 0.0f;
-    if (rover._sailboat_indirect_route) {
-        vmg = rover._sailboat_velocity_made_good;
-    }
     DataFlash.Log_Write("SAIL", "TimeUS,WindDirAbs,WindDirRel,TrueWindSpd,AparentWindSpd,SailOut,VMG",
                         "shhnn%n", "F000000", "Qffffff",
                         AP_HAL::micros64(),
@@ -189,7 +185,7 @@ void Rover::Log_Write_Sail()
                         (double)true_wind_speed,
                         (double)aparent_wind_speed,
                         (double)g2.motors.get_mainsail(),
-                        (double)vmg);
+                        (double)sailboat_get_VMG());
 }
 
 struct PACKED log_Steering {

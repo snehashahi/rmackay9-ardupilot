@@ -396,7 +396,6 @@ private:
     float _sailboat_new_tack_heading_rad;
     uint8_t _sailboat_current_tack;
     float _sailboat_heading_last_run;
-    float _sailboat_velocity_made_good;
     enum _tack {
         Unknown = 0,
         Port = 1,
@@ -529,7 +528,7 @@ private:
     void sailboat_update_mainsail(float desired_speed);
     bool sailboat_use_indirect_route(float desired_heading_cd);
     float sailboat_calc_heading(float desired_heading);
-    void sailboat_VMG(float target_heading);
+    float sailboat_get_VMG() const;
     void sailboat_trigger_tack();
     float sailboat_acro_tack();
     float sailboat_get_rate_max(float rate_max_degs) const;
