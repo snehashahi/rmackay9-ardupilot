@@ -657,14 +657,14 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SAIL_HOLD_ANGLE", 37, ParametersG2, sailboat_hold_angle, 0),
 
-    // @Param: SAIL_LOITER_RAD
-    // @DisplayName: Sailing loiter radius
-    // @Description: In loiter mode the sailboat will sail within this radius of the loiter point
+    // @Param: LOIT_RADIUS
+    // @DisplayName: Loiter radius
+    // @Description: Vehicle will drift when within this distance of the target position
     // @Units: m
-    // @Range: 0 50
+    // @Range: 0 20
     // @Increment: 1
     // @User: Standard
-    AP_GROUPINFO("SAIL_LOITER_RAD", 38, ParametersG2, sailboat_loiter_radius, 5),
+    AP_GROUPINFO("LOIT_RADIUS", 38, ParametersG2, loit_radius, 2),
 
     // @Param: SAIL_HEEL_MAX
     // @DisplayName: Sailing maximum heel angle
@@ -788,6 +788,7 @@ void Rover::load_parameters(void)
     if (g2.motors.has_sail()) {
         g2.crash_angle.set_default(0);
         g2.loit_type.set_default(1);
+        g2.loit_radius.set_default(5);
         g.waypoint_overshoot.set_default(10);
     }
 

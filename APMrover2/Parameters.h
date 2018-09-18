@@ -361,6 +361,7 @@ public:
 
     // loiter type
     AP_Int8 loit_type;
+    AP_Float loit_radius;
 
     // Sprayer
     AC_Sprayer sprayer;
@@ -378,7 +379,6 @@ public:
     AP_Float sail_no_go;
     AP_Float sailboat_straight_rate;
     AP_Float sailboat_hold_angle;
-    AP_Float sailboat_loiter_radius;
     AP_Float sail_heel_angle_max;
     AP_Int8 sail_mavlink_true_apparent;
 
