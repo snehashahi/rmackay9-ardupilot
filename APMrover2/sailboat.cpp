@@ -102,19 +102,9 @@ float Rover::sailboat_calc_heading(float desired_heading)
         Need to add some logic to stop it from tacking back towards fence once it has been bounced off, possibly a minimum distance and time between tacks or something
     */
 
-    float left_no_go_heading = 0.0f;
-    float right_no_go_heading = 0.0f;
-
     // left and right no go headings looking upwind
-    if (rover.control_mode == &rover.mode_hold) {
-        // In hold mode use hold angle
-        left_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() + radians(g2.sailboat_hold_angle));
-        right_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() - radians(g2.sailboat_hold_angle));
-    } else {
-        // Use upwind tacking angles
-        left_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() + radians(g2.sail_no_go));
-        right_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() - radians(g2.sail_no_go));
-    }
+    const float left_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() + radians(g2.sail_no_go));
+    const float right_no_go_heading = wrap_2PI(g2.windvane.get_absolute_wind_direction_rad() - radians(g2.sail_no_go));
 
     // calculate what tack we are on if it has been too long since we knew
     if (_sailboat_current_tack ==  _tack::Unknown || (AP_HAL::millis() - _sailboat_heading_last_run) > 1000) {
@@ -146,7 +136,7 @@ float Rover::sailboat_calc_heading(float desired_heading)
     }
 
     // maximum cross track error before tack, this effectively defines a 'corridor' of width 2*waypoint_overshoot that the boat will stay within, disable if tacking or in hold mode
-    if (fabsf(rover.nav_controller->crosstrack_error()) >= g.waypoint_overshoot && !is_zero(g.waypoint_overshoot) && !_sailboat_tack && !_sailboat_tacking && rover.control_mode != &rover.mode_hold) {
+    if (fabsf(rover.nav_controller->crosstrack_error()) >= g.waypoint_overshoot && !is_zero(g.waypoint_overshoot) && !_sailboat_tack && !_sailboat_tacking) {
         // Make sure the new tack will reduce the cross track error
         // If were on starbard tack we a travling towards the left hand boundary
         if (is_positive(rover.nav_controller->crosstrack_error()) && _sailboat_current_tack == _tack::STBD) {

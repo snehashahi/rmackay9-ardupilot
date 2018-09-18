@@ -648,15 +648,6 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SAIL_ST_RT_MAX", 36, ParametersG2, sailboat_straight_rate, 10),
 
-    // @Param: SAIL_HOLD_ANGLE
-    // @DisplayName: Sailing hold mode wind angle
-    // @Description: Sailing hold mode will hold this angle into the wind, zero is head to wind, if none zero aux switch tacking is enabled, if negative hold mode will not steer
-    // @Units: deg
-    // @Range: 0 180
-    // @Increment: 1
-    // @User: Standard
-    AP_GROUPINFO("SAIL_HOLD_ANGLE", 37, ParametersG2, sailboat_hold_angle, 0),
-
     // @Param: LOIT_RADIUS
     // @DisplayName: Loiter radius
     // @Description: Vehicle will drift when within this distance of the target position
