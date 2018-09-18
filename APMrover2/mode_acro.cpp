@@ -18,7 +18,7 @@ void ModeAcro::update()
         calc_throttle(desired_speed, false, true);
     }
 
-    float steering_out = 0.0f;
+    float steering_out;
 
     // handle sailboat tacking
     rover.sailboat_check_steering_triggered_tack();
@@ -35,9 +35,9 @@ void ModeAcro::update()
 
         // run steering turn rate controller and throttle controller
         steering_out = attitude_control.get_steering_out_rate(target_turn_rate,
-                                                                      g2.motors.limit.steer_left,
-                                                                      g2.motors.limit.steer_right,
-                                                                      rover.G_Dt);
+                                                              g2.motors.limit.steer_left,
+                                                              g2.motors.limit.steer_right,
+                                                              rover.G_Dt);
     }
 
     g2.motors.set_steering(steering_out * 4500.0f);
