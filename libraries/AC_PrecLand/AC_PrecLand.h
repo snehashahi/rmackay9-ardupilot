@@ -117,6 +117,9 @@ private:
     // results are stored in_target_pos_rel_out_NE, _target_vel_rel_out_NE
     void run_output_prediction();
 
+    // rotate vector from camera frame to NED frame
+    Vector3f rotate_to_NED_frame(const Vector3f& vec) const;
+
     // parameters
     AP_Int8                     _enabled;           // enabled/disabled and behaviour
     AP_Int8                     _type;              // precision landing sensor type
@@ -128,6 +131,7 @@ private:
     AP_Float                    _land_ofs_cm_y;     // Desired landing position of the camera right of the target in vehicle body frame
     AP_Float                    _accel_noise;       // accelometer process noise
     AP_Vector3f                 _cam_offset;        // Position of the camera relative to the CG
+    AP_Int8                     _gimbal_type;       // 1 if camera is mounted on a roll/pitch gimbal
 
     uint32_t                    _last_update_ms;    // system time in millisecond when update was last called
     bool                        _target_acquired;   // true if target has been seen recently

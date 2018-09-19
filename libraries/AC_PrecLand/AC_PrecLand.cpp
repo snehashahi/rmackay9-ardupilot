@@ -101,6 +101,13 @@ const AP_Param::GroupInfo AC_PrecLand::var_info[] = {
     // @RebootRequired: True
     AP_GROUPINFO("LAG", 9, AC_PrecLand, _lag, 0.02), // 20ms is the old default buffer size (8 frames @ 400hz/2.5ms)
 
+    // @Param: GIMBAL
+    // @DisplayName: Precision Land Gimbal type
+    // @Description: Precision Land Gimbal type
+    // @Values: 0:NoGimbal, 1:Gimbal
+    // @User: Advanced
+    AP_GROUPINFO("GIMBAL", 10, AC_PrecLand, _gimbal_type, 0),
+
     AP_GROUPEND
 };
 
@@ -386,9 +393,7 @@ bool AC_PrecLand::construct_pos_meas_using_rangefinder(float rangefinder_alt_m, 
 {
     Vector3f target_vec_unit_body;
     if (retrieve_los_meas(target_vec_unit_body)) {
-        const struct inertial_data_frame_s *inertial_data_delayed = (*_inertial_history)[0];
-
-        Vector3f target_vec_unit_ned = inertial_data_delayed->Tbn * target_vec_unit_body;
+        const Vector3f target_vec_unit_ned = rotate_to_NED_frame(target_vec_unit_body);
         bool target_vec_valid = target_vec_unit_ned.z > 0.0f;
         bool alt_valid = (rangefinder_alt_valid && rangefinder_alt_m > 0.0f) || (_backend->distance_to_target() > 0.0f);
         if (target_vec_valid && alt_valid) {
@@ -403,7 +408,7 @@ bool AC_PrecLand::construct_pos_meas_using_rangefinder(float rangefinder_alt_m, 
 
             // Compute camera position relative to IMU
             Vector3f accel_body_offset = AP::ins().get_imu_pos_offset(AP::ahrs().get_primary_accel_index());
-            Vector3f cam_pos_ned = inertial_data_delayed->Tbn * (_cam_offset.get() - accel_body_offset);
+            const Vector3f cam_pos_ned = rotate_to_NED_frame(_cam_offset.get() - accel_body_offset);
 
             // Compute target position relative to IMU
             _target_pos_rel_meas_NED = Vector3f(target_vec_unit_ned.x*dist, target_vec_unit_ned.y*dist, alt) + cam_pos_ned;
@@ -451,4 +456,17 @@ void AC_PrecLand::run_output_prediction()
     Vector3f land_ofs_ned_m = _ahrs.get_rotation_body_to_ned() * Vector3f(_land_ofs_cm_x,_land_ofs_cm_y,0) * 0.01f;
     _target_pos_rel_out_NE.x += land_ofs_ned_m.x;
     _target_pos_rel_out_NE.y += land_ofs_ned_m.y;
+}
+
+// rotate vector from camera frame to NED frame
+Vector3f AC_PrecLand::rotate_to_NED_frame(const Vector3f& vec) const
+{
+    if (_gimbal_type == 1) {
+        // camera is mounted on roll/pitch gimbal so no rotation required
+        return vec;
+    }
+
+    // camera is mounted directly to body so rotate into NED frame using oldest attitude data in buffer
+    const struct inertial_data_frame_s *inertial_data_delayed = (*_inertial_history)[0];
+    return inertial_data_delayed->Tbn * vec;
 }
