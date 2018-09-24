@@ -112,9 +112,9 @@ private:
     static AP_WindVane *_s_instance;
 
     // wind direction variables
-    float _home_heading;                            // heading recorded when vehicle was armed
-    float _direction_apparent;                      // wind's apparent direction (0 = ahead of vehicle)
-    float _direction_absolute;                      // wind's absolute direction (0 = North)
+    float _home_heading;                            // heading in radians recorded when vehicle was armed
+    float _direction_apparent;                      // wind's apparent direction in radians (0 = ahead of vehicle)
+    float _direction_absolute;                      // wind's absolute direction in radians (0 = North)
     float _current_analog_voltage;                  // wind direction's latest analog voltage reading
 
     // wind speed variables
