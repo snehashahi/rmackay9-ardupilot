@@ -55,7 +55,7 @@ public:
     float get_apparent_wind_direction_rad() const { return _direction_apparent; }
 
     // get the absolute wind direction in radians, 0 = North
-    float get_absolute_wind_direction_rad();
+    float get_absolute_wind_direction_rad() const { return _direction_absolute; }
 
     // Return true wind speed
     float get_true_wind_speed() const { return _speed_true; }

@@ -231,21 +231,6 @@ void AP_WindVane::update()
     update_true_wind_direction();
 }
 
-// Return the absoute wind bearing in radians, the wind comes from this direction, 0 = North
-float AP_WindVane::get_absolute_wind_direction_rad()
-{
-    // PWM and home location directly read absolute bearing
-    switch (_type) {
-        case WindVaneType::WINDVANE_HOME_HEADING:
-            return _home_heading;
-        case WindVaneType::WINDVANE_PWM_PIN:
-            // read bearing from pwm and offset home bearing by that much
-            return wrap_2PI(read_PWM_bearing() + _home_heading);
-    }
-
-    return wrap_PI(_direction_absolute);
-}
-
 // record home heading for use as wind direction if no sensor is fitted
 void AP_WindVane::record_home_headng()
 {
@@ -344,10 +329,14 @@ void AP_WindVane::update_apparent_wind_direction()
 
     switch (_type) {
         case WindVaneType::WINDVANE_HOME_HEADING:
+            // this is a approximation as we are not considering boat speed and wind speed
+            // do not filter home heading
+            _direction_apparent = wrap_PI(_home_heading - AP::ahrs().yaw);
+            return;
         case WindVaneType::WINDVANE_PWM_PIN:
             // this is a approximation as we are not considering boat speed and wind speed
             // do not filter home heading and pwm type vanes
-            _direction_apparent = wrap_PI(get_absolute_wind_direction_rad() - AP::ahrs().yaw);
+            _direction_apparent = wrap_PI(read_PWM_bearing() + _home_heading - AP::ahrs().yaw);
             return;
         case WindVaneType::WINDVANE_ANALOG_PIN:
             apparent_angle_in = read_analog();
@@ -379,7 +368,7 @@ void AP_WindVane::update_apparent_wind_direction()
 // https://en.wikipedia.org/wiki/Apparent_wind
 void AP_WindVane::update_true_wind_direction()
 {
-    float heading =  AP::ahrs().yaw;
+    float heading = AP::ahrs().yaw;
 
     // no wind speed sensor, so can't do true wind calcs
     if (_wind_speed_sensor_type == Speed_type::WINDSPEED_NONE) {
@@ -412,6 +401,7 @@ void AP_WindVane::update_true_wind_direction()
     } else if (is_positive(_direction_apparent)) {
         bearing = acosf((_speed_apparent * cosf(_direction_apparent) - ground_speed) / _speed_true);
     } else {
+        // To-Do: check if arg to acosf > 1 to avoid arithmetic exception
         bearing = -acosf((_speed_apparent * cosf(_direction_apparent) - ground_speed) / _speed_true);
     }
 
