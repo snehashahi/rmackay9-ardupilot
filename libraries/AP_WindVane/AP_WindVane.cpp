@@ -23,6 +23,9 @@
 #if CONFIG_HAL_BOARD == HAL_BOARD_PX4 || CONFIG_HAL_BOARD == HAL_BOARD_VRBRAIN
 #include <board_config.h>
 #endif
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+#include <SITL/SITL.h>
+#endif
 
 extern const AP_HAL::HAL& hal;
 
@@ -267,6 +270,60 @@ float AP_WindVane::read_PWM_bearing()
     return wrap_PI(bearing);
 }
 
+// read the apparent wind direction in radians from SITL
+float AP_WindVane::read_direction_SITL()
+{
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    // temporarily store true speed and direction for easy access
+    const float wind_speed = AP::sitl()->wind_speed_active;
+    const float wind_dir_rad = radians(AP::sitl()->wind_direction_active);
+
+    // convert true wind speed and direction into a 2D vector
+    Vector2f wind_vector_ef(sinf(wind_dir_rad) * wind_speed, cosf(wind_dir_rad) * wind_speed);
+
+    // add vehicle speed to get apparent wind vector
+    wind_vector_ef.x += AP::sitl()->state.speedE;
+    wind_vector_ef.y += AP::sitl()->state.speedN;
+
+    const float wind_dir_apparent = wrap_PI(atan2f(wind_vector_ef.x, wind_vector_ef.y) - radians(AP::sitl()->state.heading));
+
+    // debug
+    printf("wx:%4.2f wy:%4.2f wda:%4.2f wsa:%4.2f wspd:%4.2f wdir:%4.2f\n",
+                (double)wind_vector_ef.x,
+                (double)wind_vector_ef.y,
+                (double)degrees(wind_dir_rad),
+                (double)wind_speed,
+                (double)wind_vector_ef.length(),
+                (double)degrees(wind_dir_apparent)
+                );
+
+    return wind_dir_apparent;
+#else
+    return 0.0f;
+#endif
+}
+
+// read the apparent wind speed in m/s from SITL
+float AP_WindVane::read_wind_speed_SITL()
+{
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    // temporarily store true speed and direction for easy access
+    const float wind_speed = AP::sitl()->wind_speed_active;
+    const float wind_dir_rad = radians(AP::sitl()->wind_direction_active);
+
+    // convert true wind speed and direction into a 2D vector
+    Vector2f wind_vector_ef(sinf(wind_dir_rad) * wind_speed, cosf(wind_dir_rad) * wind_speed);
+
+    // add vehicle speed to get apparent wind vector
+    wind_vector_ef.x += AP::sitl()->state.speedE;
+    wind_vector_ef.y += AP::sitl()->state.speedN;
+
+    return wind_vector_ef.length();
+#else
+    return 0.0f;
+#endif
+}
+
 // read modern devices wind sensor rev p
 // https://moderndevice.com/news/calibrating-rev-p-wind-sensor-new-regression/
 float AP_WindVane::read_wind_sensor_rev_p()
@@ -308,6 +365,11 @@ void AP_WindVane::update_wind_speed()
         case WINDVANE_WIND_SENSOR_REV_P:
             apparent_wind_speed_in = read_wind_sensor_rev_p();
             break;
+        case WINDSPEED_SITL:
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+            apparent_wind_speed_in = read_wind_speed_SITL();
+            break;
+#endif
         default:
             _speed_apparent = 0.0f;
             return;
@@ -340,6 +402,11 @@ void AP_WindVane::update_apparent_wind_direction()
             return;
         case WindVaneType::WINDVANE_ANALOG_PIN:
             apparent_angle_in = read_analog();
+            break;
+        case WindVaneType::WINDVANE_SITL:
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+            apparent_angle_in = read_direction_SITL();
+#endif
             break;
     }
 

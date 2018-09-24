@@ -29,6 +29,7 @@ public:
         WINDVANE_HOME_HEADING = 1,
         WINDVANE_PWM_PIN    = 2,
         WINDVANE_ANALOG_PIN = 3,
+        WINDVANE_SITL       = 10
     };
 
     AP_WindVane();
@@ -76,6 +77,12 @@ private:
 
     // read the bearing value from a PWM value on a RC channel - returns radians
     float read_PWM_bearing();
+
+    // read the apparent wind direction in radians from SITL
+    float read_direction_SITL();
+
+    // read the apparent wind speed in m/s from SITL
+    float read_wind_speed_SITL();
 
     // read wind speed from wind sensor rev p
     float read_wind_sensor_rev_p();
@@ -130,6 +137,7 @@ private:
         WINDSPEED_NONE               = 0,
         WINDSPEED_AIRSPEED           = 1,
         WINDVANE_WIND_SENSOR_REV_P   = 2,
+        WINDSPEED_SITL               = 10
     };
 
     // pin for reading analog voltage
