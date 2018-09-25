@@ -288,14 +288,14 @@ float AP_WindVane::read_direction_SITL()
     const float wind_dir_apparent = wrap_PI(atan2f(wind_vector_ef.x, wind_vector_ef.y) - radians(AP::sitl()->state.heading));
 
     // debug
-    printf("wx:%4.2f wy:%4.2f wda:%4.2f wsa:%4.2f wspd:%4.2f wdir:%4.2f\n",
+    /*printf("wx:%4.2f wy:%4.2f wda:%4.2f wsa:%4.2f wspd:%4.2f wdir:%4.2f\n",
                 (double)wind_vector_ef.x,
                 (double)wind_vector_ef.y,
                 (double)degrees(wind_dir_rad),
                 (double)wind_speed,
                 (double)wind_vector_ef.length(),
                 (double)degrees(wind_dir_apparent)
-                );
+                );*/
 
     return wind_dir_apparent;
 #else
