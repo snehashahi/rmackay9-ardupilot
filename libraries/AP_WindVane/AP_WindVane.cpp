@@ -285,7 +285,7 @@ float AP_WindVane::read_direction_SITL()
     wind_vector_ef.x += AP::sitl()->state.speedE;
     wind_vector_ef.y += AP::sitl()->state.speedN;
 
-    const float wind_dir_apparent = wrap_PI(atan2f(wind_vector_ef.x, wind_vector_ef.y) - radians(AP::sitl()->state.heading));
+    const float wind_dir_apparent = wrap_PI(atan2f(wind_vector_ef.x, wind_vector_ef.y) - AP::ahrs().yaw);
 
     // debug
     /*printf("wx:%4.2f wy:%4.2f wda:%4.2f wsa:%4.2f wspd:%4.2f wdir:%4.2f\n",
