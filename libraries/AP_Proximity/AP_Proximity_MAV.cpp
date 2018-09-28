@@ -88,14 +88,11 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         // check increment (message's sector width)
         float increment = packet.increment;
         if (packet.increment == 0) {
-            // assume an rplidar with 64 sectors
-            increment = 360.0f / 64.0f;
+            return;
         }
-        increment = MAX(increment, 5.0f);
-        const float increment_half = increment / 2.0f;
 
         const float MAX_DISTANCE = 9999.0f;
-        const uint8_t total_distances = 360.0f / increment;
+        const uint8_t total_distances = MIN(360.0f / increment, 72);
 
         // set distance min and max
         _distance_min = packet.min_distance / 100.0f;
@@ -120,22 +117,23 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
              _distance[i] = MAX_DISTANCE;
 
              // iterate over message's sectors
+             // To-Do: improve the efficiency of this nested loop
              for (uint8_t j = 0; j < total_distances; j++) {
                  if (!used[j]) {
                      const float packet_distance_m = packet.distances[j] / 100.0f;
-                     const float mid_angle = wrap_360(increment * dir_correction * (0.5f + j) - increment_half + yaw_correction);
+                     const float mid_angle = wrap_360(j * increment * dir_correction + yaw_correction);
                      float angle_diff = fabsf(wrap_180(_sector_middle_deg[i] - mid_angle));
 
                      // update distance array sector with shortest distance from message
-                     if ((angle_diff <= sector_width_half)) {
-                         if((packet_distance_m < _distance[i])){
+                     if (angle_diff <= sector_width_half) {
+                         if (packet_distance_m < _distance[i]) {
                             _distance[i] = packet_distance_m;
                             _angle[i] = mid_angle;
+                            updated = true;
                          }
                          used[j] = true;
                      }
                  }
-                updated = true;
              }
              _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
              if (updated) {
