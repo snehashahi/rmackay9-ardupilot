@@ -86,7 +86,7 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         mavlink_msg_obstacle_distance_decode(msg, &packet);
 
         // check increment (message's sector width)
-        float increment = packet.increment;
+        uint8_t increment = packet.increment;
         if (packet.increment == 0) {
             return;
         }
@@ -107,38 +107,40 @@ void AP_Proximity_MAV::handle_msg(mavlink_message_t *msg)
         } else {
             dir_correction = -1.0f;
         }
-        bool used[72] = {false};
 
-        // iterate over distance array sectors
+        // initialise updated array and proximity sector angles (to closest object) and distances
+        bool sector_updated[_num_sectors];
+        float sector_width_half[_num_sectors];
         for (uint8_t i = 0; i < _num_sectors; i++) {
-             const float sector_width_half = _sector_width_deg[i] / 2.0f;
-             bool updated = false;
-             _angle[i] = _sector_middle_deg[i];
-             _distance[i] = MAX_DISTANCE;
+            sector_updated[i] = false;
+            sector_width_half[i] = _sector_width_deg[i] * 0.5f;
+            _angle[i] = _sector_middle_deg[i];
+            _distance[i] = MAX_DISTANCE;
+        }
 
-             // iterate over message's sectors
-             // To-Do: improve the efficiency of this nested loop
-             for (uint8_t j = 0; j < total_distances; j++) {
-                 if (!used[j]) {
-                     const float packet_distance_m = packet.distances[j] / 100.0f;
-                     const float mid_angle = wrap_360(j * increment * dir_correction + yaw_correction);
-                     float angle_diff = fabsf(wrap_180(_sector_middle_deg[i] - mid_angle));
+        // iterate over message's sectors
+        for (uint8_t j = 0; j < total_distances; j++) {
+            const float packet_distance_m = packet.distances[j] * 0.01f;
+            const float mid_angle = wrap_360(j * increment * dir_correction + yaw_correction);
 
-                     // update distance array sector with shortest distance from message
-                     if (angle_diff <= sector_width_half) {
-                         if (packet_distance_m < _distance[i]) {
-                            _distance[i] = packet_distance_m;
-                            _angle[i] = mid_angle;
-                            updated = true;
-                         }
-                         used[j] = true;
-                     }
-                 }
-             }
-             _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
-             if (updated) {
-                 update_boundary_for_sector(i);
-             }
+            // iterate over proximity sectors
+            for (uint8_t i = 0; i < _num_sectors; i++) {
+                float angle_diff = fabsf(wrap_180(_sector_middle_deg[i] - mid_angle));
+                // update distance array sector with shortest distance from message
+                if ((angle_diff <= sector_width_half[i]) && (packet_distance_m < _distance[i])) {
+                    _distance[i] = packet_distance_m;
+                    _angle[i] = mid_angle;
+                    sector_updated[i] = true;
+                }
+            }
+        }
+
+        // update proximity sectors validity and boundary point
+        for (uint8_t i = 0; i < _num_sectors; i++) {
+            _distance_valid[i] = (_distance[i] >= _distance_min) && (_distance[i] <= _distance_max);
+            if (sector_updated[i]) {
+                update_boundary_for_sector(i);
+            }
         }
     }
 }
