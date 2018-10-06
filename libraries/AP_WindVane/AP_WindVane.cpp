@@ -32,6 +32,13 @@ extern const AP_HAL::HAL& hal;
 // by default use the airspeed pin for Vane
 #define WINDVANE_DEFAULT_PIN 15
 #define WINDVANE_CALIBRATION_VOLT_DIFF_MIN  1.0f    // calibration routine's min voltage difference required for success
+// use other analog pins for speed sensor by deault
+#define WINDSPEED_DEFAULT_SPEED_PIN 14
+#define WINDSPEED_DEFAULT_TEMP_PIN 13
+// use average offset providey by manfacturer for wind sesnor rev P. as default
+// https://moderndevice.com/news/calibrating-rev-p-wind-sensor-new-regression/
+// will have to chage this once more sensors are supported
+#define WINDSPEED_DEFAULT_VOLT_OFFSET 1.346
 
 const AP_Param::GroupInfo AP_WindVane::var_info[] = {
 
@@ -107,6 +114,52 @@ const AP_Param::GroupInfo AP_WindVane::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("ANA_DZ", 9, AP_WindVane, _analog_deadzone, 0),
 
+    // @Param: CUTOFF
+    // @DisplayName: Wind vane cut off wind speed
+    // @Description: if a wind sensor is installed the wind vane will be ignored at apparent wind speeds bellow this, NOTE: if the apparent wind is consistantly bellow this the vane will not work
+    // @Units: m/s
+    // @Increment: 0.1
+    // @Range: 0 5
+    // @User: Standard
+    AP_GROUPINFO("CUTOFF", 10, AP_WindVane, _apparent_wind_vane_cutoff, 0),
+
+    // @Param: SPEED_TYPE
+    // @DisplayName: Wind speed sensor Type
+    // @Description: Wind Vane type
+    // @Values: 0:None,1:Airspeed library,2:Moden Devices Wind Sensor rev. p
+    // @User: Standard
+    AP_GROUPINFO("SPEED_TYPE", 11, AP_WindVane, _wind_speed_sensor_type,  0),
+
+    // @Param: SPEED_PIN1
+    // @DisplayName: Analog speed sensor input 1
+    // @Description: Wind speed analog speed input pin for Moden Devices Wind Sensor rev. p
+    // @Values: 11:Pixracer,13:Pixhawk ADC4,14:Pixhawk ADC3,15:Pixhawk ADC6,15:Pixhawk2 ADC,50:PixhawkAUX1,51:PixhawkAUX2,52:PixhawkAUX3,53:PixhawkAUX4,54:PixhawkAUX5,55:PixhawkAUX6,103:Pixhawk SBUS
+    // @User: Standard
+    AP_GROUPINFO("SPEED_PIN1", 12, AP_WindVane, _wind_speed_sensor_speed_in,  WINDSPEED_DEFAULT_SPEED_PIN),
+
+    // @Param: SPEED_PIN2
+    // @DisplayName: Analog speed sensor input 2
+    // @Description: Wind speed sensor analog temp input pin for Moden Devices Wind Sensor rev. p, set to -1 to diasble temp readings
+    // @Values: 11:Pixracer,13:Pixhawk ADC4,14:Pixhawk ADC3,15:Pixhawk ADC6,15:Pixhawk2 ADC,50:PixhawkAUX1,51:PixhawkAUX2,52:PixhawkAUX3,53:PixhawkAUX4,54:PixhawkAUX5,55:PixhawkAUX6,103:Pixhawk SBUS
+    // @User: Standard
+    AP_GROUPINFO("SPEED_PIN2", 13, AP_WindVane, _wind_speed_sensor_temp_in,  WINDSPEED_DEFAULT_TEMP_PIN),
+
+    // @Param: SPEED_OFS
+    // @DisplayName: Analog speed zero wind voltage offset
+    // @Description: Wind sensor analog voltage offset at zero wind speed
+    // @Units: V
+    // @Increment: 0.01
+    // @Range: 0 3.3
+    // @User: Standard
+    AP_GROUPINFO("SPEED_OFS", 14, AP_WindVane, _wind_speed_sensor_voltage_offset, WINDSPEED_DEFAULT_VOLT_OFFSET),
+
+    // @Param: SPEED_FILT
+    // @DisplayName: Wind speed low pass filter frequency
+    // @Description: Wind speed low pass filter frequency, a value of -1 disables filter
+    // @Units: Hz
+    // @User: Standard
+    AP_GROUPINFO("SPEED_FILT", 15, AP_WindVane, _speed_filt_hz, 0.5f),
+
     AP_GROUPEND
 };
 
@@ -141,6 +194,18 @@ void AP_WindVane::init()
 {
     // a pin for reading the Wind Vane voltage
     windvane_analog_source = hal.analogin->channel(_analog_pin_no);
+
+    // pins for wind sensor rev p
+    wind_speed_analog_source = hal.analogin->channel(ANALOG_INPUT_NONE);
+    wind_speed_temp_analog_source = hal.analogin->channel(ANALOG_INPUT_NONE);
+
+    // Link the airspeed libary
+    _airspeed = AP_Airspeed::get_singleton();
+
+    // Check that airspeed is enabled if it is selected as sensor type, if not revert to no wind speed sensor
+    if (_wind_speed_sensor_type == Speed_type::WINDSPEED_AIRSPEED && (_airspeed == nullptr || !_airspeed->enabled())) {
+        _wind_speed_sensor_type.set(Speed_type::WINDSPEED_NONE);
+    }
 }
 
 // update wind vane, expected to be called at 20hz
@@ -154,7 +219,9 @@ void AP_WindVane::update()
     // check for calibration
     calibrate();
 
+    update_wind_speed();
     update_apparent_wind_direction();
+    update_true_wind_direction();
 }
 
 // get the apparent wind direction in radians, 0 = head to wind
@@ -220,7 +287,84 @@ float AP_WindVane::read_SITL_direction_ef()
 
     return atan2f(wind_vector_ef.x, wind_vector_ef.y);
 }
+
+// read the apparent wind speed in m/s from SITL
+float AP_WindVane::read_wind_speed_SITL()
+{
+    // temporarily store true speed and direction for easy access
+    const float wind_speed = AP::sitl()->wind_speed_active;
+    const float wind_dir_rad = radians(AP::sitl()->wind_direction_active);
+
+    // convert true wind speed and direction into a 2D vector
+    Vector2f wind_vector_ef(sinf(wind_dir_rad) * wind_speed, cosf(wind_dir_rad) * wind_speed);
+
+    // add vehicle speed to get apparent wind vector
+    wind_vector_ef.x += AP::sitl()->state.speedE;
+    wind_vector_ef.y += AP::sitl()->state.speedN;
+
+    return wind_vector_ef.length();
+}
 #endif
+
+// read modern devices wind sensor rev p
+// https://moderndevice.com/news/calibrating-rev-p-wind-sensor-new-regression/
+float AP_WindVane::read_wind_sensor_rev_p()
+{
+    float analog_voltage = 0.0f;
+
+    // only read temp pin if defined, sensor will do OK assuming constant temp
+    float t_ambient = 28.0f; // assume room temp (deg c), equations were generated at this temp in above data sheet
+    if (is_positive(_wind_speed_sensor_temp_in)) {
+        wind_speed_temp_analog_source->set_pin(_wind_speed_sensor_temp_in);
+        analog_voltage = wind_speed_temp_analog_source->voltage_average();
+        t_ambient = (analog_voltage - 0.4f) / 0.0195f; // deg c
+        // constrain to reasonable range to avoid deviating from calabration too much and potential devide by zero
+        t_ambient = constrain_float(t_ambient, 10.0f, 40.0f);
+    }
+
+    wind_speed_analog_source->set_pin(_wind_speed_sensor_speed_in);
+    analog_voltage = wind_speed_analog_source->voltage_average();
+
+    // Apply voltage offset and make sure not negative
+    analog_voltage = analog_voltage - _wind_speed_sensor_voltage_offset;
+    if (is_negative(analog_voltage)) {
+        analog_voltage = 0.0f;
+    }
+
+    // Simplified equation from data sheet multiplied by mph to m/s conversion
+    return 24.254896f * powf((analog_voltage / powf(t_ambient,0.115157f)) ,3.009364f);
+}
+
+// Update the apparent wind speed
+void AP_WindVane::update_wind_speed()
+{
+    float apparent_wind_speed_in = 0.0f;
+
+    switch (_wind_speed_sensor_type) {
+        case WINDSPEED_AIRSPEED:
+            apparent_wind_speed_in = _airspeed->get_airspeed();
+            break;
+        case WINDVANE_WIND_SENSOR_REV_P:
+            apparent_wind_speed_in = read_wind_sensor_rev_p();
+            break;
+        case WINDSPEED_SITL:
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+            apparent_wind_speed_in = read_wind_speed_SITL();
+            break;
+#endif
+        default:
+            _speed_apparent = 0.0f;
+            return;
+    }
+
+    // apply low pass filter if enabled
+    if (is_positive(_speed_filt_hz)) {
+        wind_speed_filt.set_cutoff_frequency(_speed_filt_hz);
+        _speed_apparent = wind_speed_filt.apply(apparent_wind_speed_in, 0.02f);
+    } else {
+        _speed_apparent = apparent_wind_speed_in;
+    }
+}
 
 // calculate the apparent wind direction in radians, the wind comes from this direction, 0 = head to wind
 // expected to be called at 20hz
@@ -249,6 +393,11 @@ void AP_WindVane::update_apparent_wind_direction()
             break;
     }
 
+    // if not enough wind to move vane do not update the value
+    if (_speed_apparent < _apparent_wind_vane_cutoff){
+        return;
+    }
+
     // apply low pass filter if enabled
     if (is_positive(_vane_filt_hz)) {
         wind_sin_filt.set_cutoff_frequency(_vane_filt_hz);
@@ -263,6 +412,51 @@ void AP_WindVane::update_apparent_wind_direction()
 
     // make sure between -pi and pi
     _direction_apparent_ef = wrap_PI(_direction_apparent_ef);
+}
+
+// convert from apparent wind angle to true wind absolute angle and true wind speed
+// https://en.wikipedia.org/wiki/Apparent_wind
+void AP_WindVane::update_true_wind_direction()
+{
+    float heading = AP::ahrs().yaw;
+
+    // no wind speed sensor, so can't do true wind calcs
+    if (_wind_speed_sensor_type == Speed_type::WINDSPEED_NONE) {
+        _direction_absolute = wrap_2PI(heading + _direction_apparent_ef);
+        return;
+    }
+
+    // duplicated from rover get forward speed
+    float ground_speed = 0.0f;
+    Vector3f velocity;
+    if (!AP::ahrs().get_velocity_NED(velocity)) {
+        // use less accurate GPS, assuming entire length is along forward/back axis of vehicle
+        if (AP::gps().status() >= AP_GPS::GPS_OK_FIX_3D) {
+            if (labs(wrap_180_cd(AP::ahrs().yaw_sensor - AP::gps().ground_course_cd())) <= 9000) {
+                ground_speed = AP::gps().ground_speed();
+            } else {
+                ground_speed = -AP::gps().ground_speed();
+            }
+        }
+    }
+
+    // calculate forward speed velocity in body frame
+    ground_speed = velocity.x*AP::ahrs().cos_yaw() + velocity.y*AP::ahrs().sin_yaw();
+
+    // update true wind speed
+    _speed_true = safe_sqrt(powf(_speed_apparent, 2) + powf(ground_speed, 2) - 2 * _speed_apparent * ground_speed * cosf(_direction_apparent_ef));
+
+    if (is_zero(_speed_true)) { // no wind so ignore apparent wind effects
+        _direction_absolute = _direction_apparent_ef;
+    } else if (is_positive(_direction_apparent_ef)) {
+        _direction_absolute = acosf((_speed_apparent * cosf(_direction_apparent_ef) - ground_speed) / _speed_true);
+    } else {
+        // To-Do: check if arg to acosf > 1 to avoid arithmetic exception
+        _direction_absolute = -acosf((_speed_apparent * cosf(_direction_apparent_ef) - ground_speed) / _speed_true);
+    }
+
+    // make sure between -pi and pi
+    _direction_absolute = wrap_PI(_direction_absolute);
 }
 
 // calibrate windvane

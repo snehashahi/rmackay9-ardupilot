@@ -17,7 +17,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Param/AP_Param.h>
 #include <AP_Math/AP_Math.h>
-#include <Filter/LowPassFilter.h>
+#include <AP_Airspeed/AP_Airspeed.h>
 
 class AP_WindVane
 {
@@ -52,6 +52,15 @@ public:
     // get the apparent wind direction in body-frame in radians, 0 = head to wind
     float get_apparent_wind_direction_rad() const;
 
+    // get the absolute wind direction in radians, 0 = wind coming from north
+    float get_absolute_wind_direction_rad() const { return _direction_absolute; }
+
+    // Return true wind speed
+    float get_true_wind_speed() const { return _speed_true; }
+
+    // Return apparent wind speed
+    float get_apparent_wind_speed() const { return _speed_apparent; }
+
     // record home heading
     void record_home_headng();
 
@@ -72,10 +81,21 @@ private:
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     // read SITL's apparent wind direction in earth-frame in radians
     float read_SITL_direction_ef();
+
+    // read the apparent wind speed in m/s from SITL
+    float read_wind_speed_SITL();
 #endif
+    // read wind speed from wind sensor rev p
+    float read_wind_sensor_rev_p();
+
+    // update wind speed sensor
+    void update_wind_speed();
 
     // update apparent wind direction
     void update_apparent_wind_direction();
+
+    // convert from apparent wind angle and speed if available into true wind absolute angle and speed
+    void update_true_wind_direction();
 
     // calibrate
     void calibrate();
@@ -90,25 +110,49 @@ private:
     AP_Float _vane_filt_hz;                         // vane Low pass filter frequency
     AP_Int8 _calibration;                           // enter calibration
     AP_Float _analog_deadzone;                      // analog pot deadzone in degrees
+    AP_Float _apparent_wind_vane_cutoff;            // vane cutoff wind speed
+    AP_Int8 _wind_speed_sensor_type;                // wind speed sensor type
+    AP_Int8 _wind_speed_sensor_speed_in;            // analog speed sensor input 1
+    AP_Float _wind_speed_sensor_temp_in;            // analog speed sensor input 2, float to allow -1 to disable
+    AP_Float _wind_speed_sensor_voltage_offset;     // analog speed zero wind voltage offset
+    AP_Float _speed_filt_hz;                        // speed sensor low pass filter frequency
 
     static AP_WindVane *_singleton;
 
     // wind direction variables
     float _home_heading;                            // heading in radians recorded when vehicle was armed
     float _direction_apparent_ef;                   // wind's apparent direction in radians (0 = ahead of vehicle)
+    float _direction_absolute;                      // wind's absolute direction in radians (0 = North)
     float _current_analog_voltage;                  // wind direction's latest analog voltage reading
+
+    // wind speed variables
+    float _speed_apparent;                          // wind's apparent speed in m/s
+    float _speed_true;                              // wind's true estimated speed in m/s
 
     // calibration variables
     uint32_t _cal_start_ms = 0;                     // calibration start time in milliseconds after boot
     float _cal_volt_max;                            // maximum observed voltage during calibration
     float _cal_volt_min;                            // minimum observed voltage during calibration
 
+    enum Speed_type {
+        WINDSPEED_NONE               = 0,
+        WINDSPEED_AIRSPEED           = 1,
+        WINDVANE_WIND_SENSOR_REV_P   = 2,
+        WINDSPEED_SITL               = 10
+    };
+
     // pin for reading analog voltage
     AP_HAL::AnalogSource *windvane_analog_source;
+    AP_HAL::AnalogSource *wind_speed_analog_source;
+    AP_HAL::AnalogSource *wind_speed_temp_analog_source;
 
     // low pass filters of direction
     LowPassFilterFloat wind_sin_filt = LowPassFilterFloat(2.0f);
     LowPassFilterFloat wind_cos_filt = LowPassFilterFloat(2.0f);
+    LowPassFilterFloat wind_speed_filt = LowPassFilterFloat(2.0f);
+
+    // pointer to airspeed object, if available
+    AP_Airspeed* _airspeed;
 };
 
 namespace AP {
