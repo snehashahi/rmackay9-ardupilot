@@ -94,8 +94,8 @@ private:
     // update apparent wind direction
     void update_apparent_wind_direction();
 
-    // convert from apparent wind angle and speed if available into true wind absolute angle and speed
-    void update_true_wind_direction();
+    // calculate true wind speed and direction from apparent wind
+    void update_true_wind_speed_and_direction();
 
     // calibrate
     void calibrate();

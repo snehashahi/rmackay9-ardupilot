@@ -222,7 +222,9 @@ void AP_WindVane::update()
 
     // read apparent wind direction (relies on wind speed above)
     update_apparent_wind_direction();
-    update_true_wind_direction();
+
+    // calculate true wind speed and direction from apparent wind
+    update_true_wind_speed_and_direction();
 }
 
 // get the apparent wind direction in radians, 0 = head to wind
@@ -419,9 +421,9 @@ void AP_WindVane::update_apparent_wind_direction()
     _direction_apparent_ef = wrap_PI(_direction_apparent_ef);
 }
 
-// convert from apparent wind angle to true wind absolute angle and true wind speed
+// calculate true wind speed and direction from apparent wind
 // https://en.wikipedia.org/wiki/Apparent_wind
-void AP_WindVane::update_true_wind_direction()
+void AP_WindVane::update_true_wind_speed_and_direction()
 {
     float heading = AP::ahrs().yaw;
 
