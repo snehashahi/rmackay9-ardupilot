@@ -299,11 +299,11 @@ float AP_WindVane::read_wind_speed_SITL()
     const float wind_dir_rad = radians(AP::sitl()->wind_direction_active);
 
     // convert true wind speed and direction into a 2D vector
-    Vector2f wind_vector_ef(sinf(wind_dir_rad) * wind_speed, cosf(wind_dir_rad) * wind_speed);
+    Vector2f wind_vector_ef(cosf(wind_dir_rad) * wind_speed, sinf(wind_dir_rad) * wind_speed);
 
     // add vehicle speed to get apparent wind vector
-    wind_vector_ef.x += AP::sitl()->state.speedE;
-    wind_vector_ef.y += AP::sitl()->state.speedN;
+    wind_vector_ef.x += AP::sitl()->state.speedN;
+    wind_vector_ef.y += AP::sitl()->state.speedE;
 
     return wind_vector_ef.length();
 }
