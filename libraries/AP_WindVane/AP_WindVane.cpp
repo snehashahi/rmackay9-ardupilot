@@ -453,8 +453,9 @@ void AP_WindVane::update_true_wind_direction()
     } else if (is_positive(_direction_apparent_ef)) {
         _direction_absolute = acosf((_speed_apparent * cosf(_direction_apparent_ef) - ground_speed) / _speed_true);
     } else {
-        // To-Do: check if arg to acosf > 1 to avoid arithmetic exception
-        _direction_absolute = -acosf((_speed_apparent * cosf(_direction_apparent_ef) - ground_speed) / _speed_true);
+        // constrain arg to acosf to avoid arithmetic exception
+        float acos_arg = constrain_float((_speed_apparent * cosf(_direction_apparent_ef) - ground_speed) / _speed_true, -1.0f, 1.0f);
+        _direction_absolute = -acosf(acos_arg);
     }
 
     // make sure between -pi and pi
