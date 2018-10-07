@@ -150,9 +150,6 @@ private:
     LowPassFilterFloat wind_sin_filt = LowPassFilterFloat(2.0f);
     LowPassFilterFloat wind_cos_filt = LowPassFilterFloat(2.0f);
     LowPassFilterFloat wind_speed_filt = LowPassFilterFloat(2.0f);
-
-    // pointer to airspeed object, if available
-    AP_Airspeed* _airspeed;
 };
 
 namespace AP {

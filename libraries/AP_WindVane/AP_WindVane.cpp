@@ -199,11 +199,9 @@ void AP_WindVane::init()
     wind_speed_analog_source = hal.analogin->channel(ANALOG_INPUT_NONE);
     wind_speed_temp_analog_source = hal.analogin->channel(ANALOG_INPUT_NONE);
 
-    // Link the airspeed libary
-    _airspeed = AP_Airspeed::get_singleton();
-
-    // Check that airspeed is enabled if it is selected as sensor type, if not revert to no wind speed sensor
-    if (_wind_speed_sensor_type == Speed_type::WINDSPEED_AIRSPEED && (_airspeed == nullptr || !_airspeed->enabled())) {
+    // check that airspeed is enabled if it is selected as sensor type, if not revert to no wind speed sensor
+    AP_Airspeed* airspeed = AP_Airspeed::get_singleton();
+    if (_wind_speed_sensor_type == Speed_type::WINDSPEED_AIRSPEED && (airspeed == nullptr || !airspeed->enabled())) {
         _wind_speed_sensor_type.set(Speed_type::WINDSPEED_NONE);
     }
 }
@@ -341,9 +339,13 @@ void AP_WindVane::update_wind_speed()
     float apparent_wind_speed_in = 0.0f;
 
     switch (_wind_speed_sensor_type) {
-        case WINDSPEED_AIRSPEED:
-            apparent_wind_speed_in = _airspeed->get_airspeed();
+        case WINDSPEED_AIRSPEED: {
+            AP_Airspeed* airspeed = AP_Airspeed::get_singleton();
+            if (airspeed != nullptr) {
+                apparent_wind_speed_in = airspeed->get_airspeed();
+            }
             break;
+        }
         case WINDVANE_WIND_SENSOR_REV_P:
             apparent_wind_speed_in = read_wind_sensor_rev_p();
             break;
