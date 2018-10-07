@@ -116,7 +116,7 @@ const AP_Param::GroupInfo AP_WindVane::var_info[] = {
 
     // @Param: CUTOFF
     // @DisplayName: Wind vane cut off wind speed
-    // @Description: if a wind sensor is installed the wind vane will be ignored at apparent wind speeds bellow this, NOTE: if the apparent wind is consistantly bellow this the vane will not work
+    // @Description: Wind vane direction will be ignored when apparent wind speeds are below this value (if wind speed sensor is present).  If the apparent wind is consistently below this value the vane will not work
     // @Units: m/s
     // @Increment: 0.1
     // @Range: 0 5
@@ -125,20 +125,20 @@ const AP_Param::GroupInfo AP_WindVane::var_info[] = {
 
     // @Param: SPEED_TYPE
     // @DisplayName: Wind speed sensor Type
-    // @Description: Wind Vane type
+    // @Description: Wind speed sensor type
     // @Values: 0:None,1:Airspeed library,2:Moden Devices Wind Sensor rev. p
     // @User: Standard
     AP_GROUPINFO("SPEED_TYPE", 11, AP_WindVane, _wind_speed_sensor_type,  0),
 
     // @Param: SPEED_PIN1
-    // @DisplayName: Analog speed sensor input 1
-    // @Description: Wind speed analog speed input pin for Moden Devices Wind Sensor rev. p
+    // @DisplayName: Wind vane speed sensor analog pin
+    // @Description: Wind speed analog speed input pin for Modern Devices Wind Sensor rev. p
     // @Values: 11:Pixracer,13:Pixhawk ADC4,14:Pixhawk ADC3,15:Pixhawk ADC6,15:Pixhawk2 ADC,50:PixhawkAUX1,51:PixhawkAUX2,52:PixhawkAUX3,53:PixhawkAUX4,54:PixhawkAUX5,55:PixhawkAUX6,103:Pixhawk SBUS
     // @User: Standard
     AP_GROUPINFO("SPEED_PIN1", 12, AP_WindVane, _wind_speed_sensor_speed_in,  WINDSPEED_DEFAULT_SPEED_PIN),
 
     // @Param: SPEED_PIN2
-    // @DisplayName: Analog speed sensor input 2
+    // @DisplayName: Wind vane speed sensor analog temp pin
     // @Description: Wind speed sensor analog temp input pin for Moden Devices Wind Sensor rev. p, set to -1 to diasble temp readings
     // @Values: 11:Pixracer,13:Pixhawk ADC4,14:Pixhawk ADC3,15:Pixhawk ADC6,15:Pixhawk2 ADC,50:PixhawkAUX1,51:PixhawkAUX2,52:PixhawkAUX3,53:PixhawkAUX4,54:PixhawkAUX5,55:PixhawkAUX6,103:Pixhawk SBUS
     // @User: Standard
