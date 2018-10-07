@@ -89,7 +89,7 @@ private:
     float read_wind_sensor_rev_p();
 
     // update wind speed sensor
-    void update_wind_speed();
+    void update_apparent_wind_speed();
 
     // update apparent wind direction
     void update_apparent_wind_direction();

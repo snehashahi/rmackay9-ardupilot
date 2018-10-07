@@ -217,7 +217,10 @@ void AP_WindVane::update()
     // check for calibration
     calibrate();
 
-    update_wind_speed();
+    // read apparent wind speed
+    update_apparent_wind_speed();
+
+    // read apparent wind direction (relies on wind speed above)
     update_apparent_wind_direction();
     update_true_wind_direction();
 }
@@ -334,7 +337,7 @@ float AP_WindVane::read_wind_sensor_rev_p()
 }
 
 // Update the apparent wind speed
-void AP_WindVane::update_wind_speed()
+void AP_WindVane::update_apparent_wind_speed()
 {
     float apparent_wind_speed_in = 0.0f;
 
@@ -369,7 +372,7 @@ void AP_WindVane::update_wind_speed()
 }
 
 // calculate the apparent wind direction in radians, the wind comes from this direction, 0 = head to wind
-// expected to be called at 20hz
+// expected to be called at 20hz after apparent wind speed has been updated
 void AP_WindVane::update_apparent_wind_direction()
 {
     float apparent_angle_ef = 0.0f;
