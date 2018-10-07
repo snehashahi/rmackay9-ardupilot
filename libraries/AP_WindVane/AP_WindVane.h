@@ -62,7 +62,7 @@ public:
     float get_apparent_wind_speed() const { return _speed_apparent; }
 
     // record home heading
-    void record_home_headng();
+    void record_home_heading();
 
     // start calibration routine
     bool start_calibration();
