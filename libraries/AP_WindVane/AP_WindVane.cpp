@@ -430,9 +430,11 @@ void AP_WindVane::update_true_wind_speed_and_direction()
     // no wind speed sensor, so can't do true wind calcs
     if (_wind_speed_sensor_type == Speed_type::WINDSPEED_NONE) {
         _direction_absolute = wrap_2PI(heading + _direction_apparent_ef);
+        _speed_true = 0.0f;
         return;
     }
 
+#if 0
     // duplicated from rover get forward speed
     float ground_speed = 0.0f;
     Vector3f velocity;
@@ -451,7 +453,7 @@ void AP_WindVane::update_true_wind_speed_and_direction()
     ground_speed = velocity.x*AP::ahrs().cos_yaw() + velocity.y*AP::ahrs().sin_yaw();
 
     // update true wind speed
-    _speed_true = safe_sqrt(powf(_speed_apparent, 2) + powf(ground_speed, 2) - 2 * _speed_apparent * ground_speed * cosf(_direction_apparent_ef));
+    _speed_true = safe_sqrt(sq(_speed_apparent) + sq(ground_speed) - 2.0f * _speed_apparent * ground_speed * cosf(_direction_apparent_ef));
 
     if (is_zero(_speed_true)) { // no wind so ignore apparent wind effects
         _direction_absolute = _direction_apparent_ef;
@@ -462,6 +464,23 @@ void AP_WindVane::update_true_wind_speed_and_direction()
         float acos_arg = constrain_float((_speed_apparent * cosf(_direction_apparent_ef) - ground_speed) / _speed_true, -1.0f, 1.0f);
         _direction_absolute = -acosf(acos_arg);
     }
+#else
+    // convert apparent wind speed and direction to 2D vector
+    const Vector2f wind_apparent_vec(sinf(_direction_apparent_ef) * _speed_apparent, cosf(_direction_apparent_ef) * _speed_apparent);
+
+    // get vehicle speed to get apparent wind vector
+    Vector3f veh_velocity;
+    if (!AP::ahrs().get_velocity_NED(veh_velocity)) {
+        return;
+    }
+
+    // subtract vehicle velocity
+    Vector2f wind_true_vec = Vector2f(wind_apparent_vec.x - veh_velocity.x, wind_apparent_vec.y - veh_velocity.y);
+
+    // calculate true speed and direction
+    _direction_absolute = atan2f(wind_true_vec.x, wind_true_vec.y);
+    _speed_true = wind_true_vec.length();
+#endif
 
     // make sure between -pi and pi
     _direction_absolute = wrap_PI(_direction_absolute);
