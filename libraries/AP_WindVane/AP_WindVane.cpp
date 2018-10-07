@@ -425,32 +425,25 @@ void AP_WindVane::update_apparent_wind_direction()
 // https://en.wikipedia.org/wiki/Apparent_wind
 void AP_WindVane::update_true_wind_speed_and_direction()
 {
-    float heading = AP::ahrs().yaw;
-
     // no wind speed sensor, so can't do true wind calcs
     if (_wind_speed_sensor_type == Speed_type::WINDSPEED_NONE) {
-        _direction_absolute = wrap_2PI(heading + _direction_apparent_ef);
+        _direction_absolute = _direction_apparent_ef;
         _speed_true = 0.0f;
         return;
     }
 
-#if 0
-    // duplicated from rover get forward speed
-    float ground_speed = 0.0f;
-    Vector3f velocity;
-    if (!AP::ahrs().get_velocity_NED(velocity)) {
-        // use less accurate GPS, assuming entire length is along forward/back axis of vehicle
-        if (AP::gps().status() >= AP_GPS::GPS_OK_FIX_3D) {
-            if (labs(wrap_180_cd(AP::ahrs().yaw_sensor - AP::gps().ground_course_cd())) <= 9000) {
-                ground_speed = AP::gps().ground_speed();
-            } else {
-                ground_speed = -AP::gps().ground_speed();
-            }
-        }
+    // if no vehicle speed, can't do calcs
+    Vector3f veh_velocity;
+    if (!AP::ahrs().get_velocity_NED(veh_velocity)) {
+        // if no vehicle speed use apparent speed and direction directly
+        _direction_absolute = _direction_apparent_ef;
+        _speed_true = _speed_apparent;
+        return;
     }
 
+#if 0
     // calculate forward speed velocity in body frame
-    ground_speed = velocity.x*AP::ahrs().cos_yaw() + velocity.y*AP::ahrs().sin_yaw();
+    float ground_speed = veh_velocity.x * AP::ahrs().cos_yaw() + veh_velocity.y * AP::ahrs().sin_yaw();
 
     // update true wind speed
     _speed_true = safe_sqrt(sq(_speed_apparent) + sq(ground_speed) - 2.0f * _speed_apparent * ground_speed * cosf(_direction_apparent_ef));
@@ -465,20 +458,15 @@ void AP_WindVane::update_true_wind_speed_and_direction()
         _direction_absolute = -acosf(acos_arg);
     }
 #else
-    // convert apparent wind speed and direction to 2D vector
-    const Vector2f wind_apparent_vec(sinf(_direction_apparent_ef) * _speed_apparent, cosf(_direction_apparent_ef) * _speed_apparent);
+    // convert apparent wind speed and direction to 2D vector in same frame as vehicle velocity
+    const float wind_dir_180 = wrap_PI(_direction_apparent_ef + radians(180));
+    const Vector2f wind_apparent_vec(cosf(wind_dir_180) * _speed_apparent, sinf(wind_dir_180) * _speed_apparent);
 
-    // get vehicle speed to get apparent wind vector
-    Vector3f veh_velocity;
-    if (!AP::ahrs().get_velocity_NED(veh_velocity)) {
-        return;
-    }
-
-    // subtract vehicle velocity
-    Vector2f wind_true_vec = Vector2f(wind_apparent_vec.x - veh_velocity.x, wind_apparent_vec.y - veh_velocity.y);
+    // add vehicle velocity
+    Vector2f wind_true_vec = Vector2f(wind_apparent_vec.x + veh_velocity.x, wind_apparent_vec.y + veh_velocity.y);
 
     // calculate true speed and direction
-    _direction_absolute = atan2f(wind_true_vec.x, wind_true_vec.y);
+    _direction_absolute = wrap_PI(atan2f(wind_true_vec.y, wind_true_vec.x) - radians(180));
     _speed_true = wind_true_vec.length();
 #endif
 
