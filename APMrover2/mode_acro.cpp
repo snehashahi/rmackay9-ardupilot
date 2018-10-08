@@ -27,7 +27,7 @@ void ModeAcro::update()
     }
     if (g2.motors.has_sail() && rover.sailboat_tacking()) {
         // call heading controller during tacking
-        steering_out = attitude_control.get_steering_out_heading(rover.sailboat_acro_tack_heading_rad(),
+        steering_out = attitude_control.get_steering_out_heading(rover.sailboat_get_tack_heading_rad(),
                                                                  g2.pivot_turn_rate,
                                                                  g2.motors.limit.steer_left,
                                                                  g2.motors.limit.steer_right,

@@ -389,18 +389,13 @@ private:
 
     // sailboat variables
     enum Sailboat_Tack {
-        Tack_Unknown = 0,
-        Tack_Port = 1,
-        Tack_STBD = 2
+        Tack_Port,
+        Tack_STBD
     };
-    bool _sailboat_indirect_route;          // result of latest call to sailboat_use_indirect_route
-    bool _sailboat_tack;                    // set to true to trigger tack on next call to sailboat_calc_heading
     bool _sailboat_tacking;                 // true when sailboat is in the process of tacking to a new heading
-    float _sailboat_tack_start_ms;          // system time when tack was triggered
-    float _sailboat_new_tack_heading_cd;    // target heading in centi-degrees while tacking
-    float _sailboat_acro_tack_heading_rad;  // target heading in radians while tacking in acro mode
-    Sailboat_Tack _sailboat_current_tack;   // current tack state (Port if heading is left of no-go, STBD if right of no-go)
-    float _sailboat_last_calc_heading_ms;   // system time of last call to sailboat_calc_heading
+    float _sailboat_tack_heading_rad;       // target heading in radians while tacking in either acro or autonomous modes
+    uint32_t _sailboat_auto_tack_request_ms;// system time user requested tack in autonomous modes
+    uint32_t _sailboat_auto_tack_start_ms;  // system time when tack was started in autonomous mode
 
 private:
 
@@ -528,13 +523,12 @@ private:
     void sailboat_update_mainsail(float desired_speed);
     float sailboat_get_VMG() const;
     void sailboat_handle_tack_request_acro();
+    float sailboat_get_tack_heading_rad() const;
     void sailboat_handle_tack_request_auto();
     void sailboat_clear_tack();
     bool sailboat_tacking() const;
-    bool sailboat_use_indirect_route(float desired_heading_cd);
+    bool sailboat_use_indirect_route(float desired_heading_cd) const;
     float sailboat_calc_heading(float desired_heading_cd);
-    float sailboat_acro_tack_heading_rad();
-    float sailboat_get_rate_max(float rate_max_degs) const;
 
     // sensors.cpp
     void init_compass(void);
