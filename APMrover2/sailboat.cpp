@@ -68,7 +68,37 @@ float Rover::sailboat_get_VMG() const
     return (speed * cosf(wrap_PI(radians(nav_controller->target_bearing_cd()) - ahrs.yaw)));
 }
 
-// returns true if sailboat should take a indirect navigation route, either to go upwind or in the future for speed
+// handle user initiated tack while in acro mode
+void Rover::sailboat_handle_tack_request_acro()
+{
+    // set tacking heading target to the current angle relative to the true wind but on the new tack
+    _sailboat_acro_tack_heading_rad = wrap_2PI(ahrs.yaw + 2.0f * wrap_PI((g2.windvane.get_absolute_wind_direction_rad() - ahrs.yaw)));
+    _sailboat_tacking = true;
+    _sailboat_tack_start_ms = AP_HAL::millis();
+}
+
+// handle user initiated tack while in autonomous modes (Auto, Guided, RTL, SmartRTL)
+void Rover::sailboat_handle_tack_request_auto()
+{
+    if (!sailboat_tacking() && _sailboat_indirect_route) {
+        _sailboat_tack = true;
+    }
+}
+
+// clear tacking state variables
+void Rover::sailboat_clear_tack()
+{
+    rover._sailboat_tack = false;
+    rover._sailboat_tacking = false;
+}
+
+// returns true if boat is currently tacking
+bool Rover::sailboat_tacking() const
+{
+    return _sailboat_tacking;
+}
+
+// returns true if sailboat should take a indirect navigation route to go upwind
 // desired_heading should be in centi-degrees
 bool Rover::sailboat_use_indirect_route(float desired_heading_cd)
 {
@@ -96,6 +126,21 @@ float Rover::sailboat_calc_heading(float desired_heading_cd)
         return desired_heading_cd;
     }
 
+    // if tacking
+    //    check if tacking complete
+    //        is heading within 10 deg of target (accurate enough?)?
+    //            turn tacking off
+    //            return _sailboat_new_tack_heading_cd anyway
+    //        is timed out? fall through and reset stuff?
+    //            turn tacking off
+    //            return _sailboat_new_tack_heading_cd?  return desired_heading_cd?
+    //    else return _sailboat_new_tack_heading_cd
+
+    // if desired_heading_cd is not within no-go zone
+    //    return desired_heading_cd
+
+    // lane check
+    //
     /*
         Until we get more fancy logic for best possible speed just assume we can sail upwind at the no go angle
         Just set off on which ever of the no go angles is on the current tack, once the end destination is within a single tack it will switch back to direct route method
@@ -188,69 +233,9 @@ float Rover::sailboat_calc_heading(float desired_heading_cd)
     return desired_heading_cd;
 }
 
-// returns true if boat is currently tacking
-bool Rover::sailboat_tacking() const
-{
-    return (_sailboat_tack || _sailboat_tacking);
-}
-
-// user initiated tack
-void Rover::sailboat_trigger_tack()
-{
-    if (!control_mode->allows_tacking_from_transmitter()) {
-        return;
-    }
-
-    if (!sailboat_tacking() && rover._sailboat_indirect_route) {
-        _sailboat_tack = true;
-    }
-}
-
-// check if user triggers tack by holding steering to > 90%
-void Rover::sailboat_check_steering_triggered_tack()
-{
-    // exit immediately if not sailboat
-    if (!g2.motors.has_sail()) {
-        return;
-    }
-
-    // rudder threshold to trigger tack in auto heading modes
-    const float steer_threshold = 0.9f;
-
-    // allow force tack from rudder input
-    const float steering_in = rover.channel_steer->norm_input();
-
-    if ((fabsf(steering_in) > steer_threshold) && !sailboat_tacking()) {
-        switch (_sailboat_current_tack) {
-            case Tack_Unknown:
-                // sailboat_calc_heading has not been called so ignore
-                break;
-            case Tack_Port:
-                if (steering_in < -steer_threshold) { // if we are on port a left hand steering input would be a tack
-                    _sailboat_tack = true;
-                }
-                break;
-            case Tack_STBD:
-                if (steering_in > steer_threshold) { // if on stbd right hand turn is a tack
-                    _sailboat_tack = true;
-                }
-                break;
-        }
-    }
-}
-
 // return heading in radians when tacking in acro
 float Rover::sailboat_acro_tack_heading_rad()
 {
-    // initiate tack
-    if (_sailboat_tack) {
-        // match the current angle to the true wind on the new tack
-        _sailboat_acro_tack_heading_rad = wrap_2PI(ahrs.yaw + 2.0f * wrap_PI((g2.windvane.get_absolute_wind_direction_rad() - ahrs.yaw)));
-        _sailboat_tack = false;
-        _sailboat_tacking = true;
-        _sailboat_tack_start_ms = AP_HAL::millis();
-    }
-
     // wait until tack is completed
     // check if we have tacked round enough or if we have timed out
     // time out needed for acro as the pilot is not in control while tacking

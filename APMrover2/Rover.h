@@ -527,13 +527,12 @@ private:
     // sailboat.cpp
     void sailboat_update_mainsail(float desired_speed);
     float sailboat_get_VMG() const;
-
-
+    void sailboat_handle_tack_request_acro();
+    void sailboat_handle_tack_request_auto();
+    void sailboat_clear_tack();
+    bool sailboat_tacking() const;
     bool sailboat_use_indirect_route(float desired_heading_cd);
     float sailboat_calc_heading(float desired_heading_cd);
-    bool sailboat_tacking() const;
-    void sailboat_trigger_tack();
-    void sailboat_check_steering_triggered_tack();
     float sailboat_acro_tack_heading_rad();
     float sailboat_get_rate_max(float rate_max_degs) const;
 

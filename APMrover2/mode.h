@@ -65,9 +65,6 @@ public:
     // returns true if vehicle can be armed or disarmed from the transmitter in this mode
     virtual bool allows_arming_from_transmitter() { return !is_autopilot_mode(); }
 
-    // returns true if sailboats in this mode allow user initiated tacking from an aux switch
-    virtual bool allows_tacking_from_transmitter() const { return is_autopilot_mode(); }
-
     //
     // attributes for mavlink system status reporting
     //
@@ -118,6 +115,9 @@ public:
 
     // execute the mission in reverse (i.e. backing up)
     void set_reversed(bool value);
+
+    // handle tacking request (from auxiliary switch) in sailboats
+    virtual void handle_tack_request();
 
 protected:
 
@@ -219,15 +219,15 @@ public:
     // methods that affect movement of the vehicle in this mode
     void update() override;
 
-    // acro mode supports user manually initiating tacking from transmitter
-    bool allows_tacking_from_transmitter() const { return true; }
-
     // attributes for mavlink system status reporting
     bool has_manual_input() const override { return true; }
 
     // acro mode requires a velocity estimate for non skid-steer rovers
     bool requires_position() const override { return false; }
     bool requires_velocity() const override;
+
+    // sailboats in acro mode support user manually initiating tacking from transmitter
+    void handle_tack_request() override;
 };
 
 

@@ -20,10 +20,13 @@ void ModeAcro::update()
 
     float steering_out;
 
-    // handle sailboat tacking
-    rover.sailboat_check_steering_triggered_tack();
+    // handle sailboats
+    if (!is_zero(desired_steering)) {
+        // steering input return control to user
+        rover.sailboat_clear_tack();
+    }
     if (g2.motors.has_sail() && rover.sailboat_tacking()) {
-        // call heading controller
+        // call heading controller during tacking
         steering_out = attitude_control.get_steering_out_heading(rover.sailboat_acro_tack_heading_rad(),
                                                                  g2.pivot_turn_rate,
                                                                  g2.motors.limit.steer_left,
@@ -46,4 +49,10 @@ void ModeAcro::update()
 bool ModeAcro::requires_velocity() const
 {
     return g2.motors.have_skid_steering()? false: true;
+}
+
+// sailboats in acro mode support user manually initiating tacking from transmitter
+void ModeAcro::handle_tack_request()
+{
+    rover.sailboat_handle_tack_request_acro();
 }

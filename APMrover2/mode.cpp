@@ -20,10 +20,6 @@ void Mode::exit()
 
 bool Mode::enter()
 {
-    // clear sailboat tacking flags
-    rover._sailboat_tack = false;
-    rover._sailboat_tacking = false;
-
     const bool ignore_checks = !hal.util->get_soft_armed();   // allow switching to any mode if disarmed.  We rely on the arming check to perform
     if (!ignore_checks) {
 
@@ -51,6 +47,9 @@ bool Mode::enter()
     // initialisation common to all modes
     if (ret) {
         set_reversed(false);
+
+        // clear sailboat tacking flags
+        rover.sailboat_clear_tack();
     }
 
     return ret;
@@ -256,6 +255,15 @@ bool Mode::set_desired_speed(float speed)
 void Mode::set_reversed(bool value)
 {
     _reversed = value;
+}
+
+// handle tacking request (from auxiliary switch) in sailboats
+void Mode::handle_tack_request()
+{
+    // autopilot modes handle tacking
+    if (is_autopilot_mode()) {
+        rover.sailboat_handle_tack_request_auto();
+    }
 }
 
 void Mode::calc_throttle(float target_speed, bool nudge_allowed, bool avoidance_enabled)
