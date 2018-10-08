@@ -29,16 +29,11 @@
 
 extern const AP_HAL::HAL& hal;
 
-// by default use the airspeed pin for Vane
-#define WINDVANE_DEFAULT_PIN 15
+#define WINDVANE_DEFAULT_PIN 15                     // default wind vane sensor analog pin
 #define WINDVANE_CALIBRATION_VOLT_DIFF_MIN  1.0f    // calibration routine's min voltage difference required for success
-// use other analog pins for speed sensor by deault
-#define WINDSPEED_DEFAULT_SPEED_PIN 14
-#define WINDSPEED_DEFAULT_TEMP_PIN 13
-// use average offset providey by manfacturer for wind sesnor rev P. as default
-// https://moderndevice.com/news/calibrating-rev-p-wind-sensor-new-regression/
-// will have to chage this once more sensors are supported
-#define WINDSPEED_DEFAULT_VOLT_OFFSET 1.346
+#define WINDSPEED_DEFAULT_SPEED_PIN 14              // default pin for reading speed from ModernDevice rev p wind sensor
+#define WINDSPEED_DEFAULT_TEMP_PIN 13               // default pin for reading temperature from ModernDevice rev p wind sensor
+#define WINDSPEED_DEFAULT_VOLT_OFFSET 1.346         // default voltage offset between speed and temp pins from ModernDevice rev p wind sensor
 
 const AP_Param::GroupInfo AP_WindVane::var_info[] = {
 
@@ -195,7 +190,7 @@ void AP_WindVane::init()
     // a pin for reading the Wind Vane voltage
     windvane_analog_source = hal.analogin->channel(_analog_pin_no);
 
-    // pins for wind sensor rev p
+    // pins for ModernDevice rev p wind sensor
     wind_speed_analog_source = hal.analogin->channel(ANALOG_INPUT_NONE);
     wind_speed_temp_analog_source = hal.analogin->channel(ANALOG_INPUT_NONE);
 
@@ -309,9 +304,12 @@ float AP_WindVane::read_wind_speed_SITL()
 }
 #endif
 
-// read modern devices wind sensor rev p
+// read wind speed from Modern Device rev p wind sensor
 // https://moderndevice.com/news/calibrating-rev-p-wind-sensor-new-regression/
-float AP_WindVane::read_wind_sensor_rev_p()
+// use average offset provide by manufacturer of ModernDevice wind sensor rev P. as default
+// https://moderndevice.com/news/calibrating-rev-p-wind-sensor-new-regression/
+// will have to chage this once more sensors are supported
+float AP_WindVane::read_wind_speed_ModernDevice()
 {
     float analog_voltage = 0.0f;
 
@@ -320,22 +318,22 @@ float AP_WindVane::read_wind_sensor_rev_p()
     if (is_positive(_wind_speed_sensor_temp_in)) {
         wind_speed_temp_analog_source->set_pin(_wind_speed_sensor_temp_in);
         analog_voltage = wind_speed_temp_analog_source->voltage_average();
-        t_ambient = (analog_voltage - 0.4f) / 0.0195f; // deg c
-        // constrain to reasonable range to avoid deviating from calabration too much and potential devide by zero
+        t_ambient = (analog_voltage - 0.4f) / 0.0195f; // deg C
+        // constrain to reasonable range to avoid deviating from calibration too much and potential divide by zero
         t_ambient = constrain_float(t_ambient, 10.0f, 40.0f);
     }
 
     wind_speed_analog_source->set_pin(_wind_speed_sensor_speed_in);
     analog_voltage = wind_speed_analog_source->voltage_average();
 
-    // Apply voltage offset and make sure not negative
+    // apply voltage offset and make sure not negative
     analog_voltage = analog_voltage - _wind_speed_sensor_voltage_offset;
     if (is_negative(analog_voltage)) {
         analog_voltage = 0.0f;
     }
 
-    // Simplified equation from data sheet multiplied by mph to m/s conversion
-    return 24.254896f * powf((analog_voltage / powf(t_ambient,0.115157f)) ,3.009364f);
+    // simplified equation from data sheet, converted from mph to m/s
+    return 24.254896f * powf((analog_voltage / powf(t_ambient, 0.115157f)), 3.009364f);
 }
 
 // Update the apparent wind speed
@@ -352,7 +350,7 @@ void AP_WindVane::update_apparent_wind_speed()
             break;
         }
         case WINDVANE_WIND_SENSOR_REV_P:
-            apparent_wind_speed_in = read_wind_sensor_rev_p();
+            apparent_wind_speed_in = read_wind_speed_ModernDevice();
             break;
         case WINDSPEED_SITL:
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
@@ -441,23 +439,6 @@ void AP_WindVane::update_true_wind_speed_and_direction()
         return;
     }
 
-#if 0
-    // calculate forward speed velocity in body frame
-    float ground_speed = veh_velocity.x * AP::ahrs().cos_yaw() + veh_velocity.y * AP::ahrs().sin_yaw();
-
-    // update true wind speed
-    _speed_true = safe_sqrt(sq(_speed_apparent) + sq(ground_speed) - 2.0f * _speed_apparent * ground_speed * cosf(_direction_apparent_ef));
-
-    if (is_zero(_speed_true)) { // no wind so ignore apparent wind effects
-        _direction_absolute = _direction_apparent_ef;
-    } else if (is_positive(_direction_apparent_ef)) {
-        _direction_absolute = acosf((_speed_apparent * cosf(_direction_apparent_ef) - ground_speed) / _speed_true);
-    } else {
-        // constrain arg to acosf to avoid arithmetic exception
-        float acos_arg = constrain_float((_speed_apparent * cosf(_direction_apparent_ef) - ground_speed) / _speed_true, -1.0f, 1.0f);
-        _direction_absolute = -acosf(acos_arg);
-    }
-#else
     // convert apparent wind speed and direction to 2D vector in same frame as vehicle velocity
     const float wind_dir_180 = wrap_PI(_direction_apparent_ef + radians(180));
     const Vector2f wind_apparent_vec(cosf(wind_dir_180) * _speed_apparent, sinf(wind_dir_180) * _speed_apparent);
@@ -468,16 +449,6 @@ void AP_WindVane::update_true_wind_speed_and_direction()
     // calculate true speed and direction
     _direction_absolute = wrap_PI(atan2f(wind_true_vec.y, wind_true_vec.x) - radians(180));
     _speed_true = wind_true_vec.length();
-#endif
-
-    // debug
-    /*::printf("wax:%4.2f way:%4.2f vehx:%4.2f y:%4.2f dirT:%4.2f spdT:%4.2f\n",
-            (double)wind_apparent_vec.x,
-            (double)wind_apparent_vec.y,
-            (double)veh_velocity.x,
-            (double)veh_velocity.y,
-            (double)degrees(_direction_absolute),
-            (double)_speed_true);*/
 
     // make sure between -pi and pi
     _direction_absolute = wrap_PI(_direction_absolute);

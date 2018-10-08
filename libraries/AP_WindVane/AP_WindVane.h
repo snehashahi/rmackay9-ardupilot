@@ -85,8 +85,8 @@ private:
     // read the apparent wind speed in m/s from SITL
     float read_wind_speed_SITL();
 #endif
-    // read wind speed from wind sensor rev p
-    float read_wind_sensor_rev_p();
+    // read wind speed from ModernDevice wind speed sensor rev p
+    float read_wind_speed_ModernDevice();
 
     // update wind speed sensor
     void update_apparent_wind_speed();
