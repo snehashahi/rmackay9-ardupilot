@@ -470,6 +470,15 @@ void AP_WindVane::update_true_wind_speed_and_direction()
     _speed_true = wind_true_vec.length();
 #endif
 
+    // debug
+    /*::printf("wax:%4.2f way:%4.2f vehx:%4.2f y:%4.2f dirT:%4.2f spdT:%4.2f\n",
+            (double)wind_apparent_vec.x,
+            (double)wind_apparent_vec.y,
+            (double)veh_velocity.x,
+            (double)veh_velocity.y,
+            (double)degrees(_direction_absolute),
+            (double)_speed_true);*/
+
     // make sure between -pi and pi
     _direction_absolute = wrap_PI(_direction_absolute);
 }
